@@ -7,15 +7,6 @@ COPY --chown=1000:1000 . .
 
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
-# Baked into the build, not read at container runtime: vite.config.ts reads
-# this while evaluating the Nitro `routeRules` proxy target (/webrdp/tunnel ->
-# ovc-webrdp), which is fixed at build time like any other Vite config value.
-# Changing it means rebuilding the image, unlike the API_URL/OIDC_*/
-# BETTER_AUTH_* vars, which the compiled server reads from its environment on
-# every request.
-ARG WEBRDP_ORIGIN
-ENV WEBRDP_ORIGIN=$WEBRDP_ORIGIN
-
 RUN npm ci;
 RUN npm run build;
 

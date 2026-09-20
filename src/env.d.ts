@@ -31,6 +31,14 @@ declare namespace NodeJS {
   interface ProcessEnv {
     /** Base URL of ovc-backend's REST API, e.g. http://localhost:8000/api */
     API_URL: string
+    /**
+     * Base URL of ovc-webrdp, INCLUDING its context path, e.g.
+     * http://localhost:8090/webrdp (WEBAPP_CONTEXT=webrdp) or
+     * http://ovc-webrdp:8080 (WEBAPP_CONTEXT=ROOT). Used by
+     * src/routes/webrdp/tunnel.ts to proxy the Guacamole HTTP tunnel -
+     * read per-request like API_URL, not baked in at build time.
+     */
+    WEBRDP_ORIGIN: string
     /** OIDC issuer / discovery base, e.g. http://localhost:8080/realms/ovc */
     OIDC_ISSUER: string
     OIDC_CLIENT_ID: string

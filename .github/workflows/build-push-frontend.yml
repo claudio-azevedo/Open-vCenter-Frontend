@@ -48,8 +48,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          # WEBRDP_ORIGIN is baked into the build (see Dockerfile) - the
-          # cluster-internal Service DNS name/context path for ovc-webrdp.
-          build-args: |
-            WEBRDP_ORIGIN=http://ovc-webrdp-service-nodeport:8080/webrdp
           tags: ${{ steps.tags.outputs.list }}

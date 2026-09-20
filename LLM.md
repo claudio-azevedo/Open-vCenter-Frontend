@@ -238,8 +238,10 @@ which `await import('guacamole-common-js')` (client-only chunk), opens
 `new Guacamole.HTTPTunnel(`${VITE_WEBRDP_URL}/tunnel`)` and connects with
 `hostname=<fqdn>&port=2179&vm-guid=<vm.id>&security=vmconnect` (+ username/password
 from the form). The tunnel servlet lives in the `ovc-webrdp` Java service (guacd
-behind it); the browser calls it directly (`/webrdp/tunnel` same-origin, or the
-`VITE_WEBRDP_URL` origin in split-origin dev - `ovc-webrdp` sends permissive CORS).
+behind it); the browser calls it at `/webrdp/tunnel` same-origin by default, which
+`src/routes/webrdp/tunnel.ts` proxies to `WEBRDP_ORIGIN` (a runtime env var, read
+per-request) - or the `VITE_WEBRDP_URL` origin directly in split-origin dev
+(`ovc-webrdp` sends permissive CORS for that case).
 `GuacamoleConsole` = Win95 `Toolbar` (Disconnect / Reconnect / Clipboard /
 Ctrl+Alt+Del / Fullscreen) + `StatusBar` + a black display area + connecting/error
 overlays.

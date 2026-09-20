@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as AuthedConsoleRouteImport } from './routes/_authed/console'
 import { Route as AuthedInventoryRouteImport } from './routes/_authed/inventory'
+import { Route as WebrdpTunnelRouteImport } from './routes/webrdp/tunnel'
 import { Route as FrontendApiApiSplatRouteImport } from './routes/frontend-api/api/$'
 import { Route as FrontendApiAuthSplatRouteImport } from './routes/frontend-api/auth/$'
 
@@ -53,6 +54,11 @@ const AuthedInventoryRoute = AuthedInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AuthedRoute,
 } as any)
+const WebrdpTunnelRoute = WebrdpTunnelRouteImport.update({
+  id: '/webrdp/tunnel',
+  path: '/webrdp/tunnel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrontendApiApiSplatRoute = FrontendApiApiSplatRouteImport.update({
   id: '/frontend-api/api/$',
   path: '/frontend-api/api/$',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/console': typeof AuthedConsoleRoute
   '/inventory': typeof AuthedInventoryRoute
+  '/webrdp/tunnel': typeof WebrdpTunnelRoute
   '/frontend-api/api/$': typeof FrontendApiApiSplatRoute
   '/frontend-api/auth/$': typeof FrontendApiAuthSplatRoute
 }
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/console': typeof AuthedConsoleRoute
   '/inventory': typeof AuthedInventoryRoute
+  '/webrdp/tunnel': typeof WebrdpTunnelRoute
   '/frontend-api/api/$': typeof FrontendApiApiSplatRoute
   '/frontend-api/auth/$': typeof FrontendApiAuthSplatRoute
 }
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/_authed/console': typeof AuthedConsoleRoute
   '/_authed/inventory': typeof AuthedInventoryRoute
+  '/webrdp/tunnel': typeof WebrdpTunnelRoute
   '/frontend-api/api/$': typeof FrontendApiApiSplatRoute
   '/frontend-api/auth/$': typeof FrontendApiAuthSplatRoute
 }
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/console'
     | '/inventory'
+    | '/webrdp/tunnel'
     | '/frontend-api/api/$'
     | '/frontend-api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/console'
     | '/inventory'
+    | '/webrdp/tunnel'
     | '/frontend-api/api/$'
     | '/frontend-api/auth/$'
   id:
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/_authed/console'
     | '/_authed/inventory'
+    | '/webrdp/tunnel'
     | '/frontend-api/api/$'
     | '/frontend-api/auth/$'
   fileRoutesById: FileRoutesById
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AccessDeniedRoute: typeof AccessDeniedRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  WebrdpTunnelRoute: typeof WebrdpTunnelRoute
   FrontendApiApiSplatRoute: typeof FrontendApiApiSplatRoute
   FrontendApiAuthSplatRoute: typeof FrontendApiAuthSplatRoute
 }
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedInventoryRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/webrdp/tunnel': {
+      id: '/webrdp/tunnel'
+      path: '/webrdp/tunnel'
+      fullPath: '/webrdp/tunnel'
+      preLoaderRoute: typeof WebrdpTunnelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/frontend-api/api/$': {
       id: '/frontend-api/api/$'
       path: '/frontend-api/api/$'
@@ -227,6 +247,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccessDeniedRoute: AccessDeniedRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  WebrdpTunnelRoute: WebrdpTunnelRoute,
   FrontendApiApiSplatRoute: FrontendApiApiSplatRoute,
   FrontendApiAuthSplatRoute: FrontendApiAuthSplatRoute,
 }

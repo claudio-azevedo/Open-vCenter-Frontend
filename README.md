@@ -121,9 +121,9 @@ ovc.domain.net/         →  ovc-frontend   (SSR pages, assets, /frontend-api/*,
 ovc.domain.net/api/     →  ovc-backend    (the REST API)
 ```
 
-This app **never serves anything under `/webrdp`** itself, but as of the Nitro
-build target it does _proxy_ one specific path there server-to-server - see
-below. Its own server surface is:
+This app **never serves anything under `/webrdp`** itself, but it does
+_proxy_ one specific path there server-to-server - see below. Its own server
+surface is:
 
 | Path                                   | Served by the frontend                                        |
 | -------------------------------------- | ------------------------------------------------------------- |
@@ -132,7 +132,7 @@ below. Its own server surface is:
 | `/frontend-api/fn/*`                   | server-function (RPC) calls                                   |
 | `/frontend-api/auth/*`                 | better-auth OAuth endpoints (OIDC redirect + callback)        |
 | `/frontend-api/api/*`                  | reverse proxy to `ovc-backend` (adds the bearer token)        |
-| `/webrdp/tunnel`                       | reverse proxy to `ovc-webrdp` (Nitro `routeRules`, see below) |
+| `/webrdp/tunnel`                       | reverse proxy to `ovc-webrdp` (plain route, see below)        |
 | `/favicon.ico`, `/site.webmanifest`, … | files in `public/`                                            |
 
 The browser only ever calls the frontend: REST goes through `/frontend-api/api/*`
@@ -171,11 +171,11 @@ frontend embeds the Guacamole client itself and only calls `/webrdp/tunnel`, so 
 never iframes webrdp (`WEBRDP_FRAME_ANCESTORS` is not load-bearing here).
 
 **`WEBRDP_ORIGIN`** (base URL of `ovc-webrdp`, e.g. `http://ovc-webrdp:8080/webrdp`)
-configures that proxy via the `nitro({ routeRules })` block in `vite.config.ts`.
-Unlike the other server-only vars above, it's read at **build time** (baked
-into `.output/server/index.mjs`), not at container start - the Dockerfile
-takes it as a build arg. Changing it means rebuilding the image, not just
-restarting the container with a different env var.
+configures that proxy - `src/routes/webrdp/tunnel.ts`, a plain server route,
+the same kind as `frontend-api/api/$.ts`. Like the other server-only vars
+above (and unlike this project's previous build-time-baked `routeRules`
+approach), it's read from `process.env` on every request - change it and
+restart the container, no rebuild needed.
 
 The `/frontend-api/fn` prefix for RPC is configured in `vite.config.ts`
 (`tanstackStart({ serverFns: { base: '/frontend-api/fn' } })`); `/frontend-api/auth`

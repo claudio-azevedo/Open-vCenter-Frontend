@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm config *)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(git -C /Users/claudioa/Documents/dev/open-hyperv-manager/ovc-frontend log --oneline -3)",
+      "Bash(fnm list *)",
+      "Bash(volta list *)",
+      "Bash(command -v node)",
+      "Bash(command -v brew)",
+      "Bash(brew list *)",
+      "Bash(brew install *)",
+      "Bash(/opt/homebrew/opt/node@24/bin/node -v)",
+      "Bash(/opt/homebrew/opt/node@24/bin/npm -v)",
+      "Bash(curl -sI \"https://fonts.googleapis.com/css2?family=W95FA&display=swap\")",
+      "Bash(curl -s \"https://fonts.googleapis.com/css2?family=W95FA&display=swap\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(git mv *)"
+    ]
+  }
+}

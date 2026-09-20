@@ -1,0 +1,275 @@
+@import "tailwindcss" source("../");
+
+/*
+ * Open vCenter - Windows 95/98 visual language.
+ * Light-only. Square corners, chiselled bevels. The retro feel comes from the
+ * bevels/palette/geometry; the type is a clean, anti-aliased system UI font so
+ * it stays legible on macOS Retina (no bitmap font to fall back to).
+ */
+
+@theme {
+  /* Classic system palette */
+  --color-surface: #c0c0c0; /* ButtonFace - window/dialog body */
+  --color-surface-2: #dfdfdf; /* inner bevel highlight */
+  --color-window: #ffffff; /* editable fields, list wells */
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #808080;
+  --color-bevel-darker: #000000;
+  --color-title-active: #000080; /* active title bar */
+  --color-title-active-2: #1084d0; /* title bar gradient end */
+  --color-title-inactive: #808080;
+  --color-title-text: #ffffff;
+  --color-selection: #000080;
+  --color-selection-text: #ffffff;
+  --color-disabled-text: #808080;
+  --color-disabled-highlight: #ffffff;
+  --color-link: #0000ee;
+
+  /* Native UI sans per OS: Segoe UI on Windows (the target - this is the real
+     Windows UI font, ClearType-crisp), San Francisco on macOS, Roboto elsewhere.
+     The old stack listed `MS Sans Serif`/`Tahoma` + `font-smooth: none`, but
+     browsers substitute a thin vector "Microsoft Sans Serif" for the bitmap and
+     `font-smooth` is a no-op - so even on Windows it was a dated 11px face, not
+     real Win95 type. For an authentic pixel look, vendor W95FA via @font-face. */
+  --font-sans:
+    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue",
+    Tahoma, Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas,
+    monospace;
+
+  --text-base: 12px;
+  --text-base--line-height: 1.4;
+  --text-lg: 13px;
+  --text-xs: 10px;
+
+  /* Everything is square */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full: 0px;
+}
+
+/* ---- Bevel recipes ------------------------------------------------------- */
+/* Inset box-shadow stacks: no layout shift, no extra DOM nodes. */
+
+@utility bevel-raised {
+  box-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-darker),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark),
+    inset 2px 2px 0 0 var(--color-surface-2);
+}
+
+@utility bevel-sunken {
+  box-shadow:
+    inset 1px 1px 0 0 var(--color-bevel-dark),
+    inset -1px -1px 0 0 var(--color-bevel-light),
+    inset 2px 2px 0 0 var(--color-bevel-darker),
+    inset -2px -2px 0 0 var(--color-surface-2);
+}
+
+@utility bevel-pressed {
+  box-shadow:
+    inset 1px 1px 0 0 var(--color-bevel-dark),
+    inset -1px -1px 0 0 var(--color-bevel-light);
+}
+
+@utility bevel-thin-raised {
+  box-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-dark),
+    inset 1px 1px 0 0 var(--color-bevel-light);
+}
+
+@utility bevel-thin-sunken {
+  box-shadow:
+    inset 1px 1px 0 0 var(--color-bevel-dark),
+    inset -1px -1px 0 0 var(--color-bevel-light);
+}
+
+@utility bevel-window {
+  box-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-darker),
+    inset 1px 1px 0 0 var(--color-bevel-light);
+}
+
+/* The engraved <fieldset> (GroupBox) border: a 5x5 border-image with a small
+   notch cut at each corner, which is what makes a Win98 groupbox border read
+   as "grooved" instead of a plain two-tone rectangle - a plain `border` can't
+   express that notch. Ported from 98.css (github.com/jdan/98.css, MIT) - see
+   the "Credits" section in the frontend README. */
+@utility bevel-groupbox {
+  border-style: solid;
+  border-width: 2px;
+  border-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='5' height='5'><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h5v5H0V2h2v1h1V2H0' fill='%23fff'/><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h4v4H0V1h1v2h2V1H0' fill='%23808080'/></svg>")
+    2;
+}
+
+/* Hide native scrollbars on an element (used by <ScrollArea>, which paints its
+   own Win95 scrollbars on top). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The dithered grey track behind a Win95 scrollbar thumb. */
+@utility scroll-track {
+  background-color: var(--color-surface);
+  background-image: repeating-conic-gradient(
+    var(--color-bevel-light) 0% 25%,
+    var(--color-surface) 0% 50%
+  );
+  background-size: 2px 2px;
+}
+
+/* ---- Win95 scrollbars ------------------------------------------------- */
+/* Blink/WebKit get the full chrome via ::-webkit-scrollbar; Firefox falls back
+   to the flat two-tone `scrollbar-color`. Use <ScrollArea> when you need the
+   exact look in every browser. */
+
+* {
+  scrollbar-color: var(--color-surface) var(--color-surface-2);
+}
+
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+::-webkit-scrollbar-track {
+  background-color: var(--color-surface);
+  background-image: repeating-conic-gradient(
+    var(--color-bevel-light) 0% 25%,
+    var(--color-surface) 0% 50%
+  );
+  background-size: 2px 2px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-surface);
+  box-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-darker),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark),
+    inset 2px 2px 0 0 var(--color-surface-2);
+}
+::-webkit-scrollbar-corner {
+  background-color: var(--color-surface);
+}
+::-webkit-scrollbar-button:single-button {
+  display: block;
+  background-color: var(--color-surface);
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-darker),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark),
+    inset 2px 2px 0 0 var(--color-surface-2);
+}
+::-webkit-scrollbar-button:single-button:active {
+  box-shadow:
+    inset 1px 1px 0 0 var(--color-bevel-dark),
+    inset -1px -1px 0 0 var(--color-bevel-light);
+}
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  height: 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M8 6l3.5 4.5h-7z' fill='%23000'/></svg>");
+}
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  height: 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M8 10.5l-3.5-4.5h7z' fill='%23000'/></svg>");
+}
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  width: 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M6 8l4.5-3.5v7z' fill='%23000'/></svg>");
+}
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  width: 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M10.5 8l-4.5 3.5v-7z' fill='%23000'/></svg>");
+}
+/* kill the phantom second button at each end */
+::-webkit-scrollbar-button:single-button:vertical:start:increment,
+::-webkit-scrollbar-button:single-button:vertical:end:decrement,
+::-webkit-scrollbar-button:single-button:horizontal:start:increment,
+::-webkit-scrollbar-button:single-button:horizontal:end:decrement {
+  display: none;
+}
+
+/* ---- Base layer -------------------------------------------------------- */
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-bevel-dark, currentcolor);
+    border-radius: 0 !important;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  html {
+    background: var(--color-surface);
+    color: #000;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-surface);
+    overflow: hidden; /* the app is a single fixed-size window */
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Win95 dotted focus rectangle */
+  :focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: -4px;
+  }
+
+  ::selection {
+    background: var(--color-selection);
+    color: var(--color-selection-text);
+  }
+
+  a {
+    color: var(--color-link);
+  }
+}
+
+/*
+ * ag-grid: a selected row fills with the navy selection colour, but the theming
+ * API only sets the background - the cell text stays black and is unreadable.
+ * Force it (and any child icons) to white, matching ::selection above. Unlayered
+ * so it outranks the theme's generated rules.
+ */
+.ag-row-selected .ag-cell {
+  color: #ffffff;
+}
+
+/* Keep the navy fill (and white text) when a selected row is also hovered. */
+.ag-row-selected.ag-row-hover {
+  --ag-row-hover-color: transparent;
+}

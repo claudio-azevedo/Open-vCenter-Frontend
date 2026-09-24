@@ -7,6 +7,7 @@ import { useAuth } from '~/auth'
 import { THEMES, TREE_BEHAVIORS, useTheme, useTreeBehavior } from '~/preferences'
 import { useInventorySelection } from './selection'
 import { organizeDialog } from './organize/dialogStore'
+import { useVmFolderTargets } from './organize/scope'
 import { VmLocksDialog } from './locks/VmLocksDialog'
 import { TaskHistoryDialog } from './tasks/TaskHistoryDialog'
 import { AboutDialog } from './AboutDialog'
@@ -22,6 +23,7 @@ export function InventoryMenuBar() {
   const [historyOpen, setHistoryOpen] = React.useState(false)
   const [authDebugOpen, setAuthDebugOpen] = React.useState(false)
   const { selection } = useInventorySelection()
+  const vmFolders = useVmFolderTargets(selection?.kind === 'vm' ? selection.id : undefined)
   const { theme, setTheme } = useTheme()
   const { treeBehavior, setTreeBehavior } = useTreeBehavior()
 
@@ -56,7 +58,8 @@ export function InventoryMenuBar() {
       items: [
         {
           label: 'Move VM to Folder…',
-          disabled: selection?.kind !== 'vm',
+          disabled:
+            selection?.kind !== 'vm' || (vmFolders.ready && vmFolders.targets.length === 0),
           onSelect: () =>
             selection?.kind === 'vm' &&
             organizeDialog.open({ kind: 'move-vm', vmId: selection.id }),

@@ -33,6 +33,7 @@ import { vmConsoleTabUrl } from "./panels/webrdp";
 import { downloadVmConsoleRdpFile } from "./panels/rdpFile";
 import { moveStorageTargets } from "./vmActions/storage";
 import { organizeDialog } from "../organize/dialogStore";
+import { useVmFolderTargets } from "../organize/scope";
 import { vmActionDialog } from "./vmActions/dialogStore";
 import { useVmManagementAction } from "../actions/useVmManagementAction";
 import { statusMessage } from "../actions/statusMessage";
@@ -57,6 +58,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
   const inCluster = !!host.data?.clusterId;
   const dvdMounted = !!vm.dvdPath;
   const moveTargets = moveStorageTargets(host.data, vm);
+  const folderTargets = useVmFolderTargets(vm.id);
 
   // Console access needs a reachable host address and the VM's Hyper-V GUID.
   // Two ways in: the in-app HTML5 console (the /console route, own browser tab,
@@ -172,6 +174,8 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
     {
       label: "Move to Folder…",
       icon: FolderInput,
+      // no folder exists in the VM's cluster/host scope
+      disabled: folderTargets.ready && folderTargets.targets.length === 0,
       onSelect: () => organizeDialog.open({ kind: "move-vm", vmId: vm.id }),
     },
     {

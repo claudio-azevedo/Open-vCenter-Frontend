@@ -1,3 +1,6 @@
+import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { foldersQuery, hostQuery, vmQuery } from '~/api/queries'
 import type { Host, Vm } from '~/api/types'
 import type { Selection } from '../selection'
 
@@ -36,4 +39,31 @@ export function folderScopeForSelection(
         )
   if (!host) return null
   return host.clusterId ? { clusterId: host.clusterId } : { hostId: host.id }
+}
+
+/**
+ * Folders a VM can be moved into: the folders of its host's cluster, or of the
+ * host itself when standalone. `ready` is false until the VM, host and folder
+ * lists have loaded, so callers don't disable anything on a transient empty list.
+ */
+export function useVmFolderTargets(vmId: string | undefined) {
+  const vm = useQuery({ ...vmQuery(vmId ?? ''), enabled: !!vmId })
+  const hostId = vm.data?.hostId
+  const host = useQuery({ ...hostQuery(hostId ?? ''), enabled: !!hostId })
+  const folders = useQuery({ ...foldersQuery({}), enabled: !!vmId })
+
+  const targets = React.useMemo(() => {
+    const h = host.data
+    if (!h) return []
+    return (folders.data ?? []).filter((f) =>
+      h.clusterId ? f.clusterId === h.clusterId : f.hostId === h.id,
+    )
+  }, [host.data, folders.data])
+
+  return {
+    vm: vm.data,
+    host: host.data,
+    targets,
+    ready: host.isSuccess && folders.isSuccess,
+  }
 }

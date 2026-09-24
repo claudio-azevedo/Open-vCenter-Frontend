@@ -5,15 +5,21 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
     <Dialog
       title="About Open vCenter"
       onClose={onClose}
-      footer={
-        <Button onClick={onClose}>OK</Button>
-      }
+      footer={<Button onClick={onClose}>OK</Button>}
     >
       <div className="space-y-2 text-base">
-        <img src="/ovc-logo.svg" alt="Open vCenter" className="ui-logo h-auto w-full" />
+        <img
+          src="/ovc-logo.svg"
+          alt="Open vCenter"
+          className="ui-logo h-auto w-full"
+        />
         <p className="font-bold">Open vCenter (OVC)</p>
         <p>A modern web application for managing VMs.</p>
         <p>Apache 2.0 licensed Open Source Software.</p>
+        <p>
+          Windows and Hyper-V are registered trademarks of Microsoft
+          Corporation.
+        </p>
         <p className="text-disabled-text">See licenses and details below.</p>
         <p>
           <a

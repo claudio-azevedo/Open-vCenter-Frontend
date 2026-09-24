@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Dialog, Dropdown, TextField } from "~/components/win95";
-import { clustersQuery, foldersQuery, hostQuery, vmQuery } from "~/api/queries";
+import { clustersQuery, foldersQuery, hostQuery } from "~/api/queries";
 import { useInventorySelection } from "../selection";
+import { useVmFolderTargets } from "./scope";
 import { organizeDialog, useOrganizeDialog } from "./dialogStore";
 import {
   ClusterManagementDialog,
@@ -126,27 +127,13 @@ function NewFolderDialog({
 // ---- Move VM to folder -----------------------------------------------
 
 function MoveVmDialog({ vmId }: { vmId: string }) {
-  const vm = useQuery(vmQuery(vmId));
-  const host = useQuery({
-    ...hostQuery(vm.data?.hostId ?? ""),
-    enabled: !!vm.data?.hostId,
-  });
-  const folders = useQuery(foldersQuery({}));
+  const { vm, host, targets: reachable } = useVmFolderTargets(vmId);
   const m = useMoveVm();
 
-  const reachable = React.useMemo(() => {
-    const h = host.data;
-    if (!h) return [];
-    return (folders.data ?? []).filter((f) =>
-      h.clusterId ? f.clusterId === h.clusterId : f.hostId === h.id,
-    );
-  }, [host.data, folders.data]);
-
   const [target, setTarget] = React.useState<string>("");
-  React.useEffect(
-    () => setTarget(vm.data?.folderId ?? ""),
-    [vm.data?.folderId],
-  );
+  React.useEffect(() => setTarget(vm?.folderId ?? ""), [vm?.folderId]);
+  // nothing to do when there's no folder to pick or the VM is already there
+  const unchanged = target === (vm?.folderId ?? "");
 
   const submit = () =>
     m.mutate(
@@ -156,14 +143,20 @@ function MoveVmDialog({ vmId }: { vmId: string }) {
 
   return (
     <Dialog
-      title={`Move "${vm.data?.name ?? "…"}" to Folder`}
+      title={`Move "${vm?.name ?? "…"}" to Folder`}
       onClose={organizeDialog.close}
-      footer={<Footer onOk={submit} okLabel="Move" />}
+      footer={
+        <Footer
+          onOk={submit}
+          okLabel="Move"
+          okDisabled={!vm || reachable.length === 0 || unchanged || m.isPending}
+        />
+      }
     >
       {reachable.length === 0 ? (
         <p className="text-disabled-text">
           No folders yet for this VM's{" "}
-          {host.data?.clusterId ? "cluster" : "host"}. Select the host in the
+          {host?.clusterId ? "cluster" : "host"}. Select the host in the
           tree and use New Folder to create one first.
         </p>
       ) : (

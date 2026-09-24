@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { GroupBox, PropertyList, Table, Td, Th } from "~/components/win95";
 import type { HostHardwareInventory } from "~/api/types";
 import {
-  bitsPerSec,
   bytes,
   dateTime,
   percent,
@@ -135,60 +134,6 @@ export function HostHardwarePanel({
         </GroupBox>
       ) : null}
 
-      {hardware.network.length ? (
-        <GroupBox label="Physical Network Adapters">
-          <Table>
-            <thead>
-              <tr>
-                <Th>Adapter</Th>
-                <Th>MAC</Th>
-                <Th>Speed</Th>
-                <Th>Link</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {hardware.network.map((n) => (
-                <tr key={n.mac || n.name}>
-                  <Td>
-                    {n.name}
-                    {n.description ? (
-                      <span className="block text-disabled-text">
-                        {n.description}
-                      </span>
-                    ) : null}
-                  </Td>
-                  <Td>{n.mac || "-"}</Td>
-                  <Td>{n.speedBps ? bitsPerSec(n.speedBps) : "-"}</Td>
-                  <Td>{n.connected ? "Connected" : "Disconnected"}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </GroupBox>
-      ) : null}
-
-      {hardware.vSwitches?.length ? (
-        <GroupBox label="Virtual Switches">
-          <Table>
-            <thead>
-              <tr>
-                <Th>Name</Th>
-                <Th>Type</Th>
-                <Th>Uplink adapter</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {hardware.vSwitches.map((s) => (
-                <tr key={s.name}>
-                  <Td>{s.name}</Td>
-                  <Td>{s.type || "-"}</Td>
-                  <Td>{s.netAdapter || "-"}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </GroupBox>
-      ) : null}
     </div>
   );
 }

@@ -44,13 +44,46 @@ export interface HostHardwareInventory {
   /** Every physical host NIC - `connected` reflects link state. */
   network: Array<{
     name: string;
+    /** InterfaceDescription - the adapter model. */
     description?: string;
     mac: string;
     speedBps: number;
     connected?: boolean;
+    status?: string | null;
+    linkSpeed?: string | null;
+    driverVersion?: string | null;
+    driverDate?: string | null;
+    driverProvider?: string | null;
+    firmwareVersion?: string | null;
   }>;
   /** Virtual switches / bridges defined on the host. */
-  vSwitches?: Array<{ name: string; type: string; netAdapter?: string | null }>;
+  vSwitches?: Array<{
+    name: string;
+    id?: string | null;
+    type: string;
+    netAdapter?: string | null;
+    allowManagementOS?: boolean | null;
+    /** Switch Embedded Teaming (SET). */
+    embeddedTeaming?: boolean | null;
+    teamMembers?: string[];
+    loadBalancingAlgorithm?: string | null;
+    bandwidthReservationMode?: string | null;
+  }>;
+  /** Fibre Channel host bus adapters (best-effort; empty without FC). */
+  hbas?: Array<{
+    manufacturer: string;
+    model: string;
+    modelDescription: string;
+    serialNumber: string;
+    driverVersion: string;
+    firmwareVersion: string;
+    hardwareVersion: string;
+    nodeWWN: string;
+    portWWN: string;
+    state: string;
+    speed: string;
+    connectionType: string;
+  }>;
   system?: { manufacturer: string; model: string } | null;
   /** ISO-8601 - host last boot time; derive uptime from it. */
   bootTime?: Iso8601 | null;

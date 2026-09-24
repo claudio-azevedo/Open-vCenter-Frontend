@@ -103,6 +103,8 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
                       label: "High availability",
                       value: vm.highlyAvailable ? "Enabled" : "Disabled",
                     },
+                    // the cluster node currently running the VM
+                    { label: "Host", value: host.data?.name ?? "-" },
                   ]
                 : []),
             ]}

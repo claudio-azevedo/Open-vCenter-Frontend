@@ -22,22 +22,50 @@ export function vmStorageKey(vm: Pick<Vm, "configPath" | "disks">): string {
 }
 
 /**
- * Storage volumes a VM could be moved to: everything the host reports (already
- * scoped by the agent to the default VM path + configured `aditional_vm_storage`
- * + cluster CSVs), minus the volume it is on now. One entry per location.
+ * Storage volumes a VM could be moved to: the allowed placements for its host
+ * (see `vmStorageTargets`), minus the volume it is on now.
  */
 export function moveStorageTargets(
   host: HostDetail | undefined,
   vm: Pick<Vm, "configPath" | "disks">,
 ): StorageVolume[] {
   const current = vmStorageKey(vm);
+  return vmStorageTargets(host, isClusteredHost(host)).filter(
+    (s) => storageKey(s.path) !== current,
+  );
+}
+
+/**
+ * Storage volumes a VM may be placed on (create / clone / deploy / move):
+ * - clustered host: only Cluster Shared Volumes;
+ * - standalone host: every reported volume, except the system drive (C:) unless
+ *   the Hyper-V default VM path is on it - the agent then places the VM under
+ *   that default path, never at the drive root.
+ * Mirrors the backend's placement check. One entry per location.
+ */
+export function vmStorageTargets(
+  host: HostDetail | undefined,
+  clustered: boolean,
+): StorageVolume[] {
+  const defaultOnC =
+    storageKey(host?.hardware?.hyperv?.defaultVmPath) === "c:";
   const seen = new Set<string>();
   const out: StorageVolume[] = [];
   for (const s of host?.hardware?.storage ?? []) {
     const key = storageKey(s.path);
-    if (key === current || seen.has(key)) continue;
+    const allowed = clustered
+      ? key.includes("\\clusterstorage\\")
+      : key !== "c:" || defaultOnC;
+    if (!allowed || seen.has(key)) continue;
     seen.add(key);
     out.push(s);
   }
   return out;
+}
+
+/** Whether the host belongs to a cluster (by assignment or as it reports). */
+export function isClusteredHost(
+  host: Pick<HostDetail, "clusterId" | "hardware"> | undefined,
+): boolean {
+  return !!(host?.clusterId || host?.hardware?.cluster?.clustered);
 }

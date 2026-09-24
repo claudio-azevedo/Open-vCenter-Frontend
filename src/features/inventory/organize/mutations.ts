@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createCluster, deleteCluster, updateCluster } from '~/api/endpoints/clusters'
 import { createHost, deleteHost, updateHost } from '~/api/endpoints/hosts'
 import { createFolder, deleteFolder, renameFolder } from '~/api/endpoints/folders'
-import { createVlan, deleteVlan } from '~/api/endpoints/vlans'
+import { createVlan, deleteVlan, updateVlan } from '~/api/endpoints/vlans'
 import { cloneVm, createVm, moveVm } from '~/api/endpoints/vms'
 import type { VmCloneBody, VmCreateBody } from '~/api/types'
 import { ApiError } from '~/api/client'
@@ -123,6 +123,20 @@ export const useCreateVlan = () =>
       hostId?: string
     }) => createVlan(input),
     (v) => `Created VLAN "${v.name}" (tag ${v.vlanId})`,
+  )
+
+export const useUpdateVlan = () =>
+  useInventoryMutation(
+    (input: {
+      id: string
+      name?: string
+      description?: string
+      isDefault?: boolean
+    }) => {
+      const { id, ...body } = input
+      return updateVlan(id, body)
+    },
+    (v) => `Updated VLAN "${v.name}" (tag ${v.vlanId})`,
   )
 
 export const useDeleteVlan = () =>

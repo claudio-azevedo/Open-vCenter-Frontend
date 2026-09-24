@@ -210,8 +210,13 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
     ...(inCluster
       ? ([
           {
-            label: "Migrate VM…",
+            // only cluster roles (HA VMs) can move between nodes - Move-VM
+            // outside the cluster needs a live-migration setup we don't manage
+            label: vm.highlyAvailable
+              ? "Migrate VM…"
+              : "Migrate VM… (requires HA)",
             icon: Move,
+            disabled: !vm.highlyAvailable,
             onSelect: () =>
               vmActionDialog.open({ kind: "migrate", vmId: vm.id }),
           },

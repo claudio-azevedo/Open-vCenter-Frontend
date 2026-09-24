@@ -38,6 +38,14 @@ const KIND_LABELS: Record<string, string> = {
   host_hwinventory: "Hardware Inventory",
   host_update_agent: "Update Agent",
   host_restart_agent: "Restart Agent",
+  refresh_hardware: "Refresh Hardware",
+  refresh_inventory: "Refresh VMs",
+  restart: "Restart Host",
+  // --- failover cluster node ---
+  suspend: "Pause Node",
+  suspend_drain: "Pause Node (Drain)",
+  resume: "Resume Node",
+  resume_fallback: "Resume Node (Failback)",
 };
 
 export function taskLabel(kind: string): string {

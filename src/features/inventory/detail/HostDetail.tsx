@@ -14,7 +14,9 @@ import { useInventorySelection } from "../selection";
 import { relTime } from "../format";
 import { hostConsoleTabUrl } from "./panels/webrdp";
 import { DetailHeader } from "./DetailHeader";
+import { HostActionsMenu } from "./HostActionsMenu";
 import { HostAgentUpdateButton } from "./HostAgentUpdateButton";
+import { HostConfigurationPanel } from "./panels/HostConfigurationPanel";
 import { HostHardwarePanel } from "./panels/HostHardwarePanel";
 import { HostMetricsPanel } from "./panels/HostMetricsPanel";
 import { HostSetupAgentPanel } from "./panels/HostSetupAgentPanel";
@@ -26,6 +28,7 @@ const CONNECTED_TABS: TabItem[] = [
   { id: "summary", label: "Summary" },
   { id: "vms", label: "Virtual Machines" },
   { id: "metrics", label: "Host Metrics" },
+  { id: "configuration", label: "Configuration" },
   { id: "tasks", label: "Tasks" },
 ];
 
@@ -71,6 +74,9 @@ export function HostDetail({ hostId }: { hostId: string }) {
         actions={
           <div className="flex gap-1">
             {known ? <HostAgentUpdateButton host={known} /> : null}
+            {h && agentResponded ? (
+              <HostActionsMenu host={h} vms={vms.data ?? []} />
+            ) : null}
             <Button
               className="min-w-0 px-2"
               disabled={!h?.online || !(h?.fqdn ?? h?.ipAddress)}
@@ -98,6 +104,14 @@ export function HostDetail({ hostId }: { hostId: string }) {
                   items={[
                     { label: "Status", value: h.online ? "Online" : "Offline" },
                     { label: "Cluster", value: clusterName },
+                    ...(h.hardware?.cluster?.clustered
+                      ? [
+                          {
+                            label: "Cluster node state",
+                            value: h.hardware.cluster.state || "-",
+                          },
+                        ]
+                      : []),
                     {
                       label: "Hypervisor",
                       value: HYPERVISOR_LABEL[h.hypervisor],
@@ -126,6 +140,9 @@ export function HostDetail({ hostId }: { hostId: string }) {
           </div>
         ) : null}
         {active === "metrics" ? <HostMetricsPanel hostId={hostId} /> : null}
+        {active === "configuration" && h ? (
+          <HostConfigurationPanel host={h} vms={vms.data ?? []} />
+        ) : null}
         {active === "tasks" ? <TasksPanel hostId={hostId} /> : null}
       </Tabs>
     </div>

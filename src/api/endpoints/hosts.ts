@@ -63,3 +63,24 @@ export const updateHostAgent = (id: string, binaryId?: string) =>
     method: "POST",
     body: { binaryId: binaryId ?? null },
   });
+
+/**
+ * Host operations queued on the agent:
+ * - Failover Cluster node maintenance: `suspend` (pause), `suspend_drain`
+ *   (pause + move roles away), `resume`, `resume_fallback` (resume + fail roles
+ *   back) - clustered hosts only, admin only;
+ * - `restart` - reboot the host (admin only; the agent refuses while VMs run or,
+ *   on a cluster node, unless the node is Paused);
+ * - `refresh_hardware` / `refresh_inventory` - force an inventory report.
+ */
+export type HostAction =
+  | "suspend"
+  | "suspend_drain"
+  | "resume"
+  | "resume_fallback"
+  | "restart"
+  | "refresh_hardware"
+  | "refresh_inventory";
+
+export const hostAction = (id: string, action: HostAction) =>
+  request<{ task: Task }>(`/hosts/${id}/actions/${action}`, { method: "POST" });

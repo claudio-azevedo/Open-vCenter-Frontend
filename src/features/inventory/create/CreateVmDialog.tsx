@@ -22,6 +22,11 @@ import {
 import type { VmCreateBody, VmDiskSpec, VmFirmware, VmOs } from "~/api/types";
 import { organizeDialog } from "../organize/dialogStore";
 import { bytes } from "../format";
+import {
+  isClusteredHost,
+  storageKey,
+  vmStorageTargets,
+} from "../detail/vmActions/storage";
 import { useCloneVm, useCreateVlan, useCreateVm } from "../organize/mutations";
 
 type Mode = "new" | "template" | "clone";
@@ -313,26 +318,31 @@ export function CreateVmDialog({
   }, [host.data, hostId, vmSwitches]);
 
   const defaultVmPath = host.data?.hardware?.hyperv?.defaultVmPath ?? null;
-  const defVol = defaultVmPath?.slice(0, 2).toLowerCase();
-  const storages = (host.data?.hardware?.storage ?? []).filter(
-    (s) => s.path.slice(0, 2).toLowerCase() !== "c:" || defVol === "c:",
+  // Allowed placements: CSVs only on a clustered host, never the system drive.
+  // The choice is always sent explicitly, so the agent never falls back to a
+  // default VM path that may sit on C: or on a non-shared volume.
+  const clustered = isClusterHost || isClusteredHost(host.data);
+  const defKey = storageKey(defaultVmPath);
+  const storages = React.useMemo(
+    () => vmStorageTargets(host.data, clustered),
+    [host.data, clustered],
   );
-  const multiStorage = storages.length > 1;
+  const noStorage = !!host.data && storages.length === 0;
 
   React.useEffect(() => {
-    if (!multiStorage) {
+    if (storages.length === 0) {
       setStorageBase("");
       return;
     }
     const preferred =
-      storages.find((s) => s.path.slice(0, 2).toLowerCase() === defVol) ??
+      storages.find((s) => storageKey(s.path) === defKey) ??
       storages.reduce((a, b) => (b.freeBytes > a.freeBytes ? b : a));
     setStorageBase((prev) =>
       storages.some((s) => s.path === prev) ? prev : preferred.path,
     );
-  }, [multiStorage, storages, defVol]);
+  }, [storages, defKey]);
 
-  const destinationStorage = multiStorage ? storageBase : "";
+  const destinationStorage = storageBase;
   const vmFolder = React.useMemo(
     () => previewVmFolder(defaultVmPath, destinationStorage, name),
     [defaultVmPath, destinationStorage, name],
@@ -340,7 +350,11 @@ export function CreateVmDialog({
 
   // ---- validation ------------------------------------------------------
   const nameValid = NAME_RE.test(name);
-  const step0Valid = nameValid && !!hostId && (mode === "new" || !!sourceId);
+  const step0Valid =
+    nameValid &&
+    !!hostId &&
+    (mode === "new" || !!sourceId) &&
+    !!destinationStorage;
   const disksValid = disks.every(
     (d) => DISK_NAME_RE.test(d.name) && d.name.length <= 6 && d.sizeGb >= 1,
   );
@@ -651,17 +665,23 @@ export function CreateVmDialog({
                 </p>
               ) : null}
 
-              {multiStorage ? (
+              {noStorage ? (
+                <p className="text-danger">
+                  {clustered
+                    ? "This host is in a cluster but reports no Cluster Shared Volume - VMs can only be placed on a CSV."
+                    : "This host reports no storage volume for VMs - the system drive (C:) is only allowed when it holds the Hyper-V default VM path."}
+                </p>
+              ) : storages.length > 0 ? (
                 <label className="flex flex-col gap-1 text-base">
-                  Storage volume
+                  {clustered ? "Cluster Shared Volume" : "Storage volume"}
                   <Dropdown
                     value={storageBase}
                     onChange={setStorageBase}
                     options={storages.map((s) => ({
                       value: s.path,
-                      label: `${s.label ? `${s.label} - ` : ""}${s.path} (${Math.round(
-                        s.freeBytes / 1024 ** 3,
-                      )} GB free)`,
+                      label: `${s.label ? `${s.label} - ` : ""}${s.path}${
+                        storageKey(s.path) === defKey ? " (default)" : ""
+                      } (${Math.round(s.freeBytes / 1024 ** 3)} GB free)`,
                     }))}
                   />
                 </label>

@@ -309,21 +309,49 @@ function UploadRow({
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [version, setVersion] = React.useState("");
   const [makeActive, setMakeActive] = React.useState(true);
+  const [fileName, setFileName] = React.useState("");
 
   const submit = () => {
     const file = fileRef.current?.files?.[0];
     if (!file || !version.trim()) return;
+    if (!file.name.toLowerCase().endsWith(".exe")) return;
     onUpload({ file, version: version.trim(), makeActive });
     setVersion("");
     if (fileRef.current) fileRef.current.value = "";
+    setFileName("");
   };
 
   return (
     <div className="flex flex-wrap items-end gap-2">
-      <label className="flex flex-col gap-1 text-base">
-        Binary
-        <input ref={fileRef} type="file" className="text-base" />
-      </label>
+      <div className="flex flex-col gap-1">
+        <span className="text-base">Binary</span>
+        <div className="flex items-center gap-1">
+          <TextField
+            readOnly
+            placeholder="No file selected"
+            value={fileName}
+            onClick={() => fileRef.current?.click()}
+            className="w-48 cursor-default"
+          />
+          <Button onClick={() => fileRef.current?.click()}>Browse…</Button>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden"
+          accept=".exe"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f && !f.name.toLowerCase().endsWith(".exe")) {
+              statusMessage.set("Only .exe files can be uploaded.");
+              e.target.value = "";
+              setFileName("");
+              return;
+            }
+            setFileName(f?.name ?? "");
+          }}
+        />
+      </div>
       <TextField
         label="Version"
         placeholder="e.g. 1.2.0"

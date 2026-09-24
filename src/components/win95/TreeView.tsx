@@ -32,10 +32,11 @@ function Expander({
       type="button"
       tabIndex={-1}
       aria-label={expanded ? "Collapse" : "Expand"}
+      data-expanded={expanded}
       onClick={onClick}
-      className="grid h-[15px] w-[15px] shrink-0 place-items-center border border-bevel-dark bg-window text-[11px] leading-none text-black"
+      className="ui-tree-expander grid h-[15px] w-[15px] shrink-0 place-items-center text-[11px] leading-none"
     >
-      {expanded ? "−" : "+"}
+      <span className="ui-tree-expander-glyph">{expanded ? "−" : "+"}</span>
     </button>
   );
 }
@@ -63,10 +64,7 @@ function TreeRow({
         aria-expanded={expandable ? expanded : undefined}
         onClick={() => onSelect(node.id)}
         onDoubleClick={() => expandable && onToggle(node.id)}
-        className={cn(
-          "flex h-[18px] cursor-default items-center gap-1 pr-2 whitespace-nowrap",
-          selected && "bg-selection text-selection-text",
-        )}
+        className="ui-tree-row flex h-[18px] cursor-default items-center gap-1 pr-2 whitespace-nowrap"
         style={{ paddingLeft: depth * 16 + 2 }}
       >
         {expandable ? (
@@ -116,7 +114,7 @@ export function TreeView({
     <ul
       role="tree"
       className={cn(
-        "bevel-sunken h-full overflow-auto bg-window py-1",
+        "ui-tree bevel-sunken h-full overflow-auto bg-window py-1",
         className,
       )}
     >

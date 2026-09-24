@@ -13,7 +13,7 @@ export function Toolbar({
   return (
     <div
       className={cn(
-        'bevel-thin-raised flex items-center gap-[2px] bg-surface px-1 py-[3px]',
+        'ui-toolbar flex items-center gap-[2px] px-1 py-[3px]',
         className,
       )}
     >
@@ -24,7 +24,7 @@ export function Toolbar({
 
 export function ToolbarSeparator() {
   return (
-    <div className="mx-1 h-[20px] w-px border-l border-l-bevel-dark border-r border-r-bevel-light" />
+    <div className="ui-toolbar-sep mx-1 h-[20px] w-px" />
   )
 }
 
@@ -51,11 +51,9 @@ export const ToolbarButton = React.forwardRef<
       title={label}
       aria-label={label}
       disabled={disabled}
+      data-active={active || undefined}
       className={cn(
-        'flex h-[26px] items-center gap-1 px-1.5 text-base',
-        'hover:bevel-thin-raised active:bevel-thin-sunken',
-        active && 'bevel-thin-sunken bg-surface-2',
-        disabled && 'text-disabled-text hover:shadow-none',
+        'ui-toolbtn flex h-[26px] items-center gap-1 px-1.5 text-base',
         className,
       )}
       {...props}

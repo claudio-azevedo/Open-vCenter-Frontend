@@ -331,7 +331,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
       />
       {vm.lock ? (
         <span
-          className="bevel-thin-sunken bg-window ml-1 flex items-center gap-1 px-1.5 py-[2px] text-[#8a6d00]"
+          className="bevel-thin-sunken bg-window ml-1 flex items-center gap-1 px-1.5 py-[2px] text-notice-text"
           title={`${taskLabel(vm.lock.kind)} - started by ${vm.lock.requestedBy} ${relTime(
             vm.lock.acquiredAt,
           )}`}

@@ -60,6 +60,7 @@ export function Menu({
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
+        data-pressed={open || undefined}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'min-h-[23px] min-w-0 px-2',
@@ -75,17 +76,14 @@ export function Menu({
         <ul
           role="menu"
           className={cn(
-            'bevel-raised absolute top-full z-50 mt-[1px] min-w-[190px] bg-surface p-[2px] py-1',
+            'ui-menu absolute top-full z-50 mt-[1px] min-w-[190px]',
             align === 'end' ? 'right-0' : 'left-0',
           )}
         >
           {items.map((entry, i) => {
             if (entry.type === 'separator') {
               return (
-                <li
-                  key={i}
-                  className="my-1 h-px border-t border-t-bevel-dark border-b border-b-bevel-light"
-                />
+                <li key={i} className="ui-menu-sep my-1 h-px" />
               )
             }
             return (
@@ -94,19 +92,16 @@ export function Menu({
                   type="button"
                   role="menuitem"
                   disabled={entry.disabled}
-                  className={cn(
-                    'flex w-full items-center gap-2 px-3 py-[3px] text-left text-base',
-                    entry.disabled
-                      ? 'text-disabled-text'
-                      : 'hover:bg-selection hover:text-selection-text',
-                    entry.danger && !entry.disabled && 'text-[#c00000]',
-                  )}
+                  data-danger={entry.danger || undefined}
+                  className="ui-menu-item flex w-full items-center gap-2 px-3 py-[3px] text-left text-base"
                   onClick={() => {
                     setOpen(false)
                     entry.onSelect?.()
                   }}
                 >
-                  {entry.icon ? <Icon icon={entry.icon} size={14} /> : null}
+                  <span className="ui-menu-lead grid shrink-0 place-items-center empty:hidden">
+                    {entry.icon ? <Icon icon={entry.icon} size={14} /> : null}
+                  </span>
                   <span>{entry.label}</span>
                 </button>
               </li>

@@ -3,7 +3,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { cn } from './bevel'
 
 /**
- * Horizontal two-pane split with a Win95-style raised divider.
+ * Horizontal two-pane split with a themed divider.
  * Divider position is persisted per `autoSaveId` in localStorage.
  */
 export function SplitPane({
@@ -36,8 +36,8 @@ export function SplitPane({
       >
         {left}
       </Panel>
-      <PanelResizeHandle className="group relative w-[6px] shrink-0 bg-surface">
-        <span className="pointer-events-none absolute inset-y-0 left-[1px] w-[3px] bevel-thin-raised bg-surface group-data-[resize-handle-active]:bevel-thin-sunken" />
+      <PanelResizeHandle className="ui-splitter relative w-[6px] shrink-0">
+        <span className="ui-splitter-grip pointer-events-none absolute inset-y-0 left-[1px] w-[3px]" />
       </PanelResizeHandle>
       <Panel minSize={minRightSize} className="min-w-0">
         {right}

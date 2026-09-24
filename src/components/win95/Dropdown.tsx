@@ -7,8 +7,8 @@ export interface DropdownOption {
 }
 
 /**
- * A Win95-styled combo box. Unlike the native `<select>` (see `Select`), the
- * option list is our own markup, so it matches the bevel theme in every browser.
+ * A themed combo box. Unlike the native `<select>` (see `Select`), the
+ * option list is our own markup, so it matches the theme in every browser.
  */
 export function Dropdown({
   label,
@@ -81,30 +81,28 @@ export function Dropdown({
             setOpen((v) => !v)
           }
         }}
-        className={cn(
-          'bevel-sunken flex w-full items-center gap-1 bg-window py-[2px] pr-[2px] pl-1 text-left text-base text-black',
-          'disabled:text-disabled-text',
-        )}
+        className="ui-field flex w-full items-center gap-1 py-[2px] pr-[2px] pl-1 text-left text-base"
       >
         <span className={cn('flex-1 truncate', !selected && 'text-disabled-text')}>
           {selected ? selected.label : placeholder}
         </span>
         <span
           aria-hidden
-          className={cn(
-            'bevel-raised active:bevel-pressed grid h-[17px] w-[17px] shrink-0 place-items-center bg-surface',
-            open && 'bevel-pressed',
-          )}
+          data-open={open}
+          className="ui-dropdown-btn grid h-[17px] w-[17px] shrink-0 place-items-center"
         >
-          <span
-            className="block h-0 w-0 border-x-[4px] border-t-[4px] border-x-transparent border-t-black"
-          />
+          <span className="block h-0 w-0 border-x-[4px] border-t-[4px] border-x-transparent border-t-current" />
         </span>
       </button>
       {open && !disabled ? (
         <ul
           role="listbox"
-          className="absolute top-full left-0 z-50 -mt-[2px] max-h-56 w-max min-w-full max-w-[min(24rem,80vw)] overflow-auto border-2 border-bevel-darker bg-window p-[2px] shadow-[4px_4px_10px_0_rgba(0,0,0,0.35)]"
+          // Callers often wrap the field in a <label>. A click in the list would
+          // then run the label's activation behaviour and re-click the combobox
+          // button, re-opening the list right after an option closed it.
+          // Cancelling the default here stops that for options and padding.
+          onClick={(e) => e.preventDefault()}
+          className="ui-listbox absolute top-full left-0 z-50 -mt-[2px] max-h-56 w-max min-w-full max-w-[min(24rem,80vw)] overflow-auto p-[2px]"
         >
           {options.map((o) => {
             const active = o.value === value
@@ -114,12 +112,7 @@ export function Dropdown({
                   type="button"
                   role="option"
                   aria-selected={active}
-                  className={cn(
-                    'block w-full truncate px-2 py-[2px] text-left text-base',
-                    active
-                      ? 'bg-selection text-selection-text'
-                      : 'hover:bg-selection hover:text-selection-text',
-                  )}
+                  className="ui-option block w-full truncate px-2 py-[2px] text-left text-base"
                   onClick={() => {
                     onChange(o.value)
                     setOpen(false)

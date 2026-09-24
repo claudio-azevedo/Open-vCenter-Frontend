@@ -37,7 +37,7 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
   return (
     <div className="flex flex-col gap-3">
       {hostOffline ? (
-        <div className="bevel-thin-sunken bg-window px-2 py-1.5 text-[#8a6d00]">
+        <div className="bevel-thin-sunken bg-window px-2 py-1.5 text-notice-text">
           Host <strong>{host.data?.name}</strong> agent is offline
           {host.data?.agent.lastSeen
             ? ` (last seen ${relTime(host.data.agent.lastSeen)})`
@@ -124,7 +124,7 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
           value={vm.notes ?? ""}
           rows={5}
           placeholder="No notes"
-          className="bevel-sunken bg-window w-full resize-none px-1.5 py-[3px] text-base text-black outline-none"
+          className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
         />
       </GroupBox>
 

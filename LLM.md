@@ -52,19 +52,61 @@ never sends an identity or scope.
 - **TanStack Start** (SSR) + **TanStack Router** (file-based routes in `src/routes/`,
   `src/routeTree.gen.ts` is generated) + **TanStack Query** (polling, task tracking).
 - **React 19**, **TypeScript** (strict), **Vite**.
-- **Tailwind CSS v4** via `@tailwindcss/vite`, one stylesheet: `src/styles/app.css`.
+- **Tailwind CSS v4** via `@tailwindcss/vite`: `src/styles/app.css` plus one file
+  per theme in `src/styles/themes/`.
 - **ag-grid-community v36** - used only for the VM list grid (`VmGrid`, client-only).
 - **lucide-react** - icons.
 - **redaxios** - HTTP.
 - **Node 24** required (devDependencies alias `typescript` to a TS 6/7 preview;
   `npx tsc --noEmit` works under it).
 
+## Themes
+
+Five visual themes: **Windows Classic** (default), **Windows XP**, **Windows 7**
+(Aero glass via `backdrop-filter`), **Modern (Light)** and **Modern (Dark)**.
+
+- The choice lives in the `ovc-theme` cookie (1 year, `SameSite=Lax`). The root
+  route's `beforeLoad` reads it (`getPreferences()`, isomorphic) so SSR renders
+  `<html data-theme="…">` - no flash of the default theme.
+- Users pick it in the login screen's "Theme" dropdown or in the Explorer's
+  **Preferences › Theme** submenu (`useTheme().setTheme`).
+- A theme is CSS only. Rules for new UI code:
+  - visuals a theme may change go through a `ui-*` class (or a `bevel-*`
+    utility) whose look comes from custom properties - never hard-code chrome
+    with Tailwind colour/shadow utilities;
+  - colours are semantic tokens only (`text-fg`, `text-danger`, `text-success`,
+    `text-warning`, `text-accent`, `bg-window`, `bg-notice-bg`, chart series
+    `var(--color-chart-N)`, …) - no raw hex values in components;
+  - a new token needs a Classic value in `app.css`; themes override only what
+    differs.
+- Components don't branch on the theme id. The one exception is `ScrollArea`,
+  which renders a native scroller for themes with `nativeScrollbars`.
+
+## Tree behaviour
+
+**Preferences › Tree Behavior** (`ovc-tree-behavior` cookie): `Collapsed`
+(default) opens nothing; `Expanded` opens every cluster and host, never folders.
+It seeds the tree on the first populated render and again when the preference
+changes - not on data refetches, so manual expand/collapse sticks. In both modes
+the ancestors of the selected node are opened, so a deep link (`?sel=vm:…`) is
+never hidden. See `initialExpansion` in `features/inventory/tree/treeModel.ts`.
+
 ## Layout / architecture
 
 ```
 src/
-  styles/app.css              Win95 theme: @theme tokens + @utility bevel classes.
-                              Light-only, square corners, no font smoothing.
+  styles/app.css              Token contract with Windows Classic values: @theme
+                              colour tokens, component custom properties
+                              (--btn-*, --titlebar-*, --menu-*, ...), @utility
+                              bevel classes and the semantic `ui-*` classes.
+  styles/themes/              xp.css, win7.css, modern.css (light + dark) - each
+                              only redefines tokens under
+                              :root[data-theme='<id>'].
+  preferences/                User preferences, persisted in cookies (cookies.ts):
+                              theme list (theme.ts), tree behaviour
+                              (treeBehavior.ts), SSR + client read
+                              (getPreferences.ts), PreferencesProvider with
+                              useTheme / useTreeBehavior (provider.tsx).
   components/win95/            Presentational Win95 primitives - Window, TitleBar,
                               MenuBar, Toolbar, TreeView, SplitPane, Tabs, GroupBox,
                               Table/PropertyList, ProgressBar, Button, TextField,

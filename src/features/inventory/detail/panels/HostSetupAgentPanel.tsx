@@ -32,7 +32,7 @@ export function HostSetupAgentPanel({ host }: { host: Host }) {
         {install.isLoading ? (
           <p className="text-base text-disabled-text">Generating…</p>
         ) : install.isError ? (
-          <p className="text-base text-title-active">
+          <p className="text-base text-accent">
             Could not generate an install URL:{" "}
             {install.error instanceof ApiError
               ? install.error.message
@@ -61,7 +61,7 @@ export function HostSetupAgentPanel({ host }: { host: Host }) {
               spellCheck={false}
               value={install.data?.command ?? ""}
               onFocus={(e) => e.currentTarget.select()}
-              className="bevel-sunken h-24 w-full resize-none bg-window p-2 font-mono text-base text-black outline-none"
+              className="ui-field h-24 w-full resize-none p-2 font-mono text-base outline-none"
             />
           </div>
         )}
@@ -86,7 +86,7 @@ export function HostSetupAgentPanel({ host }: { host: Host }) {
         {cfg.isLoading ? (
           <p className="text-base text-disabled-text">Loading…</p>
         ) : cfg.isError ? (
-          <p className="text-base text-title-active">
+          <p className="text-base text-accent">
             Could not load the agent config:{" "}
             {cfg.error instanceof ApiError ? cfg.error.message : String(cfg.error)}
           </p>
@@ -100,7 +100,7 @@ export function HostSetupAgentPanel({ host }: { host: Host }) {
               spellCheck={false}
               value={cfg.data?.configIni ?? ""}
               onFocus={(e) => e.currentTarget.select()}
-              className="bevel-sunken h-72 w-full resize-none bg-window p-2 font-mono text-base text-black outline-none"
+              className="ui-field h-72 w-full resize-none p-2 font-mono text-base outline-none"
             />
           </div>
         )}

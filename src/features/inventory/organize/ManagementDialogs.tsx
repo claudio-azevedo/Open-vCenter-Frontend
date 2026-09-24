@@ -323,7 +323,7 @@ export function HostManagementDialog() {
                         <span className="inline-flex items-center gap-1.5">
                           <span
                             className={`inline-block h-2 w-2 ${
-                              h.online ? "bg-[#008000]" : "bg-bevel-dark"
+                              h.online ? "bg-success" : "bg-bevel-dark"
                             }`}
                           />
                           {h.name}

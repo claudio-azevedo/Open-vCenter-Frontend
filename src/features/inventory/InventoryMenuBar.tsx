@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { MenuBar } from '~/components/win95'
 import type { MenuDef, MenuEntry } from '~/components/win95'
 import { useAuth } from '~/auth'
+import { THEMES, TREE_BEHAVIORS, useTheme, useTreeBehavior } from '~/preferences'
 import { useInventorySelection } from './selection'
 import { organizeDialog } from './organize/dialogStore'
 import { VmLocksDialog } from './locks/VmLocksDialog'
@@ -21,6 +22,8 @@ export function InventoryMenuBar() {
   const [historyOpen, setHistoryOpen] = React.useState(false)
   const [authDebugOpen, setAuthDebugOpen] = React.useState(false)
   const { selection } = useInventorySelection()
+  const { theme, setTheme } = useTheme()
+  const { treeBehavior, setTreeBehavior } = useTreeBehavior()
 
   const menus: MenuDef[] = [
     {
@@ -86,6 +89,27 @@ export function InventoryMenuBar() {
               { label: 'VM Locks…', onSelect: () => setLocksOpen(true) },
             ] as MenuEntry[])
           : []),
+      ],
+    },
+    {
+      label: 'Preferences',
+      items: [
+        {
+          label: 'Theme',
+          items: THEMES.map((t) => ({
+            label: t.label,
+            checked: t.id === theme,
+            onSelect: () => setTheme(t.id),
+          })),
+        },
+        {
+          label: 'Tree Behavior',
+          items: TREE_BEHAVIORS.map((b) => ({
+            label: b.label,
+            checked: b.id === treeBehavior,
+            onSelect: () => setTreeBehavior(b.id),
+          })),
+        },
       ],
     },
     {

@@ -55,12 +55,12 @@ export const STATUS_TEXT: Record<TaskStatus, string> = {
 export function statusClass(status: TaskStatus): string {
   switch (status) {
     case "succeeded":
-      return "text-[#008000]";
+      return "text-success";
     case "failed":
     case "timeout":
-      return "font-bold text-[#c00000]";
+      return "font-bold text-danger";
     case "running":
-      return "text-[#00007b]";
+      return "text-running";
     default:
       return "text-disabled-text";
   }

@@ -8,7 +8,7 @@ export interface TabItem {
 }
 
 /**
- * Win95 tab strip. Controlled: parent owns the active id (we keep it in the URL
+ * Tab strip. Controlled: parent owns the active id (we keep it in the URL
  * so a selected detail tab is deep-linkable).
  */
 export function Tabs({
@@ -37,11 +37,10 @@ export function Tabs({
               aria-selected={active}
               onClick={() => onChange(tab.id)}
               className={cn(
-                'bg-surface px-3 pt-[3px] text-base select-none',
-                'border border-b-0 border-t-bevel-light border-l-bevel-light border-r-bevel-dark',
+                'ui-tab px-3 pt-[3px] text-base select-none',
                 active
                   ? 'relative -mb-px pb-[4px] pt-[4px]'
-                  : 'mt-[2px] pb-[2px] text-black/90',
+                  : 'mt-[2px] pb-[2px]',
               )}
             >
               {tab.label}
@@ -50,7 +49,7 @@ export function Tabs({
         })}
       </div>
       <ScrollArea
-        className="bevel-thin-raised min-h-0 flex-1 bg-surface"
+        className="ui-tab-panel min-h-0 flex-1"
         viewportClassName="p-3"
       >
         {children}

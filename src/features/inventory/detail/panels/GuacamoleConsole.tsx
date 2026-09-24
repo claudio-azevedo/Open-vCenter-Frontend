@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type * as Guacamole from "guacamole-common-js";
 import {
+  Button,
   StatusBar,
   StatusBarPanel,
   Toolbar,
@@ -49,7 +50,7 @@ const STATE_LABEL: Record<ConnState, string> = {
 };
 const STATE_DOT: Record<ConnState, string> = {
   connecting: "bg-[#808000]",
-  connected: "bg-[#008000]",
+  connected: "bg-success",
   disconnected: "bg-[#808080]",
   error: "bg-[#800000]",
 };
@@ -339,28 +340,26 @@ export function GuacamoleConsole({
       {showClipboard ? (
         <div className="bevel-thin-raised flex items-start gap-2 bg-surface p-2">
           <textarea
-            className="bevel-sunken h-16 flex-1 resize-none bg-window px-1.5 py-1 font-mono text-base text-black outline-none"
+            className="ui-field h-16 flex-1 resize-none px-1.5 py-1 font-mono text-base outline-none"
             placeholder="Paste text to push to the remote clipboard, or copy from the remote…"
             value={clipboardText}
             onChange={(e) => setClipboardText(e.target.value)}
           />
           <div className="flex shrink-0 flex-col gap-1">
-            <button
-              type="button"
-              className="bevel-raised min-h-[23px] px-2 text-base active:bevel-pressed disabled:text-disabled-text"
+            <Button
+              className="px-2"
               onClick={sendClipboard}
               disabled={!clipboardText || !live}
             >
               Send to clipboard
-            </button>
-            <button
-              type="button"
-              className="bevel-raised min-h-[23px] px-2 text-base active:bevel-pressed disabled:text-disabled-text"
+            </Button>
+            <Button
+              className="px-2"
               onClick={typeClipboard}
               disabled={!clipboardText || !live}
             >
               Type text
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
@@ -429,12 +428,6 @@ function OverlayButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      className="bevel-raised min-h-[23px] bg-surface px-3 text-base text-black active:bevel-pressed"
-      onClick={onClick}
-    >
-      {children}
-    </button>
+    <Button onClick={onClick}>{children}</Button>
   );
 }

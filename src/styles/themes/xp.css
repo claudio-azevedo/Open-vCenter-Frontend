@@ -1,0 +1,287 @@
+/*
+ * Windows XP ("Luna" blue). Values ported from XP.css
+ * (github.com/botoxparty/XP.css, MIT) and Mularr's xp theme - see "Credits"
+ * in the README. Only tokens are redefined here; see app.css for the contract.
+ */
+
+:root[data-theme='xp'] {
+  --color-surface: #ece9d8;
+  --color-surface-2: #f5f4ee;
+  --color-window: #ffffff;
+  --color-fg: #000000;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #aca899;
+  --color-bevel-darker: #716f64;
+  --color-line: #7f9db9;
+
+  --color-title-active: #0054e3;
+  --color-title-active-2: #3d95ff;
+  --color-title-inactive: #7a96df;
+  --color-title-text: #ffffff;
+
+  --color-selection: #316ac5;
+  --color-selection-text: #ffffff;
+  --color-disabled-text: #8a877a;
+  --color-disabled-highlight: transparent;
+  --color-link: #0066cc;
+
+  --color-accent: #0046d5;
+  --color-success: #1d8a1d;
+  --color-danger: #c00000;
+  --color-warning: #b8860b;
+  --color-info: #316ac5;
+  --color-running: #0046d5;
+  --color-notice-bg: #ffffe1; /* XP tooltip yellow */
+  --color-notice-text: #5a4600;
+
+  --font-sans: Tahoma, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto,
+    Arial, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --radius-full: 9999px;
+
+  /* Flat 1px borders instead of chiselled bevels */
+  --bevel-raised: inset 0 0 0 1px var(--color-bevel-dark);
+  --bevel-sunken: inset 0 0 0 1px var(--color-line);
+  --bevel-pressed: inset 0 0 0 1px var(--color-bevel-dark),
+    inset 1px 1px 2px rgba(0, 0, 0, 0.15);
+  --bevel-thin-raised: inset 0 0 0 1px #d6d2c2;
+  --bevel-thin-sunken: inset 0 0 0 1px var(--color-bevel-dark);
+  --bevel-window: var(--bevel-raised);
+
+  /* Bliss-ish desktop behind the main window */
+  --desktop-bg: radial-gradient(
+      ellipse 140% 55% at 30% 105%,
+      #74b84a 0 55%,
+      transparent 56%
+    ),
+    linear-gradient(#2a64d4, #6e9ff0 60%, #a9c8f5);
+
+  --focus-outline: 1px dotted var(--color-fg);
+  --focus-offset: -3px;
+
+  /* Window: blue Luna frame, rounded top */
+  --window-bg: #0831d9;
+  --window-shadow: inset -1px -1px #00138c, inset 1px 1px #0831d9,
+    inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda,
+    inset 3px 3px #0855dd, 2px 3px 10px rgba(0, 0, 0, 0.35);
+  --window-radius: 8px 8px 0 0;
+  --window-padding: 0 0 3px;
+  --window-body-margin: 0 3px;
+  --window-body-bg: var(--color-surface);
+
+  --titlebar-height: 28px;
+  --titlebar-padding: 3px 5px 3px 6px;
+  --titlebar-bg: linear-gradient(
+    180deg,
+    #0997ff,
+    #0053ee 8%,
+    #0050ee 40%,
+    #06f 88%,
+    #06f 93%,
+    #005bff 95%,
+    #003dd7 96%,
+    #003dd7
+  );
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: 1px 1px #0f1089;
+  --titlebar-font: "Trebuchet MS", Tahoma, sans-serif;
+  --titlebar-font-size: 13px;
+  --titlebar-radius: 7px 7px 0 0;
+  --titlebar-border: none;
+  --titlebar-inactive-bg: linear-gradient(180deg, #7697e7, #7e9ee3 40%, #94afe8);
+  --titlebar-inactive-text: #d8e4f8;
+  --titlebar-btn-gap: 2px;
+  --titlebar-btn-width: 21px;
+  --titlebar-btn-height: 21px;
+  --titlebar-btn-bg: radial-gradient(
+    circle at 90% 90%,
+    #0054e9 0%,
+    #2263d5 55%,
+    #4479e4 70%,
+    #a3bbec 90%,
+    #ffffff 100%
+  );
+  --titlebar-btn-color: #ffffff;
+  --titlebar-btn-shadow: inset 0 0 0 1px #ffffff;
+  --titlebar-btn-radius: 3px;
+  --titlebar-btn-hover-bg: radial-gradient(
+    circle at 90% 90%,
+    #1d6cf5 0%,
+    #3a7cef 55%,
+    #6395f5 70%,
+    #c1d4f7 90%,
+    #ffffff 100%
+  );
+  --titlebar-btn-active-shadow: inset 0 0 0 1px #ffffff,
+    inset 1px 1px 3px rgba(0, 0, 0, 0.4);
+  --titlebar-close-bg: radial-gradient(
+    circle at 90% 90%,
+    #cc4600 0%,
+    #dc6527 55%,
+    #cd7546 70%,
+    #ffccb2 90%,
+    #ffffff 100%
+  );
+  --titlebar-close-color: #ffffff;
+  --titlebar-close-hover-bg: radial-gradient(
+    circle at 90% 90%,
+    #e45a12 0%,
+    #ee7a3d 55%,
+    #e08a5d 70%,
+    #ffd9c6 90%,
+    #ffffff 100%
+  );
+
+  /* Buttons */
+  --btn-bg: linear-gradient(180deg, #ffffff, #ecebe5 86%, #d8d0c4);
+  --btn-border: 1px solid #003c74;
+  --btn-radius: 3px;
+  --btn-shadow: none;
+  --btn-hover-bg: var(--btn-bg);
+  --btn-hover-border-color: #003c74;
+  --btn-hover-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889,
+    inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
+  --btn-active-bg: linear-gradient(
+    180deg,
+    #cdcac3,
+    #e3e3db 8%,
+    #e5e5de 94%,
+    #f2f2f1
+  );
+  --btn-active-border-color: #003c74;
+  --btn-active-shadow: none;
+  --btn-focus-shadow: inset -1px 1px #cee7ff, inset 1px 2px #98b8ea,
+    inset -2px 2px #bcd4f6, inset 1px -1px #89ade4, inset 2px -2px #89ade4;
+  --btn-focus-outline: 1px dotted #000000;
+  --btn-focus-offset: -4px;
+  --btn-disabled-bg: #f5f4ea;
+  --btn-disabled-shadow: none;
+  --btn-disabled-text-shadow: none;
+
+  --field-shadow: inset 0 0 0 1px var(--color-line);
+  --field-thin-shadow: var(--field-shadow);
+  --field-radius: 0px;
+  --field-disabled-bg: #f5f4ea;
+
+  --dropdown-btn-bg: linear-gradient(180deg, #e6eefc, #c3d3fd 45%, #a9c1f8);
+  --dropdown-btn-shadow: inset 0 0 0 1px #b9cbf3;
+  --dropdown-btn-open-shadow: inset 0 0 0 1px #8aa6e2,
+    inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+  --dropdown-btn-radius: 2px;
+  --dropdown-arrow-color: #4d6185;
+  --listbox-border: 1px solid #000000;
+  --listbox-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+  --menubar-bg: var(--color-surface);
+  --menubar-shadow: inset 0 -1px 0 #d6d2c2;
+  --menubar-item-open-bg: var(--color-selection);
+  --menu-bg: #ffffff;
+  --menu-shadow: 0 0 0 1px #aca899, 3px 3px 4px rgba(0, 0, 0, 0.25);
+  --menu-padding: 2px;
+  --menu-sep-top: #aca899;
+  --menu-sep-bottom: transparent;
+
+  --tab-bg: linear-gradient(
+    180deg,
+    #ffffff,
+    #ffffff 26%,
+    #fafaf9 0,
+    #f0f0ea 95%,
+    #ecebe5
+  );
+  --tab-border-color: #919b9c #919b9c transparent #919b9c;
+  --tab-radius: 3px 3px 0 0;
+  --tab-inactive-opacity: 1;
+  --tab-hover-bg: linear-gradient(180deg, #ffffff, #fdf5dd);
+  --tab-active-bg: #fcfcfe;
+  --tab-active-border-color: #e68b2c #919b9c transparent #919b9c;
+  --tab-active-shadow: inset 0 2px 0 #ffc73c;
+  --tab-panel-bg: #fcfcfe;
+  --tab-panel-shadow: inset 0 0 0 1px #919b9c, 1px 1px 1px rgba(0, 0, 0, 0.12);
+
+  --toolbar-bg: var(--color-surface);
+  --toolbar-shadow: inset 0 -1px 0 #d6d2c2;
+  --toolbtn-radius: 3px;
+  --toolbtn-hover-bg: linear-gradient(180deg, #ffffff, #f3f3ef 80%, #e3e1d6);
+  --toolbtn-hover-shadow: inset 0 0 0 1px #cecec3;
+  --toolbtn-active-bg: #e0ded3;
+  --toolbtn-active-shadow: inset 0 0 0 1px #aca899,
+    inset 1px 1px 2px rgba(0, 0, 0, 0.15);
+  --toolbtn-on-bg: #f4f3ee;
+  --toolbtn-on-shadow: inset 0 0 0 1px #aca899;
+  --toolbar-sep-left: #c5c2b2;
+  --toolbar-sep-right: #ffffff;
+
+  --statusbar-shadow: inset 0 1px 0 #d6d2c2;
+  --statusbar-panel-shadow: inset -1px 0 0 #aca899, 1px 0 0 #ffffff;
+
+  --progress-well-bg: #ffffff;
+  --progress-well-shadow: inset 0 0 0 1px #686868;
+  --progress-well-radius: 3px;
+  --progress-padding: 2px;
+  --progress-fill: repeating-linear-gradient(
+      90deg,
+      transparent 0 8px,
+      #ffffff 8px 10px
+    ),
+    linear-gradient(
+      180deg,
+      #acedad 0,
+      #7be47d 14%,
+      #4cda50 28%,
+      #2ed330 42%,
+      #42d845 57%,
+      #76e275 71%,
+      #8fe791 85%,
+      #ffffff
+    );
+  --progress-muted-fill: linear-gradient(180deg, #f2f2ee, #dcdad0);
+
+  --groupbox-border: 1px solid #d0d0bf;
+  --groupbox-border-image: none;
+  --groupbox-radius: 4px;
+  --groupbox-legend-bg: transparent;
+  --groupbox-legend-color: #0046d5;
+
+  --tree-inset: 1px;
+  --tree-expander-bg: linear-gradient(135deg, #ffffff, #d4d0c8);
+  --tree-expander-border: 1px solid #7a99a6;
+  --tree-expander-radius: 1px;
+
+  --th-bg: linear-gradient(180deg, #ffffff, #f1efe2 80%, #ebeadb);
+  --th-shadow: inset -1px 0 0 #aca899, inset 1px 0 0 #ffffff,
+    inset 0 -1px 0 #aca899, inset 0 -2px 0 #cbc7b8, inset 0 -3px 0 #d6d2c2;
+
+  --splitter-bg: var(--color-surface);
+  --splitter-grip-bg: transparent;
+  --splitter-grip-shadow: none;
+  --splitter-grip-active-shadow: inset 0 0 0 1px var(--color-bevel-dark);
+
+  --sb-bg: #fefefb;
+  --sb-shadow: inset 1px 0 0 #eeede5;
+  --sb-track-bg: #fefefb;
+  --sb-thumb-bg: linear-gradient(135deg, #c8d6fb, #b9cafa 50%, #aac0f7);
+  --sb-thumb-shadow: inset 0 0 0 1px #ffffff, 0 0 0 1px #9eb7f4;
+  --sb-thumb-radius: 3px;
+  --sb-btn-bg: linear-gradient(135deg, #d4e0fd, #bccdfa 50%, #aec3f7);
+  --sb-btn-shadow: inset 0 0 0 1px #ffffff, 0 0 0 1px #9eb7f4;
+  --sb-btn-active-shadow: inset 0 0 0 1px #ffffff,
+    inset 1px 1px 3px rgba(0, 0, 0, 0.25);
+  --sb-btn-radius: 3px;
+  --sb-arrow-color: #4d6185;
+  --sb-color-thumb: #b9cafa;
+  --sb-color-track: #fefefb;
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: #f1efe2;
+  --grid-header-image: linear-gradient(180deg, #ffffff, #ebeadb);
+  --grid-row-hover: #eef3fb;
+  --grid-border: #e2dfd0;
+}

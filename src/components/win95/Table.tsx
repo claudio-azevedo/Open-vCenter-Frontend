@@ -28,7 +28,7 @@ export function Th({
   return (
     <th
       className={cn(
-        "bevel-thin-raised bg-surface px-2 py-[3px] text-left font-normal",
+        "ui-th px-2 py-[3px] text-left",
         "sticky top-0",
         className,
       )}

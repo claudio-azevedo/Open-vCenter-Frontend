@@ -23,23 +23,24 @@ export const panelRecipe = cva('bg-surface', {
   defaultVariants: { bevel: 'raised' },
 })
 
-/** Classic push button. `pressed` forces the depressed look (e.g. active toggle). */
+/**
+ * Push button. Visuals (fill, border, bevel, hover/pressed states) come from
+ * the theme via the `ui-btn` class; this recipe only owns layout. `pressed`
+ * forces the depressed look (e.g. an active toggle); the 1px text shift of a
+ * pressed button is a Classic-only detail.
+ */
 export const buttonRecipe = cva(
-  'inline-flex items-center justify-center gap-1 bg-surface px-3 py-[3px] ' +
-    'text-base leading-none select-none ' +
-    'focus-visible:outline focus-visible:outline-1 focus-visible:outline-dotted ' +
-    'focus-visible:outline-black focus-visible:outline-offset-[-4px]',
+  'ui-btn inline-flex items-center justify-center gap-1 px-3 py-[3px] ' +
+    'text-base leading-none select-none cursor-default',
   {
     variants: {
       pressed: {
-        true: 'bevel-pressed pt-[4px] pb-[2px] pl-[13px] pr-[11px]',
-        false: 'bevel-raised active:bevel-pressed active:pt-[4px] active:pb-[2px]',
+        true: 'classic:pt-[4px] classic:pb-[2px] classic:pl-[13px] classic:pr-[11px]',
+        false: 'classic:active:pt-[4px] classic:active:pb-[2px]',
       },
       block: { true: 'w-full', false: '' },
-      disabled: {
-        true: 'text-disabled-text [text-shadow:1px_1px_0_var(--color-disabled-highlight)] cursor-default',
-        false: 'cursor-default',
-      },
+      // kept for API compatibility - the disabled look is `.ui-btn:disabled`
+      disabled: { true: '', false: '' },
     },
     defaultVariants: { pressed: false, block: false, disabled: false },
   },

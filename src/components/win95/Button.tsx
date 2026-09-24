@@ -21,6 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type="button"
         disabled={disabled}
+        data-pressed={pressed || undefined}
         className={cn(
           'min-w-[75px] min-h-[23px]',
           buttonRecipe({ pressed, block, disabled: !!disabled }),

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { TriangleAlert } from 'lucide-react'
-import { Dialog, Icon } from '~/components/win95'
+import { Button, Dialog, Icon } from '~/components/win95'
 import { useAuth } from './useAuth'
 
 /**
@@ -22,17 +22,11 @@ export function DevBypassWarning() {
       onClose={() => setOpen(false)}
       width={380}
       footer={
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="bevel-raised active:bevel-pressed min-w-[75px] bg-surface px-3 py-[3px]"
-        >
-          OK
-        </button>
+        <Button onClick={() => setOpen(false)}>OK</Button>
       }
     >
       <div className="flex gap-3 text-base">
-        <Icon icon={TriangleAlert} size={28} className="text-title-active" />
+        <Icon icon={TriangleAlert} size={28} className="text-accent" />
         <p>
           <code>OVC_AUTH_MODE=stub</code> is set - no login is required and every
           request is treated as <strong>{user?.email}</strong> with

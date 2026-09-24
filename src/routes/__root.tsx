@@ -16,17 +16,25 @@ import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
+import {
+  DEFAULT_PREFERENCES,
+  PreferencesProvider,
+  getPreferences,
+  useTheme,
+} from '~/preferences'
+import type { Preferences } from '~/preferences'
 
 export interface RouterContext {
   queryClient: QueryClient
   user: AuthUser | null
   authDisabled: boolean
+  preferences: Preferences
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {
     const { user, authDisabled } = await fetchCurrentUser()
-    return { user, authDisabled }
+    return { user, authDisabled, preferences: getPreferences() }
   },
   head: () => ({
     meta: [
@@ -47,17 +55,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
   }),
   errorComponent: (props) => (
-    <RootDocument>
-      <DefaultCatchBoundary {...props} />
-    </RootDocument>
+    // beforeLoad may be what failed, so the context can't be trusted here.
+    <PreferencesProvider initial={DEFAULT_PREFERENCES}>
+      <RootDocument>
+        <DefaultCatchBoundary {...props} />
+      </RootDocument>
+    </PreferencesProvider>
   ),
   notFoundComponent: () => <NotFound />,
   component: RootComponent,
 })
 
 function RootComponent() {
-  const { user, authDisabled, queryClient } = Route.useRouteContext()
+  const { user, authDisabled, queryClient, preferences } =
+    Route.useRouteContext()
   return (
+    <PreferencesProvider initial={preferences}>
     <RootDocument>
       <QueryClientProvider client={queryClient}>
         <AuthProvider user={user} authDisabled={authDisabled}>
@@ -71,12 +84,14 @@ function RootComponent() {
         ) : null}
       </QueryClientProvider>
     </RootDocument>
+    </PreferencesProvider>
   )
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme()
   return (
-    <html lang="en">
+    <html lang="en" data-theme={theme}>
       <head>
         <HeadContent />
       </head>

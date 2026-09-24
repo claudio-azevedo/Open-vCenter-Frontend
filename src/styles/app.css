@@ -1,29 +1,72 @@
 @import "tailwindcss" source("../");
 
 /*
- * Open vCenter - Windows 95/98 visual language.
- * Light-only. Square corners, chiselled bevels. The retro feel comes from the
- * bevels/palette/geometry; the type is a clean, anti-aliased system UI font so
- * it stays legible on macOS Retina (no bitmap font to fall back to).
+ * Open vCenter - themable desktop visual language.
+ *
+ * How theming works (same model as Mularr's `ui-*` + `[data-theme]` CSS):
+ *   - `<html data-theme="…">` is rendered server-side from the `ovc-theme`
+ *     cookie (see src/theme/).
+ *   - This file defines the full token contract with **Windows Classic**
+ *     values: Tailwind colour tokens (`@theme`) plus plain custom properties
+ *     for component chrome (`--btn-*`, `--titlebar-*`, `--menu-*`, …).
+ *   - Each file in ./themes/ only redefines tokens under
+ *     `:root[data-theme='<id>']`, plus the odd structural override inside
+ *     `@layer components` (so Tailwind utilities passed via className still win).
+ *   - Components use the semantic `ui-*` classes below for anything a theme
+ *     restyles, and Tailwind utilities for layout only. Feature code sticks to
+ *     semantic colour utilities (`text-fg`, `text-danger`, `bg-window`, …) -
+ *     never raw hex values.
  */
 
-@theme {
-  /* Classic system palette */
+@import "./themes/xp.css";
+@import "./themes/win7.css";
+@import "./themes/modern.css";
+
+/* `classic:` variant - for the few Classic-only layout tweaks (pressed-button
+   text shift) that can't be expressed as a token. */
+@custom-variant classic (&:where([data-theme='classic'] *));
+
+@theme static {
+  /* Surfaces */
   --color-surface: #c0c0c0; /* ButtonFace - window/dialog body */
-  --color-surface-2: #dfdfdf; /* inner bevel highlight */
+  --color-surface-2: #dfdfdf; /* inner bevel highlight, pressed/active fills */
   --color-window: #ffffff; /* editable fields, list wells */
+  --color-fg: #000000; /* default text */
   --color-bevel-light: #ffffff;
   --color-bevel-dark: #808080;
   --color-bevel-darker: #000000;
-  --color-title-active: #000080; /* active title bar */
-  --color-title-active-2: #1084d0; /* title bar gradient end */
+  --color-line: #808080; /* 1px borders in the flat themes */
+
+  /* Title bar (Classic TitleBar gradient; other themes use --titlebar-bg) */
+  --color-title-active: #000080;
+  --color-title-active-2: #1084d0;
   --color-title-inactive: #808080;
   --color-title-text: #ffffff;
+
   --color-selection: #000080;
   --color-selection-text: #ffffff;
-  --color-disabled-text: #808080;
+  --color-disabled-text: #808080; /* also the "muted label" colour */
   --color-disabled-highlight: #ffffff;
   --color-link: #0000ee;
+
+  /* Semantic status colours */
+  --color-accent: #000080; /* emphasised text, error hints */
+  --color-success: #008000;
+  --color-danger: #c00000;
+  --color-warning: #b8860b;
+  --color-info: #4169e1;
+  --color-running: #00007b;
+  --color-notice-bg: #fff8e0;
+  --color-notice-text: #7a5a00;
+  --color-danger-bg: #ffecec; /* row marked for removal */
+  --color-info-bg: #e8f0ff; /* row marked for change */
+
+  /* Metric chart series */
+  --color-chart-1: #008000;
+  --color-chart-2: #000080;
+  --color-chart-3: #008080;
+  --color-chart-4: #a000a0;
+  --color-chart-5: #c00000;
 
   /* Native UI sans per OS: Segoe UI on Windows (the target - this is the real
      Windows UI font, ClearType-crisp), San Francisco on macOS, Roboto elsewhere.
@@ -43,7 +86,7 @@
   --text-lg: 13px;
   --text-xs: 10px;
 
-  /* Everything is square */
+  /* Classic is square; the other themes restore real radii. */
   --radius-xs: 0px;
   --radius-sm: 0px;
   --radius-md: 0px;
@@ -54,64 +97,284 @@
   --radius-full: 0px;
 }
 
-/* ---- Bevel recipes ------------------------------------------------------- */
-/* Inset box-shadow stacks: no layout shift, no extra DOM nodes. */
+/* ---- Component token contract (Classic values) --------------------------- */
 
-@utility bevel-raised {
-  box-shadow:
+:root {
+  /* Bevel recipes: inset box-shadow stacks - no layout shift, no extra DOM. */
+  --bevel-raised:
     inset -1px -1px 0 0 var(--color-bevel-darker),
     inset 1px 1px 0 0 var(--color-bevel-light),
     inset -2px -2px 0 0 var(--color-bevel-dark),
     inset 2px 2px 0 0 var(--color-surface-2);
-}
-
-@utility bevel-sunken {
-  box-shadow:
+  --bevel-sunken:
     inset 1px 1px 0 0 var(--color-bevel-dark),
     inset -1px -1px 0 0 var(--color-bevel-light),
     inset 2px 2px 0 0 var(--color-bevel-darker),
     inset -2px -2px 0 0 var(--color-surface-2);
-}
-
-@utility bevel-pressed {
-  box-shadow:
+  --bevel-pressed:
     inset 1px 1px 0 0 var(--color-bevel-dark),
     inset -1px -1px 0 0 var(--color-bevel-light);
-}
-
-@utility bevel-thin-raised {
-  box-shadow:
+  --bevel-thin-raised:
     inset -1px -1px 0 0 var(--color-bevel-dark),
     inset 1px 1px 0 0 var(--color-bevel-light);
-}
-
-@utility bevel-thin-sunken {
-  box-shadow:
+  --bevel-thin-sunken:
     inset 1px 1px 0 0 var(--color-bevel-dark),
     inset -1px -1px 0 0 var(--color-bevel-light);
-}
-
-@utility bevel-window {
-  box-shadow:
+  --bevel-window:
     inset -1px -1px 0 0 var(--color-bevel-darker),
     inset 1px 1px 0 0 var(--color-bevel-light);
+  --panel-radius: 0px; /* radius of the generic bevelled wells/panels */
+
+  /* Brand logo tweak for dark themes */
+  --logo-filter: none;
+
+  /* Page behind the main window */
+  --desktop-bg: var(--color-surface);
+
+  --focus-outline: 1px dotted var(--color-fg);
+  --focus-offset: -4px;
+
+  /* Window frame */
+  --window-bg: var(--color-surface);
+  --window-shadow: var(--bevel-raised);
+  --window-radius: 0px;
+  --window-padding: 2px 3px 3px;
+  --window-backdrop: none;
+  --window-body-margin: 0;
+  --window-body-bg: transparent;
+  --window-body-shadow: none;
+  --window-body-radius: 0px;
+
+  /* Title bar */
+  --titlebar-height: 22px;
+  --titlebar-padding: 2px 3px;
+  --titlebar-bg: linear-gradient(
+    to right,
+    var(--color-title-active),
+    var(--color-title-active-2)
+  );
+  --titlebar-text: var(--color-title-text);
+  --titlebar-text-shadow: none;
+  --titlebar-font: inherit;
+  --titlebar-font-size: var(--text-base);
+  --titlebar-font-weight: 700;
+  --titlebar-radius: 0px;
+  --titlebar-border: none;
+  --titlebar-inactive-bg: var(--color-title-inactive);
+  --titlebar-inactive-text: var(--color-surface-2);
+  --titlebar-btn-gap: 2px;
+  --titlebar-btn-width: 18px;
+  --titlebar-btn-height: 18px;
+  --titlebar-btn-align: center;
+  --titlebar-btn-bg: var(--color-surface);
+  --titlebar-btn-color: var(--color-fg);
+  --titlebar-btn-shadow: var(--bevel-raised);
+  --titlebar-btn-radius: 0px;
+  --titlebar-btn-hover-bg: var(--titlebar-btn-bg);
+  --titlebar-btn-hover-color: var(--titlebar-btn-color);
+  --titlebar-btn-active-shadow: var(--bevel-pressed);
+  --titlebar-btn-group-radius: 0px;
+  --titlebar-close-width: var(--titlebar-btn-width);
+  --titlebar-close-bg: var(--titlebar-btn-bg);
+  --titlebar-close-color: var(--titlebar-btn-color);
+  --titlebar-close-hover-bg: var(--titlebar-close-bg);
+  --titlebar-close-hover-color: var(--titlebar-close-color);
+
+  /* Push buttons */
+  --btn-bg: var(--color-surface);
+  --btn-color: var(--color-fg);
+  --btn-border: 0 solid transparent;
+  --btn-radius: 0px;
+  --btn-shadow: var(--bevel-raised);
+  --btn-hover-bg: var(--btn-bg);
+  --btn-hover-border-color: transparent;
+  --btn-hover-shadow: var(--btn-shadow);
+  --btn-active-bg: var(--btn-bg);
+  --btn-active-border-color: var(--btn-hover-border-color);
+  --btn-active-shadow: var(--bevel-pressed);
+  --btn-focus-shadow: var(--btn-shadow);
+  --btn-focus-outline: 1px dotted var(--color-fg);
+  --btn-focus-offset: -4px;
+  --btn-disabled-bg: var(--btn-bg);
+  --btn-disabled-shadow: var(--btn-shadow);
+  --btn-disabled-text-shadow: 1px 1px 0 var(--color-disabled-highlight);
+
+  /* Text fields, selects, textareas */
+  --field-bg: var(--color-window);
+  --field-shadow: var(--bevel-sunken);
+  --field-thin-shadow: var(--bevel-thin-sunken);
+  --field-hover-shadow: var(--field-shadow);
+  --field-focus-shadow: var(--field-shadow);
+  --field-radius: 0px;
+  --field-disabled-bg: var(--field-bg);
+
+  /* Combo box (Dropdown) arrow button + popup list */
+  --dropdown-btn-bg: var(--color-surface);
+  --dropdown-btn-shadow: var(--bevel-raised);
+  --dropdown-btn-open-shadow: var(--bevel-pressed);
+  --dropdown-btn-radius: 0px;
+  --dropdown-arrow-color: var(--color-fg);
+  --listbox-bg: var(--color-window);
+  --listbox-border: 2px solid var(--color-bevel-darker);
+  --listbox-shadow: 4px 4px 10px 0 rgba(0, 0, 0, 0.35);
+  --listbox-radius: 0px;
+
+  /* Menu bar + popup menus */
+  --menubar-bg: var(--color-surface);
+  --menubar-shadow: var(--bevel-thin-raised);
+  --menubar-item-radius: 0px;
+  --menubar-item-hover-bg: transparent;
+  --menubar-item-hover-text: inherit;
+  --menubar-item-hover-shadow: none;
+  --menubar-item-open-bg: var(--color-selection);
+  --menubar-item-open-text: var(--color-selection-text);
+  --menubar-item-open-shadow: none;
+  --menu-bg: var(--color-surface);
+  --menu-shadow: var(--bevel-raised);
+  --menu-radius: 0px;
+  --menu-padding: 4px 2px;
+  --menu-item-radius: 0px;
+  --menu-item-hover-bg: var(--color-selection);
+  --menu-item-hover-text: var(--color-selection-text);
+  --menu-item-hover-shadow: none;
+  --menu-sep-top: var(--color-bevel-dark);
+  --menu-sep-bottom: var(--color-bevel-light);
+
+  /* Tabs */
+  --tab-bg: var(--color-surface);
+  --tab-text: var(--color-fg);
+  --tab-inactive-opacity: 0.9;
+  --tab-border-width: 1px 1px 0 1px;
+  --tab-border-color: var(--color-bevel-light) var(--color-bevel-dark)
+    transparent var(--color-bevel-light);
+  --tab-radius: 0px;
+  --tab-shadow: none;
+  --tab-hover-bg: var(--tab-bg);
+  --tab-active-bg: var(--tab-bg);
+  --tab-active-border-color: var(--tab-border-color);
+  --tab-active-shadow: none;
+  --tab-panel-bg: var(--color-surface);
+  --tab-panel-shadow: var(--bevel-thin-raised);
+  --tab-panel-radius: 0px;
+
+  /* Toolbar */
+  --toolbar-bg: var(--color-surface);
+  --toolbar-shadow: var(--bevel-thin-raised);
+  --toolbtn-radius: 0px;
+  --toolbtn-hover-bg: transparent;
+  --toolbtn-hover-shadow: var(--bevel-thin-raised);
+  --toolbtn-active-bg: transparent;
+  --toolbtn-active-shadow: var(--bevel-thin-sunken);
+  --toolbtn-on-bg: var(--color-surface-2);
+  --toolbtn-on-shadow: var(--bevel-thin-sunken);
+  --toolbar-sep-left: var(--color-bevel-dark);
+  --toolbar-sep-right: var(--color-bevel-light);
+
+  /* Status bar */
+  --statusbar-bg: var(--color-surface);
+  --statusbar-shadow: none;
+  --statusbar-panel-shadow: var(--bevel-thin-sunken);
+  --statusbar-panel-radius: 0px;
+
+  /* Progress bar */
+  --progress-well-bg: var(--color-window);
+  --progress-well-shadow: var(--bevel-sunken);
+  --progress-well-radius: 0px;
+  --progress-padding: 2px;
+  --progress-fill: var(--color-title-active);
+  --progress-fill-radius: 0px;
+  --progress-muted-fill: var(--color-surface);
+
+  /* Group box (fieldset). Engraved 5x5 border-image with a notch cut at each
+     corner, which is what makes a Win98 groupbox border read as "grooved"
+     instead of a plain two-tone rectangle. Ported from 98.css
+     (github.com/jdan/98.css, MIT) - see "Credits" in the README. */
+  --groupbox-border: 2px solid transparent;
+  --groupbox-border-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='5' height='5'><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h5v5H0V2h2v1h1V2H0' fill='%23fff'/><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h4v4H0V1h1v2h2V1H0' fill='%23808080'/></svg>")
+    2;
+  --groupbox-radius: 0px;
+  --groupbox-legend-bg: var(--color-surface);
+  --groupbox-legend-color: inherit;
+
+  /* Tree view. --tree-inset keeps row hover/selection fills off the well's
+     border (the bevel is an inset shadow, so a full-width row would paint
+     over it) - match it to the width of the theme's --bevel-sunken. */
+  --tree-inset: 2px;
+  --tree-row-radius: 0px;
+  --tree-hover-bg: transparent;
+  --tree-hover-shadow: none;
+  --tree-selected-bg: var(--color-selection);
+  --tree-selected-text: var(--color-selection-text);
+  --tree-selected-shadow: none;
+  --tree-expander-bg: var(--color-window);
+  --tree-expander-border: 1px solid var(--color-bevel-dark);
+  --tree-expander-color: var(--color-fg);
+  --tree-expander-radius: 0px;
+
+  /* Table header */
+  --th-bg: var(--color-surface);
+  /* Win98/2000 list-view header: a full raised bevel per column, so the
+     header reads as a strip of buttons against the white well. */
+  --th-shadow:
+    inset -1px -1px 0 0 var(--color-bevel-darker),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark);
+  --th-font-weight: 400;
+
+  /* Split pane divider */
+  --splitter-bg: var(--color-surface);
+  --splitter-grip-bg: var(--color-surface);
+  --splitter-grip-shadow: var(--bevel-thin-raised);
+  --splitter-grip-active-shadow: var(--bevel-thin-sunken);
+
+  /* Scrollbars (ScrollArea + native) */
+  --sb-bg: var(--color-surface);
+  --sb-shadow: var(--bevel-thin-sunken);
+  --sb-track-bg: var(--color-surface)
+    repeating-conic-gradient(var(--color-bevel-light) 0% 25%, transparent 0% 50%)
+    0 0 / 2px 2px;
+  --sb-thumb-bg: var(--color-surface);
+  --sb-thumb-shadow: var(--bevel-raised);
+  --sb-thumb-radius: 0px;
+  --sb-btn-bg: var(--color-surface);
+  --sb-btn-shadow: var(--bevel-raised);
+  --sb-btn-active-shadow: var(--bevel-pressed);
+  --sb-btn-radius: 0px;
+  --sb-arrow-color: var(--color-fg);
+  --sb-color-thumb: var(--color-surface);
+  --sb-color-track: var(--color-surface-2);
+
+  /* ag-grid (VmGrid) */
+  --grid-fg: #181d1f; /* ag-grid Quartz default, kept so Classic is unchanged */
+  --grid-header-bg: var(--color-surface);
+  --grid-header-image: none;
+  --grid-row-hover: #e8e8e8;
+  --grid-border: var(--color-surface);
 }
 
-/* The engraved <fieldset> (GroupBox) border: a 5x5 border-image with a small
-   notch cut at each corner, which is what makes a Win98 groupbox border read
-   as "grooved" instead of a plain two-tone rectangle - a plain `border` can't
-   express that notch. Ported from 98.css (github.com/jdan/98.css, MIT) - see
-   the "Credits" section in the frontend README. */
-@utility bevel-groupbox {
-  border-style: solid;
-  border-width: 2px;
-  border-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='5' height='5'><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h5v5H0V2h2v1h1V2H0' fill='%23fff'/><path fill-rule='evenodd' clip-rule='evenodd' d='M0 0h4v4H0V1h1v2h2V1H0' fill='%23808080'/></svg>")
-    2;
+/* ---- Bevel utilities ----------------------------------------------------- */
+
+@utility bevel-raised {
+  box-shadow: var(--bevel-raised);
+}
+@utility bevel-sunken {
+  box-shadow: var(--bevel-sunken);
+}
+@utility bevel-pressed {
+  box-shadow: var(--bevel-pressed);
+}
+@utility bevel-thin-raised {
+  box-shadow: var(--bevel-thin-raised);
+}
+@utility bevel-thin-sunken {
+  box-shadow: var(--bevel-thin-sunken);
+}
+@utility bevel-window {
+  box-shadow: var(--bevel-window);
 }
 
 /* Hide native scrollbars on an element (used by <ScrollArea>, which paints its
-   own Win95 scrollbars on top). */
+   own scrollbars on top). */
 @utility scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -120,23 +383,377 @@
   }
 }
 
-/* The dithered grey track behind a Win95 scrollbar thumb. */
-@utility scroll-track {
-  background-color: var(--color-surface);
-  background-image: repeating-conic-gradient(
-    var(--color-bevel-light) 0% 25%,
-    var(--color-surface) 0% 50%
-  );
-  background-size: 2px 2px;
+/* ---- Semantic components ------------------------------------------------- */
+
+@layer components {
+  /* Anything drawn with a bevel utility picks up the theme's panel radius. */
+  .bevel-raised,
+  .bevel-sunken,
+  .bevel-thin-raised,
+  .bevel-thin-sunken {
+    border-radius: var(--panel-radius);
+  }
+
+  .ui-logo {
+    filter: var(--logo-filter);
+  }
+
+  /* Window */
+  .ui-window {
+    background: var(--window-bg);
+    box-shadow: var(--window-shadow);
+    border-radius: var(--window-radius);
+    padding: var(--window-padding);
+    backdrop-filter: var(--window-backdrop);
+  }
+  .ui-window-body {
+    margin: var(--window-body-margin);
+    background: var(--window-body-bg);
+    box-shadow: var(--window-body-shadow);
+    border-radius: var(--window-body-radius);
+  }
+
+  /* Title bar */
+  .ui-titlebar {
+    height: var(--titlebar-height);
+    padding: var(--titlebar-padding);
+    background: var(--titlebar-bg);
+    color: var(--titlebar-text);
+    border-radius: var(--titlebar-radius);
+    border: var(--titlebar-border);
+    text-shadow: var(--titlebar-text-shadow);
+    font-family: var(--titlebar-font);
+    font-size: var(--titlebar-font-size);
+    font-weight: var(--titlebar-font-weight);
+  }
+  .ui-titlebar[data-active='false'] {
+    background: var(--titlebar-inactive-bg);
+    color: var(--titlebar-inactive-text);
+  }
+  .ui-titlebar-controls {
+    gap: var(--titlebar-btn-gap);
+    align-self: var(--titlebar-btn-align);
+  }
+  .ui-titlebar-btn {
+    width: var(--titlebar-btn-width);
+    height: var(--titlebar-btn-height);
+    background: var(--titlebar-btn-bg);
+    color: var(--titlebar-btn-color);
+    box-shadow: var(--titlebar-btn-shadow);
+    border-radius: var(--titlebar-btn-radius);
+    text-shadow: none;
+  }
+  .ui-titlebar-btn:first-child {
+    border-bottom-left-radius: var(--titlebar-btn-group-radius);
+  }
+  .ui-titlebar-btn:last-child {
+    border-bottom-right-radius: var(--titlebar-btn-group-radius);
+  }
+  .ui-titlebar-btn:hover:not(:disabled) {
+    background: var(--titlebar-btn-hover-bg);
+    color: var(--titlebar-btn-hover-color);
+  }
+  .ui-titlebar-btn:active:not(:disabled) {
+    box-shadow: var(--titlebar-btn-active-shadow);
+  }
+  .ui-titlebar-btn:disabled {
+    color: var(--color-disabled-text);
+  }
+  .ui-titlebar-btn[data-kind='close'] {
+    width: var(--titlebar-close-width);
+    background: var(--titlebar-close-bg);
+    color: var(--titlebar-close-color);
+  }
+  .ui-titlebar-btn[data-kind='close']:hover:not(:disabled) {
+    background: var(--titlebar-close-hover-bg);
+    color: var(--titlebar-close-hover-color);
+  }
+
+  /* Push button */
+  .ui-btn {
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    border: var(--btn-border);
+    border-radius: var(--btn-radius);
+    box-shadow: var(--btn-shadow);
+  }
+  .ui-btn:hover:not(:disabled) {
+    background: var(--btn-hover-bg);
+    border-color: var(--btn-hover-border-color);
+    box-shadow: var(--btn-hover-shadow);
+  }
+  .ui-btn:focus-visible:not(:disabled) {
+    outline: var(--btn-focus-outline);
+    outline-offset: var(--btn-focus-offset);
+    box-shadow: var(--btn-focus-shadow);
+  }
+  .ui-btn:active:not(:disabled),
+  .ui-btn[data-pressed='true']:not(:disabled) {
+    background: var(--btn-active-bg);
+    border-color: var(--btn-active-border-color);
+    box-shadow: var(--btn-active-shadow);
+  }
+  .ui-btn:disabled {
+    color: var(--color-disabled-text);
+    background: var(--btn-disabled-bg);
+    box-shadow: var(--btn-disabled-shadow);
+    text-shadow: var(--btn-disabled-text-shadow);
+  }
+
+  /* Text field / select / textarea */
+  .ui-field {
+    background: var(--field-bg);
+    color: var(--color-fg);
+    box-shadow: var(--field-shadow);
+    border-radius: var(--field-radius);
+  }
+  .ui-field.ui-field-thin {
+    box-shadow: var(--field-thin-shadow);
+  }
+  .ui-field:hover:not(:disabled) {
+    box-shadow: var(--field-hover-shadow);
+  }
+  .ui-field:focus,
+  .ui-field:focus-within,
+  .ui-field[aria-expanded='true'] {
+    box-shadow: var(--field-focus-shadow);
+  }
+  .ui-field:disabled {
+    color: var(--color-disabled-text);
+    background: var(--field-disabled-bg);
+  }
+
+  /* Combo box */
+  .ui-dropdown-btn {
+    background: var(--dropdown-btn-bg);
+    box-shadow: var(--dropdown-btn-shadow);
+    border-radius: var(--dropdown-btn-radius);
+    color: var(--dropdown-arrow-color);
+  }
+  .ui-dropdown-btn[data-open='true'] {
+    box-shadow: var(--dropdown-btn-open-shadow);
+  }
+  .ui-listbox {
+    background: var(--listbox-bg);
+    border: var(--listbox-border);
+    box-shadow: var(--listbox-shadow);
+    border-radius: var(--listbox-radius);
+  }
+  .ui-option[aria-selected='true'],
+  .ui-option:hover {
+    background: var(--color-selection);
+    color: var(--color-selection-text);
+  }
+
+  /* Menus */
+  .ui-menubar {
+    background: var(--menubar-bg);
+    box-shadow: var(--menubar-shadow);
+  }
+  .ui-menubar-item {
+    border-radius: var(--menubar-item-radius);
+  }
+  .ui-menubar-item:hover {
+    background: var(--menubar-item-hover-bg);
+    color: var(--menubar-item-hover-text);
+    box-shadow: var(--menubar-item-hover-shadow);
+  }
+  .ui-menubar-item[data-open='true'] {
+    background: var(--menubar-item-open-bg);
+    color: var(--menubar-item-open-text);
+    box-shadow: var(--menubar-item-open-shadow);
+  }
+  .ui-menu {
+    background: var(--menu-bg);
+    box-shadow: var(--menu-shadow);
+    border-radius: var(--menu-radius);
+    padding: var(--menu-padding);
+  }
+  .ui-menu-item {
+    border-radius: var(--menu-item-radius);
+  }
+  .ui-menu-item:disabled {
+    color: var(--color-disabled-text);
+  }
+  .ui-menu-item[data-danger='true']:not(:disabled) {
+    color: var(--color-danger);
+  }
+  .ui-menu-item:hover:not(:disabled),
+  .ui-menu-item[data-open='true'] {
+    background: var(--menu-item-hover-bg);
+    color: var(--menu-item-hover-text);
+    box-shadow: var(--menu-item-hover-shadow);
+  }
+  .ui-menu-sep {
+    border-top: 1px solid var(--menu-sep-top);
+    border-bottom: 1px solid var(--menu-sep-bottom);
+  }
+
+  /* Tabs */
+  .ui-tab {
+    background: var(--tab-bg);
+    color: var(--tab-text);
+    border-style: solid;
+    border-width: var(--tab-border-width);
+    border-color: var(--tab-border-color);
+    border-radius: var(--tab-radius);
+    box-shadow: var(--tab-shadow);
+  }
+  .ui-tab[aria-selected='false'] {
+    opacity: var(--tab-inactive-opacity);
+  }
+  .ui-tab[aria-selected='false']:hover {
+    background: var(--tab-hover-bg);
+  }
+  .ui-tab[aria-selected='true'] {
+    background: var(--tab-active-bg);
+    border-color: var(--tab-active-border-color);
+    box-shadow: var(--tab-active-shadow);
+  }
+  .ui-tab-panel {
+    background: var(--tab-panel-bg);
+    box-shadow: var(--tab-panel-shadow);
+    border-radius: var(--tab-panel-radius);
+  }
+
+  /* Toolbar */
+  .ui-toolbar {
+    background: var(--toolbar-bg);
+    box-shadow: var(--toolbar-shadow);
+  }
+  .ui-toolbtn {
+    border-radius: var(--toolbtn-radius);
+  }
+  .ui-toolbtn:hover:not(:disabled) {
+    background: var(--toolbtn-hover-bg);
+    box-shadow: var(--toolbtn-hover-shadow);
+  }
+  .ui-toolbtn:active:not(:disabled) {
+    background: var(--toolbtn-active-bg);
+    box-shadow: var(--toolbtn-active-shadow);
+  }
+  .ui-toolbtn[data-active='true'] {
+    background: var(--toolbtn-on-bg);
+    box-shadow: var(--toolbtn-on-shadow);
+  }
+  .ui-toolbtn:disabled {
+    color: var(--color-disabled-text);
+  }
+  .ui-toolbar-sep {
+    border-left: 1px solid var(--toolbar-sep-left);
+    border-right: 1px solid var(--toolbar-sep-right);
+  }
+
+  /* Status bar */
+  .ui-statusbar {
+    background: var(--statusbar-bg);
+    box-shadow: var(--statusbar-shadow);
+  }
+  .ui-statusbar-panel {
+    box-shadow: var(--statusbar-panel-shadow);
+    border-radius: var(--statusbar-panel-radius);
+  }
+
+  /* Progress bar */
+  .ui-progress {
+    background: var(--progress-well-bg);
+    box-shadow: var(--progress-well-shadow);
+    border-radius: var(--progress-well-radius);
+    padding: var(--progress-padding);
+  }
+  .ui-progress-fill {
+    background: var(--progress-fill);
+    border-radius: var(--progress-fill-radius);
+  }
+  .ui-progress-fill[data-tone='muted'] {
+    background: var(--progress-muted-fill);
+  }
+
+  /* Group box */
+  .ui-groupbox {
+    border: var(--groupbox-border);
+    border-image: var(--groupbox-border-image);
+    border-radius: var(--groupbox-radius);
+  }
+  .ui-groupbox-legend {
+    background: var(--groupbox-legend-bg);
+    color: var(--groupbox-legend-color);
+  }
+
+  /* Tree view */
+  .ui-tree {
+    padding-inline: var(--tree-inset);
+  }
+  .ui-tree-row {
+    border-radius: var(--tree-row-radius);
+  }
+  .ui-tree-row:hover {
+    background: var(--tree-hover-bg);
+    box-shadow: var(--tree-hover-shadow);
+  }
+  .ui-tree-row[aria-selected='true'] {
+    background: var(--tree-selected-bg);
+    color: var(--tree-selected-text);
+    box-shadow: var(--tree-selected-shadow);
+  }
+  .ui-tree-expander {
+    background: var(--tree-expander-bg);
+    border: var(--tree-expander-border);
+    border-radius: var(--tree-expander-radius);
+    color: var(--tree-expander-color);
+  }
+
+  /* Table header */
+  .ui-th {
+    background: var(--th-bg);
+    box-shadow: var(--th-shadow);
+    font-weight: var(--th-font-weight);
+  }
+
+  /* Split pane */
+  .ui-splitter {
+    background: var(--splitter-bg);
+  }
+  .ui-splitter-grip {
+    background: var(--splitter-grip-bg);
+    box-shadow: var(--splitter-grip-shadow);
+  }
+  [data-resize-handle-active] > .ui-splitter-grip {
+    box-shadow: var(--splitter-grip-active-shadow);
+  }
+
+  /* ScrollArea's painted scrollbars */
+  .ui-sb {
+    background: var(--sb-bg);
+    box-shadow: var(--sb-shadow);
+  }
+  .ui-sb-track {
+    background: var(--sb-track-bg);
+  }
+  .ui-sb-thumb {
+    background: var(--sb-thumb-bg);
+    box-shadow: var(--sb-thumb-shadow);
+    border-radius: var(--sb-thumb-radius);
+  }
+  .ui-sb-btn {
+    background: var(--sb-btn-bg);
+    box-shadow: var(--sb-btn-shadow);
+    border-radius: var(--sb-btn-radius);
+    color: var(--sb-arrow-color);
+  }
+  .ui-sb-btn:active {
+    box-shadow: var(--sb-btn-active-shadow);
+  }
 }
 
-/* ---- Win95 scrollbars ------------------------------------------------- */
-/* Blink/WebKit get the full chrome via ::-webkit-scrollbar; Firefox falls back
-   to the flat two-tone `scrollbar-color`. Use <ScrollArea> when you need the
-   exact look in every browser. */
+/* ---- Native scrollbars ---------------------------------------------------- */
+/* Blink/WebKit get the full chrome via ::-webkit-scrollbar; Firefox (and Chrome
+   121+, where the standard property wins) fall back to the flat two-tone
+   `scrollbar-color`. Use <ScrollArea> when you need the exact look in every
+   browser. */
 
 * {
-  scrollbar-color: var(--color-surface) var(--color-surface-2);
+  scrollbar-color: var(--sb-color-thumb) var(--sb-color-track);
 }
 
 ::-webkit-scrollbar {
@@ -144,39 +761,26 @@
   height: 16px;
 }
 ::-webkit-scrollbar-track {
-  background-color: var(--color-surface);
-  background-image: repeating-conic-gradient(
-    var(--color-bevel-light) 0% 25%,
-    var(--color-surface) 0% 50%
-  );
-  background-size: 2px 2px;
+  background: var(--sb-track-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-surface);
-  box-shadow:
-    inset -1px -1px 0 0 var(--color-bevel-darker),
-    inset 1px 1px 0 0 var(--color-bevel-light),
-    inset -2px -2px 0 0 var(--color-bevel-dark),
-    inset 2px 2px 0 0 var(--color-surface-2);
+  background: var(--sb-thumb-bg);
+  box-shadow: var(--sb-thumb-shadow);
+  border-radius: var(--sb-thumb-radius);
 }
 ::-webkit-scrollbar-corner {
-  background-color: var(--color-surface);
+  background-color: var(--sb-bg);
 }
 ::-webkit-scrollbar-button:single-button {
   display: block;
-  background-color: var(--color-surface);
+  background-color: var(--sb-btn-bg);
   background-repeat: no-repeat;
   background-position: center;
-  box-shadow:
-    inset -1px -1px 0 0 var(--color-bevel-darker),
-    inset 1px 1px 0 0 var(--color-bevel-light),
-    inset -2px -2px 0 0 var(--color-bevel-dark),
-    inset 2px 2px 0 0 var(--color-surface-2);
+  box-shadow: var(--sb-btn-shadow);
+  border-radius: var(--sb-btn-radius);
 }
 ::-webkit-scrollbar-button:single-button:active {
-  box-shadow:
-    inset 1px 1px 0 0 var(--color-bevel-dark),
-    inset -1px -1px 0 0 var(--color-bevel-light);
+  box-shadow: var(--sb-btn-active-shadow);
 }
 ::-webkit-scrollbar-button:single-button:vertical:decrement {
   height: 16px;
@@ -211,7 +815,6 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-bevel-dark, currentcolor);
-    border-radius: 0 !important;
   }
 
   html,
@@ -220,18 +823,19 @@
   }
 
   html {
-    background: var(--color-surface);
-    color: #000;
+    background: var(--desktop-bg);
+    color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
+    accent-color: var(--color-accent);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
   body {
-    background: var(--color-surface);
+    background: var(--desktop-bg);
     overflow: hidden; /* the app is a single fixed-size window */
   }
 
@@ -243,10 +847,10 @@
     color: inherit;
   }
 
-  /* Win95 dotted focus rectangle */
+  /* Win95 dotted focus rectangle (a soft ring in the modern themes) */
   :focus-visible {
-    outline: 1px dotted #000;
-    outline-offset: -4px;
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-offset);
   }
 
   ::selection {
@@ -260,16 +864,20 @@
 }
 
 /*
- * ag-grid: a selected row fills with the navy selection colour, but the theming
- * API only sets the background - the cell text stays black and is unreadable.
- * Force it (and any child icons) to white, matching ::selection above. Unlayered
- * so it outranks the theme's generated rules.
+ * ag-grid: a selected row fills with the selection colour, but the theming
+ * API only sets the background - the cell text keeps the foreground colour and
+ * can be unreadable. Force it to the selection text colour, matching ::selection
+ * above. Unlayered so it outranks the theme's generated rules.
  */
 .ag-row-selected .ag-cell {
-  color: #ffffff;
+  color: var(--color-selection-text);
 }
 
-/* Keep the navy fill (and white text) when a selected row is also hovered. */
+/* Keep the selection fill when a selected row is also hovered. */
 .ag-row-selected.ag-row-hover {
   --ag-row-hover-color: transparent;
+}
+
+.ag-header {
+  background-image: var(--grid-header-image);
 }

@@ -445,7 +445,7 @@ export function EditVmDialog({
         confirmLabel: "Remove disks",
         message: (
           <div className="space-y-2">
-            <p className="font-bold text-[#c00000]">
+            <p className="font-bold text-danger">
               This is a destructive action and can damage the VM.
             </p>
             <p>
@@ -502,7 +502,7 @@ export function EditVmDialog({
     >
       <div className="flex h-[440px] flex-col">
         {locked ? (
-          <p className="bevel-thin-sunken mb-2 shrink-0 bg-[#fff8e0] p-2 text-[#7a5a00]">
+          <p className="bevel-thin-sunken mb-2 shrink-0 bg-notice-bg p-2 text-notice-text">
             Another operation is running on this VM - wait for it to finish
             before editing.
           </p>
@@ -604,7 +604,7 @@ export function EditVmDialog({
                       )}
                     </div>
                     {memErrors.length > 0 ? (
-                      <div className="text-[#c00000]">
+                      <div className="text-danger">
                         {memErrors.map((e, i) => (
                           <p key={i}>{e}</p>
                         ))}
@@ -683,7 +683,7 @@ export function EditVmDialog({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
-                  className="bevel-sunken bg-window w-full resize-none px-1.5 py-[3px] text-base text-black outline-none"
+                  className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
                 />
               </label>
             </div>
@@ -716,7 +716,7 @@ export function EditVmDialog({
                   key={en.nic.id || i}
                   className={cn(
                     "bevel-thin-sunken space-y-2 p-2",
-                    en.action === "remove" && "bg-[#ffecec]",
+                    en.action === "remove" && "bg-danger-bg",
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -809,7 +809,7 @@ export function EditVmDialog({
                     </div>
                   )}
                   {en.action === "remove" && (
-                    <p className="text-[#c00000]">
+                    <p className="text-danger">
                       This adapter will be removed when you save.
                     </p>
                   )}
@@ -819,7 +819,7 @@ export function EditVmDialog({
               {newNics.map((nic, i) => (
                 <div
                   key={`new-${i}`}
-                  className="bevel-thin-sunken space-y-2 border border-dashed border-[#7f7f7f] p-2"
+                  className="bevel-thin-sunken space-y-2 border border-dashed border-bevel-dark p-2"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-base font-bold">
@@ -910,13 +910,13 @@ export function EditVmDialog({
           {tab === "disks" && (
             <div className="flex flex-col gap-2">
               {hasSnapshots ? (
-                <p className="bevel-thin-sunken bg-[#fff8e0] p-2 text-[#7a5a00]">
+                <p className="bevel-thin-sunken bg-notice-bg p-2 text-notice-text">
                   <Icon icon={TriangleAlert} size={13} /> Disk changes are
                   blocked while the VM has snapshots. Delete every snapshot
                   first.
                 </p>
               ) : disksNeedOff ? (
-                <p className="bevel-thin-sunken bg-[#fff8e0] p-2 text-[#7a5a00]">
+                <p className="bevel-thin-sunken bg-notice-bg p-2 text-notice-text">
                   <Icon icon={TriangleAlert} size={13} /> This is a BIOS
                   (generation 1) VM. Its disks are on the IDE controller, which
                   cannot change while the VM is running - power off the VM to
@@ -958,8 +958,8 @@ export function EditVmDialog({
                     key={ed.disk.id || i}
                     className={cn(
                       "bevel-thin-sunken space-y-2 p-2",
-                      ed.action === "remove" && "bg-[#ffecec]",
-                      ed.action === "expand" && "bg-[#e8f0ff]",
+                      ed.action === "remove" && "bg-danger-bg",
+                      ed.action === "expand" && "bg-info-bg",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -1023,7 +1023,7 @@ export function EditVmDialog({
                           }
                         />
                         {ed.newSizeGb * GIB <= ed.disk.sizeBytes ? (
-                          <span className="text-[#c00000]">
+                          <span className="text-danger">
                             Must be larger than {curGb} GB.
                           </span>
                         ) : null}
@@ -1032,7 +1032,7 @@ export function EditVmDialog({
 
                     {ed.action === "remove" && (
                       <div className="space-y-1">
-                        <p className="text-[#c00000]">
+                        <p className="text-danger">
                           <Icon icon={TriangleAlert} size={13} /> Destructive -
                           this disk will be detached from the VM on save.
                         </p>
@@ -1056,7 +1056,7 @@ export function EditVmDialog({
               {newDisks.map((nd, i) => (
                 <div
                   key={`new-${i}`}
-                  className="bevel-thin-sunken space-y-2 border border-dashed border-[#7f7f7f] p-2"
+                  className="bevel-thin-sunken space-y-2 border border-dashed border-bevel-dark p-2"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-base font-bold">
@@ -1136,7 +1136,7 @@ export function EditVmDialog({
               ) : null}
 
               {diskErrors.length > 0 ? (
-                <div className="text-[#c00000]">
+                <div className="text-danger">
                   {diskErrors.map((e, i) => (
                     <p key={i}>{e}</p>
                   ))}

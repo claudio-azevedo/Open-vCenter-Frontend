@@ -24,7 +24,7 @@ export function TaskDetailsDialog({
       <Button onClick={onClose}>Close</Button>
     }>
       {task.isError ? (
-        <p className="text-[#c00000]">
+        <p className="text-danger">
           {task.error instanceof ApiError
             ? task.error.message
             : "Could not load the task."}
@@ -52,7 +52,7 @@ export function TaskDetailsDialog({
               { label: "Finished", value: dateTime(t.finishedAt) },
               { label: "Correlation id", value: <code>{t.correlationId ?? "-"}</code> },
               ...(t.error
-                ? [{ label: "Error", value: <span className="text-[#c00000]">{t.error}</span> }]
+                ? [{ label: "Error", value: <span className="text-danger">{t.error}</span> }]
                 : []),
             ]}
           />

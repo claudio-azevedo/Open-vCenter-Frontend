@@ -15,8 +15,7 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
         ref={ref}
         id={inputId}
         className={cn(
-          'bevel-sunken bg-window px-1.5 py-[3px] text-base text-black',
-          'outline-none disabled:text-disabled-text',
+          'ui-field px-1.5 py-[3px] text-base outline-none',
           className,
         )}
         {...props}

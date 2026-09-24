@@ -1,4 +1,4 @@
-import { Dialog } from "~/components/win95";
+import { Button, Dialog } from "~/components/win95";
 
 export function AboutDialog({ onClose }: { onClose: () => void }) {
   return (
@@ -6,17 +6,11 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
       title="About Open vCenter"
       onClose={onClose}
       footer={
-        <button
-          type="button"
-          onClick={onClose}
-          className="bevel-raised active:bevel-pressed min-w-[75px] bg-surface px-3 py-[3px]"
-        >
-          OK
-        </button>
+        <Button onClick={onClose}>OK</Button>
       }
     >
       <div className="space-y-2 text-base">
-        <img src="/ovc-logo.svg" alt="Open vCenter" className="h-auto w-full" />
+        <img src="/ovc-logo.svg" alt="Open vCenter" className="ui-logo h-auto w-full" />
         <p className="font-bold">Open vCenter (OVC)</p>
         <p>A modern web application for managing VMs.</p>
         <p>Apache 2.0 licensed Open Source Software.</p>
@@ -26,7 +20,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
             href="https://github.com/claudio-azevedo/Open-vCenter"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-title-active underline"
+            className="text-accent underline"
           >
             github.com/claudio-azevedo/Open-vCenter
           </a>
@@ -36,7 +30,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
             href="https://openvcenter.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-title-active underline"
+            className="text-accent underline"
           >
             openvcenter.com
           </a>

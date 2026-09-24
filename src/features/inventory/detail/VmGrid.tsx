@@ -28,20 +28,23 @@ import { useVmBatchPowerAction } from "../actions/useVmBatchPowerAction";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// Flat, square, gray - a Win95 list view. Bevel comes from the wrapper div.
-const win95Theme = themeQuartz.withParams({
+// A flat list view; colours come from the active theme's CSS tokens (see
+// app.css / themes), so switching themes needs no grid re-render. The bevel
+// comes from the wrapper div.
+const gridTheme = themeQuartz.withParams({
   fontFamily: "inherit",
   fontSize: 11,
   headerFontSize: 11,
   borderRadius: 0,
   wrapperBorderRadius: 0,
-  browserColorScheme: "light",
-  backgroundColor: "#ffffff",
-  headerBackgroundColor: "#c0c0c0",
-  oddRowBackgroundColor: "#ffffff",
-  rowHoverColor: "#e8e8e8",
-  selectedRowBackgroundColor: "#000080",
-  borderColor: "#c0c0c0",
+  browserColorScheme: "inherit",
+  foregroundColor: "var(--grid-fg)",
+  backgroundColor: "var(--color-window)",
+  headerBackgroundColor: "var(--grid-header-bg)",
+  oddRowBackgroundColor: "var(--color-window)",
+  rowHoverColor: "var(--grid-row-hover)",
+  selectedRowBackgroundColor: "var(--color-selection)",
+  borderColor: "var(--grid-border)",
 });
 
 const columns: ColDef<Vm>[] = [
@@ -213,7 +216,7 @@ export function VmGrid({ vms }: { vms: Vm[] }) {
             disabled={batch.isPending}
             onClick={() => runBatch("start")}
           >
-            <Icon icon={Play} size={14} className="text-[#008000]" />
+            <Icon icon={Play} size={14} className="text-success" />
             Power On ({selectedVms.length})
           </Button>
         )}
@@ -223,7 +226,7 @@ export function VmGrid({ vms }: { vms: Vm[] }) {
             disabled={batch.isPending}
             onClick={() => runBatch("stop")}
           >
-            <Icon icon={Power} size={14} className="text-[#c00000]" />
+            <Icon icon={Power} size={14} className="text-danger" />
             Power Off ({selectedVms.length})
           </Button>
         )}
@@ -234,7 +237,7 @@ export function VmGrid({ vms }: { vms: Vm[] }) {
           fallback={<div className="p-2 text-disabled-text">Loading grid…</div>}
         >
           <AgGridReact<Vm>
-            theme={win95Theme}
+            theme={gridTheme}
             rowData={filtered}
             columnDefs={columns}
             defaultColDef={defaultColDef}

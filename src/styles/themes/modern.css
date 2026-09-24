@@ -1,0 +1,336 @@
+/*
+ * Modern - flat, rounded, soft shadows. Palette follows shadcn/ui's zinc
+ * tokens (light + dark). Same density as the retro themes on purpose: only
+ * the look changes, not the layout. Native (thin) scrollbars - see
+ * `nativeScrollbars` in src/theme/themes.ts.
+ */
+
+:root[data-theme='modern-light'],
+:root[data-theme='modern-dark'] {
+  --font-sans: Inter, "Segoe UI Variable", "Segoe UI", -apple-system,
+    BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  --bevel-raised: 0 0 0 1px var(--color-line), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --bevel-sunken: inset 0 0 0 1px var(--color-line);
+  --bevel-pressed: inset 0 0 0 1px var(--color-line);
+  --bevel-thin-raised: inset 0 0 0 1px var(--color-line);
+  --bevel-thin-sunken: inset 0 0 0 1px var(--color-line);
+  --bevel-window: var(--bevel-raised);
+  --panel-radius: 6px;
+
+  --desktop-bg: var(--color-surface-2);
+
+  --focus-outline: 2px solid var(--modern-ring);
+  --focus-offset: 1px;
+
+  --window-bg: var(--color-surface);
+  --window-shadow: 0 0 0 1px var(--color-line), 0 8px 30px rgba(0, 0, 0, 0.12);
+  --window-radius: 10px;
+  --window-padding: 0;
+  --window-body-margin: 0;
+  --window-body-radius: 0 0 10px 10px;
+
+  --titlebar-height: 30px;
+  --titlebar-padding: 0 4px 0 10px;
+  --titlebar-bg: var(--color-surface);
+  --titlebar-text: var(--color-fg);
+  --titlebar-font-weight: 600;
+  --titlebar-radius: 10px 10px 0 0;
+  --titlebar-border: none;
+  --titlebar-inactive-bg: var(--color-surface);
+  --titlebar-inactive-text: var(--color-disabled-text);
+  --titlebar-btn-gap: 2px;
+  --titlebar-btn-width: 26px;
+  --titlebar-btn-height: 22px;
+  --titlebar-btn-bg: transparent;
+  --titlebar-btn-color: var(--color-disabled-text);
+  --titlebar-btn-shadow: none;
+  --titlebar-btn-radius: 6px;
+  --titlebar-btn-hover-bg: var(--modern-hover);
+  --titlebar-btn-hover-color: var(--color-fg);
+  --titlebar-btn-active-shadow: none;
+  --titlebar-close-hover-bg: #e11d48;
+  --titlebar-close-hover-color: #ffffff;
+
+  --btn-bg: var(--color-window);
+  --btn-color: var(--color-fg);
+  --btn-border: 1px solid var(--color-line);
+  --btn-radius: 6px;
+  --btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --btn-hover-bg: var(--modern-hover);
+  --btn-hover-border-color: var(--color-line);
+  --btn-active-bg: var(--modern-active);
+  --btn-active-border-color: var(--color-line);
+  --btn-active-shadow: none;
+  --btn-focus-shadow: 0 0 0 3px var(--modern-ring-soft);
+  --btn-focus-outline: none;
+  --btn-focus-offset: 0;
+  --btn-disabled-bg: var(--color-window);
+  --btn-disabled-shadow: none;
+  --btn-disabled-text-shadow: none;
+
+  --field-shadow: inset 0 0 0 1px var(--color-line);
+  --field-thin-shadow: var(--field-shadow);
+  --field-hover-shadow: inset 0 0 0 1px var(--color-bevel-darker);
+  --field-focus-shadow: inset 0 0 0 1px var(--modern-ring),
+    0 0 0 3px var(--modern-ring-soft);
+  --field-radius: 6px;
+  --field-disabled-bg: var(--color-surface);
+
+  --dropdown-btn-bg: transparent;
+  --dropdown-btn-shadow: none;
+  --dropdown-btn-open-shadow: none;
+  --dropdown-arrow-color: var(--color-disabled-text);
+  --listbox-border: 1px solid var(--color-line);
+  --listbox-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --listbox-radius: 8px;
+
+  --menubar-bg: var(--color-surface);
+  --menubar-shadow: inset 0 -1px 0 var(--color-line);
+  --menubar-item-radius: 6px;
+  --menubar-item-hover-bg: var(--modern-hover);
+  --menubar-item-open-bg: var(--modern-active);
+  --menubar-item-open-text: var(--color-fg);
+  --menu-bg: var(--color-window);
+  --menu-shadow: 0 0 0 1px var(--color-line), 0 10px 30px rgba(0, 0, 0, 0.15);
+  --menu-radius: 8px;
+  --menu-padding: 4px;
+  --menu-item-radius: 4px;
+  --menu-item-hover-bg: var(--modern-hover);
+  --menu-item-hover-text: var(--color-fg);
+  --menu-sep-top: var(--color-line);
+  --menu-sep-bottom: transparent;
+
+  --tab-bg: transparent;
+  --tab-text: var(--color-disabled-text);
+  --tab-inactive-opacity: 1;
+  --tab-border-width: 0 0 2px 0;
+  --tab-border-color: transparent;
+  --tab-radius: 0;
+  --tab-hover-bg: transparent;
+  --tab-active-bg: transparent;
+  --tab-active-border-color: var(--modern-ring);
+  --tab-panel-bg: var(--color-window);
+  --tab-panel-shadow: 0 0 0 1px var(--color-line);
+  --tab-panel-radius: 8px;
+
+  --toolbar-bg: var(--color-surface);
+  --toolbar-shadow: none;
+  --toolbtn-radius: 6px;
+  --toolbtn-hover-bg: var(--modern-hover);
+  --toolbtn-hover-shadow: none;
+  --toolbtn-active-bg: var(--modern-active);
+  --toolbtn-active-shadow: none;
+  --toolbtn-on-bg: var(--modern-active);
+  --toolbtn-on-shadow: inset 0 0 0 1px var(--color-line);
+  --toolbar-sep-left: var(--color-line);
+  --toolbar-sep-right: transparent;
+
+  --statusbar-bg: var(--color-surface);
+  --statusbar-shadow: inset 0 1px 0 var(--color-line);
+  --statusbar-panel-shadow: inset -1px 0 0 var(--color-line);
+  --statusbar-panel-radius: 0;
+
+  --progress-well-bg: var(--modern-active);
+  --progress-well-shadow: none;
+  --progress-well-radius: 9999px;
+  --progress-padding: 0;
+  --progress-fill: var(--modern-ring);
+  --progress-fill-radius: 9999px;
+  --progress-muted-fill: var(--color-bevel-dark);
+
+  --groupbox-border: 1px solid var(--color-line);
+  --groupbox-border-image: none;
+  --groupbox-radius: 8px;
+  --groupbox-legend-bg: transparent;
+  --groupbox-legend-color: var(--color-disabled-text);
+
+  --tree-inset: 4px;
+  --tree-row-radius: 4px;
+  --tree-hover-bg: var(--modern-hover);
+  --tree-selected-bg: var(--color-selection);
+  --tree-selected-text: var(--color-selection-text);
+  --tree-expander-bg: transparent;
+  --tree-expander-border: none;
+  --tree-expander-color: var(--color-disabled-text);
+
+  --th-bg: var(--modern-hover);
+  --th-shadow: inset -1px 0 0 var(--color-bevel-dark),
+    inset 0 -1px 0 var(--color-bevel-darker);
+  --th-font-weight: 600;
+
+  --splitter-bg: transparent;
+  --splitter-grip-bg: transparent;
+  --splitter-grip-shadow: none;
+  --splitter-grip-active-shadow: inset 0 0 0 1px var(--modern-ring);
+
+  --sb-color-thumb: var(--color-bevel-dark);
+  --sb-color-track: transparent;
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: var(--color-surface);
+  --grid-header-image: none;
+  --grid-row-hover: var(--modern-hover);
+  --grid-border: var(--color-line);
+}
+
+:root[data-theme='modern-light'] {
+  --color-surface: #fafafa;
+  --color-surface-2: #f4f4f5;
+  --color-window: #ffffff;
+  --color-fg: #18181b;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #d4d4d8;
+  --color-bevel-darker: #a1a1aa;
+  --color-line: #e4e4e7;
+
+  --color-title-active: #2563eb;
+  --color-title-active-2: #3b82f6;
+  --color-title-inactive: #a1a1aa;
+  --color-title-text: #18181b;
+
+  --color-selection: #dbeafe;
+  --color-selection-text: #1e3a8a;
+  --color-disabled-text: #71717a;
+  --color-disabled-highlight: transparent;
+  --color-link: #2563eb;
+
+  --color-accent: #2563eb;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-info: #2563eb;
+  --color-running: #2563eb;
+  --color-notice-bg: #fffbeb;
+  --color-notice-text: #92400e;
+  --color-danger-bg: #fef2f2;
+  --color-info-bg: #eff6ff;
+
+  --color-chart-1: #16a34a;
+  --color-chart-2: #2563eb;
+  --color-chart-3: #0d9488;
+  --color-chart-4: #c026d3;
+  --color-chart-5: #dc2626;
+
+  --modern-hover: #f4f4f5;
+  --modern-active: #e4e4e7;
+  --modern-ring: #2563eb;
+  --modern-ring-soft: rgba(37, 99, 235, 0.25);
+}
+
+:root[data-theme='modern-dark'] {
+  color-scheme: dark;
+
+  --color-surface: #18181b;
+  --color-surface-2: #09090b;
+  --color-window: #111113;
+  --color-fg: #e4e4e7;
+  --color-bevel-light: #3f3f46;
+  --color-bevel-dark: #52525b;
+  --color-bevel-darker: #71717a;
+  --color-line: #27272a;
+
+  --color-title-active: #3b82f6;
+  --color-title-active-2: #60a5fa;
+  --color-title-inactive: #52525b;
+  --color-title-text: #e4e4e7;
+
+  --color-selection: #1e3a8a;
+  --color-selection-text: #dbeafe;
+  --color-disabled-text: #a1a1aa;
+  --color-disabled-highlight: transparent;
+  --color-link: #60a5fa;
+
+  --color-accent: #60a5fa;
+  --color-success: #4ade80;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-running: #93c5fd;
+  --color-notice-bg: #422006;
+  --color-notice-text: #fde68a;
+  --color-danger-bg: #450a0a;
+  --color-info-bg: #172554;
+
+  --color-chart-1: #4ade80;
+  --color-chart-2: #60a5fa;
+  --color-chart-3: #2dd4bf;
+  --color-chart-4: #e879f9;
+  --color-chart-5: #f87171;
+
+  --modern-hover: #27272a;
+  --modern-active: #3f3f46;
+  --modern-ring: #3b82f6;
+  --modern-ring-soft: rgba(59, 130, 246, 0.35);
+
+  /* The logo's navy wordmark vanishes on a dark ground: invert lightness, keep hue */
+  --logo-filter: invert(1) hue-rotate(180deg) brightness(1.1);
+}
+
+@layer components {
+  /* Chevrons instead of +/- boxes in the tree */
+  :is([data-theme='modern-light'], [data-theme='modern-dark'])
+    .ui-tree-expander-glyph {
+    display: none;
+  }
+  :is([data-theme='modern-light'], [data-theme='modern-dark'])
+    .ui-tree-expander::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 120ms ease;
+  }
+  :is([data-theme='modern-light'], [data-theme='modern-dark'])
+    .ui-tree-expander[data-expanded='true']::before {
+    transform: rotate(45deg);
+  }
+
+  /* Softer transitions for the interactive bits */
+  :is([data-theme='modern-light'], [data-theme='modern-dark'])
+    :is(.ui-btn, .ui-toolbtn, .ui-menu-item, .ui-menubar-item, .ui-tree-row, .ui-field, .ui-tab) {
+    transition:
+      background-color 120ms ease,
+      box-shadow 120ms ease,
+      color 120ms ease;
+  }
+
+  /* Thin native scrollbars */
+  :is([data-theme='modern-light'], [data-theme='modern-dark']) * {
+    scrollbar-width: thin;
+  }
+}
+
+/* The Classic webkit scrollbar buttons make no sense here */
+:is([data-theme='modern-light'], [data-theme='modern-dark'])
+  ::-webkit-scrollbar-button {
+  display: none;
+}
+:is([data-theme='modern-light'], [data-theme='modern-dark'])
+  ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+:is([data-theme='modern-light'], [data-theme='modern-dark'])
+  ::-webkit-scrollbar-track {
+  background: transparent;
+}
+:is([data-theme='modern-light'], [data-theme='modern-dark'])
+  ::-webkit-scrollbar-thumb {
+  background: var(--color-bevel-dark);
+  box-shadow: none;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}

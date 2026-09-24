@@ -146,7 +146,7 @@ export function AgentManagementDialog() {
                 : "Unavailable"}
           </p>
           {storage.data && !storage.data.downloadsEnabled ? (
-            <p className="text-base text-title-active">
+            <p className="text-base text-accent">
               Downloads disabled - set OVC_PUBLIC_BASE_URL so hosts can fetch
               the binary. Upgrades will fail until then.
             </p>

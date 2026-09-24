@@ -15,8 +15,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         ref={ref}
         id={selectId}
         className={cn(
-          'bevel-thin-sunken bg-window px-1 py-[2px] text-base text-black',
-          'appearance-none disabled:text-disabled-text',
+          'ui-field ui-field-thin px-1 py-[2px] text-base appearance-none',
           className,
         )}
         {...props}

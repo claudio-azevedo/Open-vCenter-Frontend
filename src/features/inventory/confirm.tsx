@@ -100,7 +100,7 @@ export function ConfirmHost() {
         {state.checkbox && (
           <label
             className={`flex items-center gap-2 text-base ${
-              state.checkbox.danger ? "text-[#c00000]" : ""
+              state.checkbox.danger ? "text-danger" : ""
             }`}
           >
             <input

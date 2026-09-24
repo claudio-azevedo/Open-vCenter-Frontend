@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ShieldAlert } from "lucide-react";
-import { Button, Icon } from "~/components/win95";
+import { Button, Icon, Window } from "~/components/win95";
 import { hasAnyRole, isAdminRole } from "~/auth";
 
 export const Route = createFileRoute("/access-denied")({
@@ -16,12 +16,12 @@ export const Route = createFileRoute("/access-denied")({
 
 function AccessDenied() {
   return (
-    <div className="grid h-full w-full place-items-center bg-surface p-8">
-      <div className="bevel-raised w-[380px] bg-surface p-[3px] pt-[2px]">
-        <div className="flex h-[22px] items-center gap-1 bg-title-active bg-gradient-to-r from-title-active to-title-active-2 px-2 text-title-text">
-          <Icon icon={ShieldAlert} size={14} />
-          <span className="text-base font-bold">Access denied</span>
-        </div>
+    <div className="grid h-full w-full place-items-center p-8">
+      <Window
+        title="Access denied"
+        icon={<Icon icon={ShieldAlert} size={14} />}
+        className="w-[380px]"
+      >
         <div className="flex flex-col gap-3 p-4 text-base">
           <p className="font-bold">No roles assigned</p>
           <p>
@@ -32,7 +32,7 @@ function AccessDenied() {
             Sign out
           </Button>
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

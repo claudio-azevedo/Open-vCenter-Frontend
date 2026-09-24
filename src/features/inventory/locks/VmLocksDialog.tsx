@@ -89,7 +89,7 @@ export function VmLocksDialog({ onClose }: { onClose: () => void }) {
         </p>
 
         {locks.isError ? (
-          <p className="text-[#c00000]">
+          <p className="text-danger">
             {locks.error instanceof ApiError
               ? locks.error.message
               : "Could not load locks."}

@@ -4,6 +4,7 @@ import { routeTree } from './routeTree.gen'
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
 import { NotFound } from './components/NotFound'
 import { ApiError } from '~/api/client'
+import { DEFAULT_PREFERENCES } from '~/preferences'
 
 // The backend rejects an expired/dead OIDC session with 401 on any API call.
 // When that happens the app's own session cookie can still look valid, so the
@@ -41,7 +42,7 @@ export function getRouter() {
 
   return createRouter({
     routeTree,
-    context: { queryClient, user: null, authDisabled: false },
+    context: { queryClient, user: null, authDisabled: false, preferences: DEFAULT_PREFERENCES },
     defaultPreload: 'intent',
     defaultErrorComponent: DefaultCatchBoundary,
     defaultNotFoundComponent: () => <NotFound />,

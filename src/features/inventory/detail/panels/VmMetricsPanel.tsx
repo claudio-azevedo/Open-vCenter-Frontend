@@ -69,7 +69,7 @@ export function VmMetricsPanel({ vm }: { vm: Vm }) {
           series={[
             {
               label: "CPU",
-              color: "#008000",
+              color: 'var(--color-chart-1)',
               values: gauge(samples, (s) => s.cpuPercent),
             },
           ]}
@@ -84,7 +84,7 @@ export function VmMetricsPanel({ vm }: { vm: Vm }) {
           series={[
             {
               label: "Used",
-              color: "#000080",
+              color: 'var(--color-chart-2)',
               values: gauge(samples, (s) => s.memBytes),
             },
           ]}
@@ -99,12 +99,12 @@ export function VmMetricsPanel({ vm }: { vm: Vm }) {
           series={[
             {
               label: "Receive",
-              color: "#008080",
+              color: 'var(--color-chart-3)',
               values: rateSeries(samples, (s) => s.netRxBytes),
             },
             {
               label: "Send",
-              color: "#a000a0",
+              color: 'var(--color-chart-4)',
               values: rateSeries(samples, (s) => s.netTxBytes),
             },
           ]}
@@ -119,7 +119,7 @@ export function VmMetricsPanel({ vm }: { vm: Vm }) {
           series={[
             {
               label: "Disk I/O",
-              color: "#c00000",
+              color: 'var(--color-chart-5)',
               values: rateSeries(samples, (s) => s.diskBytes),
             },
           ]}

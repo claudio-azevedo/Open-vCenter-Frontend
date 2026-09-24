@@ -64,7 +64,7 @@ export function TasksDock() {
         <Icon icon={ListChecks} size={14} />
         <span className="font-bold">Recent Tasks</span>
         {running > 0 ? (
-          <span className="bevel-thin-sunken bg-window px-1 text-[#00007b]">
+          <span className="bevel-thin-sunken bg-window px-1 text-running">
             {running} running
           </span>
         ) : null}

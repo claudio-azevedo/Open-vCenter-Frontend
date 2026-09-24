@@ -9,6 +9,7 @@ import {
   VmIcon,
 } from "./nodeIcons";
 import type { Selection, SelectionKind } from "../selection";
+import type { TreeBehavior } from "~/preferences";
 
 const SELECTABLE_KINDS: SelectionKind[] = [
   "cluster",
@@ -182,4 +183,41 @@ export function buildInventoryTree(params: {
   }
 
   return nodes;
+}
+
+/**
+ * The nodes that start expanded for a tree-behaviour preference:
+ * `expanded` opens every top-level node (clusters + standalone hosts) and each
+ * cluster's hosts, leaving folders collapsed; `collapsed` opens nothing. Either
+ * way the ancestors of `selectedId` are opened too, so a deep-linked selection
+ * is never hidden inside a collapsed node.
+ */
+export function initialExpansion(
+  nodes: TreeNode[],
+  behavior: TreeBehavior,
+  selectedId?: string,
+): Set<string> {
+  const next = new Set<string>();
+  if (behavior === "expanded") {
+    for (const top of nodes) {
+      next.add(top.id);
+      for (const child of top.children ?? []) {
+        if (child.id.startsWith("host:")) next.add(child.id);
+      }
+    }
+  }
+  if (selectedId) {
+    for (const id of ancestorsOf(nodes, selectedId) ?? []) next.add(id);
+  }
+  return next;
+}
+
+/** Ids of the nodes above `id`, root first; `null` when `id` isn't in the tree. */
+function ancestorsOf(nodes: TreeNode[], id: string): string[] | null {
+  for (const node of nodes) {
+    if (node.id === id) return [];
+    const below = ancestorsOf(node.children ?? [], id);
+    if (below) return [node.id, ...below];
+  }
+  return null;
 }

@@ -361,7 +361,7 @@ function ExportTemplateDialog({ vmId }: { vmId: string }) {
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder="What this template is, how it was prepared…"
-            className="bevel-sunken bg-window w-full resize-none px-1.5 py-[3px] text-base text-black outline-none"
+            className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
           />
         </label>
       </div>
@@ -394,7 +394,7 @@ function NotesDialog({ vmId }: { vmId: string }) {
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         rows={6}
-        className="bevel-sunken bg-window w-full resize-none px-1.5 py-[3px] text-base text-black outline-none"
+        className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
       />
     </Dialog>
   );

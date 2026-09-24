@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Minus, Square, X } from 'lucide-react'
-import { cn } from './bevel'
 import { Icon } from './Icon'
 
 export interface TitleBarProps {
@@ -13,11 +12,13 @@ export interface TitleBarProps {
 }
 
 function TitleButton({
+  kind,
   label,
   icon,
   onClick,
   disabled,
 }: {
+  kind: 'minimize' | 'maximize' | 'close'
   label: string
   icon: React.ReactNode
   onClick?: () => void
@@ -27,12 +28,10 @@ function TitleButton({
     <button
       type="button"
       aria-label={label}
+      data-kind={kind}
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        'bevel-raised active:bevel-pressed grid h-[18px] w-[18px] place-items-center bg-surface',
-        'text-black disabled:text-disabled-text',
-      )}
+      className="ui-titlebar-btn grid shrink-0 place-items-center"
     >
       {icon}
     </button>
@@ -49,18 +48,15 @@ export function TitleBar({
 }: TitleBarProps) {
   return (
     <div
-      className={cn(
-        'flex h-[22px] items-center gap-1 px-[3px] py-[2px] select-none',
-        active
-          ? 'bg-title-active bg-gradient-to-r from-title-active to-title-active-2 text-title-text'
-          : 'bg-title-inactive text-surface-2',
-      )}
+      data-active={active}
+      className="ui-titlebar flex shrink-0 items-center gap-1 select-none"
     >
       {icon ? <span className="grid place-items-center">{icon}</span> : null}
-      <span className="flex-1 truncate text-base font-bold">{title}</span>
-      <div className="flex items-center gap-[2px]">
+      <span className="flex-1 truncate">{title}</span>
+      <div className="ui-titlebar-controls flex items-center">
         {onMinimize ? (
           <TitleButton
+            kind="minimize"
             label="Minimize"
             onClick={onMinimize}
             icon={<Icon icon={Minus} size={12} className="mt-1" />}
@@ -68,6 +64,7 @@ export function TitleBar({
         ) : null}
         {onMaximize ? (
           <TitleButton
+            kind="maximize"
             label="Maximize"
             onClick={onMaximize}
             icon={<Icon icon={Square} size={10} />}
@@ -75,6 +72,7 @@ export function TitleBar({
         ) : null}
         {onClose ? (
           <TitleButton
+            kind="close"
             label="Close"
             onClick={onClose}
             icon={<Icon icon={X} size={12} />}

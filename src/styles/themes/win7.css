@@ -1,0 +1,341 @@
+/*
+ * Windows 7 (Aero). Values ported from 7.css (github.com/khang-nd/7.css, MIT)
+ * - see "Credits" in the README. The glass frame is a translucent tinted
+ * background + `backdrop-filter`, so it blurs whatever sits behind the window:
+ * the desktop wallpaper for the main window, the Explorer for dialogs.
+ */
+
+:root[data-theme='win7'] {
+  --color-surface: #f0f0f0;
+  --color-surface-2: #fafafa;
+  --color-window: #ffffff;
+  --color-fg: #1e1e1e;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #a0a0a0;
+  --color-bevel-darker: #707070;
+  --color-line: #abadb3;
+
+  --color-title-active: #2b6cc4;
+  --color-title-active-2: #5a9ae6;
+  --color-title-inactive: #a9bdd6;
+  --color-title-text: #000000;
+
+  --color-selection: #cce8ff;
+  --color-selection-text: #000000;
+  --color-disabled-text: #6d6d6d;
+  --color-disabled-highlight: transparent;
+  --color-link: #0066cc;
+
+  --color-accent: #1e5aa8;
+  --color-success: #268a26;
+  --color-danger: #c42b1c;
+  --color-warning: #b07d0b;
+  --color-info: #3a78c9;
+  --color-running: #1e5aa8;
+  --color-notice-bg: #fff8e0;
+  --color-notice-text: #6b5200;
+  --color-info-bg: #e5f1fb;
+
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --radius-full: 9999px;
+
+  --bevel-raised: inset 0 0 0 1px #d9d9d9;
+  --bevel-sunken: inset 0 0 0 1px #828790;
+  --bevel-pressed: inset 0 0 0 1px #98a7b8, inset 1px 1px 2px rgba(0, 0, 0, 0.12);
+  --bevel-thin-raised: inset 0 0 0 1px #dadada;
+  --bevel-thin-sunken: inset 0 0 0 1px #c5c5c5;
+  --bevel-window: var(--bevel-raised);
+  --panel-radius: 2px;
+
+  /* "Harmony"-style wallpaper behind the glass */
+  --desktop-bg: radial-gradient(
+      ellipse 60% 45% at 28% 38%,
+      rgba(120, 210, 255, 0.75),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 75% 70%,
+      rgba(64, 160, 90, 0.55),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 35% at 60% 25%,
+      rgba(255, 170, 60, 0.45),
+      transparent 70%
+    ),
+    linear-gradient(135deg, #0c3b7c, #1a6fbf 50%, #0a2f66);
+
+  --focus-outline: 1px dotted var(--color-fg);
+  --focus-offset: -3px;
+
+  /* Aero glass window */
+  --window-bg: linear-gradient(
+      115deg,
+      transparent 0 18%,
+      rgba(255, 255, 255, 0.28) 19% 24%,
+      transparent 25% 55%,
+      rgba(255, 255, 255, 0.2) 56% 60%,
+      transparent 61%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.45),
+      rgba(255, 255, 255, 0.1) 30px
+    ),
+    rgba(100, 150, 205, 0.55);
+  --window-backdrop: blur(10px) saturate(1.4);
+  --window-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.65), 2px 4px 16px rgba(0, 0, 0, 0.55);
+  --window-radius: 7px;
+  --window-padding: 0 7px 7px;
+  --window-body-margin: 0;
+  --window-body-bg: var(--color-surface);
+  --window-body-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(255, 255, 255, 0.5);
+  --window-body-radius: 1px;
+
+  --titlebar-height: 30px;
+  --titlebar-padding: 0 0 2px 2px;
+  --titlebar-bg: transparent;
+  --titlebar-text: #000000;
+  --titlebar-text-shadow: 0 0 10px #ffffff, 0 0 6px #ffffff, 0 0 3px #ffffff;
+  --titlebar-font-size: 12px;
+  --titlebar-font-weight: 400;
+  --titlebar-inactive-bg: transparent;
+  --titlebar-inactive-text: #3a3a3a;
+  --titlebar-btn-gap: 0;
+  --titlebar-btn-align: flex-start;
+  --titlebar-btn-width: 27px;
+  --titlebar-btn-height: 19px;
+  --titlebar-btn-bg: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.3) 45%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    rgba(255, 255, 255, 0.5)
+  );
+  --titlebar-btn-color: #1e1e1e;
+  --titlebar-btn-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 1px rgba(0, 0, 0, 0.45);
+  --titlebar-btn-radius: 0;
+  --titlebar-btn-group-radius: 5px;
+  --titlebar-btn-hover-bg: linear-gradient(
+    180deg,
+    #b6e3fb,
+    #7fcbf5 45%,
+    #3aa4e0 50%,
+    #53c0f0 75%,
+    #a8e5fa
+  );
+  --titlebar-btn-active-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.55), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --titlebar-close-width: 45px;
+  --titlebar-close-bg: linear-gradient(
+    180deg,
+    #e8a493,
+    #d67b67 45%,
+    #b03c1f 50%,
+    #d2481e 75%,
+    #e7907a
+  );
+  --titlebar-close-color: #ffffff;
+  --titlebar-close-hover-bg: linear-gradient(
+    180deg,
+    #f4b9a9,
+    #ea8a73 45%,
+    #d0391a 50%,
+    #ef5a2c 75%,
+    #f7b09c
+  );
+
+  /* Buttons */
+  --btn-bg: linear-gradient(180deg, #f2f2f2 45%, #ebebeb 45%, #cfcfcf);
+  --btn-border: 1px solid #707070;
+  --btn-radius: 3px;
+  --btn-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  --btn-hover-bg: linear-gradient(180deg, #eaf6fd 45%, #bee6fd 45%, #a7d9f5);
+  --btn-hover-border-color: #3c7fb1;
+  --btn-hover-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  --btn-active-bg: linear-gradient(
+    180deg,
+    #e5f4fc,
+    #c4e5f6 30% 50%,
+    #98d1ef 50%,
+    #68b3db
+  );
+  --btn-active-border-color: #2c628b;
+  --btn-active-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2),
+    inset -1px 1px 0 rgba(0, 0, 0, 0.07);
+  --btn-focus-shadow: inset 0 0 0 1px #48c4f6, inset 0 0 0 2px #ffffff;
+  --btn-focus-outline: 1px dotted #000000;
+  --btn-focus-offset: -4px;
+  --btn-disabled-bg: #f4f4f4;
+  --btn-disabled-shadow: none;
+  --btn-disabled-text-shadow: none;
+
+  --field-shadow: inset 0 0 0 1px #abadb3;
+  --field-thin-shadow: var(--field-shadow);
+  --field-hover-shadow: inset 0 0 0 1px #7eb4ea;
+  --field-focus-shadow: inset 0 0 0 1px #3d7bad;
+  --field-radius: 2px;
+  --field-disabled-bg: #f4f4f4;
+
+  --dropdown-btn-bg: transparent;
+  --dropdown-btn-shadow: none;
+  --dropdown-btn-open-shadow: none;
+  --dropdown-arrow-color: #333333;
+  --listbox-border: 1px solid #646464;
+  --listbox-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+
+  --menubar-bg: linear-gradient(180deg, #fbfcfe, #e8edf6 45%, #dce6f4 45%, #dde9f7);
+  --menubar-shadow: inset 0 -1px 0 #b6bccc;
+  --menubar-item-radius: 3px;
+  --menubar-item-hover-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(203, 226, 250, 0.7));
+  --menubar-item-hover-shadow: inset 0 0 0 1px #aecff7;
+  --menubar-item-open-bg: linear-gradient(180deg, #e9f2fc, #cde3fa);
+  --menubar-item-open-text: #000000;
+  --menubar-item-open-shadow: inset 0 0 0 1px #7da2ce;
+  --menu-bg: linear-gradient(90deg, #f1f1f1 26px, #e2e3e3 26px 27px, #ffffff 27px 28px, #f5f5f5 28px);
+  --menu-shadow: 0 0 0 1px #979797, 3px 3px 4px rgba(0, 0, 0, 0.25);
+  --menu-radius: 0;
+  --menu-padding: 2px;
+  --menu-item-radius: 3px;
+  --menu-item-hover-bg: linear-gradient(180deg, rgba(234, 243, 253, 0.9), rgba(214, 232, 252, 0.9));
+  --menu-item-hover-text: #000000;
+  --menu-item-hover-shadow: inset 0 0 0 1px #aecff7;
+  --menu-sep-top: #e2e3e3;
+  --menu-sep-bottom: #ffffff;
+
+  --tab-bg: linear-gradient(180deg, #f2f2f2 45%, #ebebeb 45%, #cfcfcf);
+  --tab-border-color: #898c95 #898c95 transparent #898c95;
+  --tab-radius: 3px 3px 0 0;
+  --tab-inactive-opacity: 1;
+  --tab-hover-bg: linear-gradient(180deg, #eaf6fd 45%, #bee6fd 45%, #a7d9f5);
+  --tab-active-bg: #ffffff;
+  --tab-active-border-color: #898c95 #898c95 transparent #898c95;
+  --tab-panel-bg: #ffffff;
+  --tab-panel-shadow: inset 0 0 0 1px #898c95;
+
+  --toolbar-bg: linear-gradient(180deg, #fbfcfe, #e8edf6 45%, #dce6f4 45%, #dde9f7);
+  --toolbar-shadow: inset 0 -1px 0 #b6bccc;
+  --toolbtn-radius: 3px;
+  --toolbtn-hover-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(210, 232, 252, 0.8));
+  --toolbtn-hover-shadow: inset 0 0 0 1px #7da2ce, inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+  --toolbtn-active-bg: linear-gradient(180deg, #c9e0f7, #a9cdf2);
+  --toolbtn-active-shadow: inset 0 0 0 1px #6590bc, inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+  --toolbtn-on-bg: linear-gradient(180deg, #dcebfc, #c1dbfc);
+  --toolbtn-on-shadow: inset 0 0 0 1px #7da2ce;
+  --toolbar-sep-left: #b6bccc;
+  --toolbar-sep-right: #ffffff;
+
+  --statusbar-bg: linear-gradient(180deg, #f5f7fb, #e3e9f3);
+  --statusbar-shadow: inset 0 1px 0 #b6bccc;
+  --statusbar-panel-shadow: inset -1px 0 0 #c7cdd8;
+
+  --progress-well-bg: linear-gradient(180deg, #f3f3f3, #e0e0e0);
+  --progress-well-shadow: inset 0 0 0 1px #8f8f8f, inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+  --progress-well-radius: 3px;
+  --progress-padding: 1px;
+  --progress-fill: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0.15) 45%,
+      transparent 50%
+    ),
+    linear-gradient(90deg, #06b025, #37d34e 70%, #06b025);
+  --progress-fill-radius: 2px;
+  --progress-muted-fill: linear-gradient(180deg, #f2f2f2, #d5d5d5);
+
+  --groupbox-border: 1px solid #d5dfe5;
+  --groupbox-border-image: none;
+  --groupbox-radius: 3px;
+  --groupbox-legend-bg: transparent;
+  --groupbox-legend-color: #1e3287;
+
+  --tree-inset: 2px;
+  --tree-row-radius: 2px;
+  --tree-hover-bg: linear-gradient(180deg, #f5fafd, #e8f5fd);
+  --tree-hover-shadow: inset 0 0 0 1px #d8f0fa;
+  --tree-selected-bg: linear-gradient(180deg, #dcebfc, #c1dbfc);
+  --tree-selected-text: #000000;
+  --tree-selected-shadow: inset 0 0 0 1px #7da2ce;
+  --tree-expander-bg: transparent;
+  --tree-expander-border: none;
+  --tree-expander-color: #595959;
+
+  --th-bg: linear-gradient(180deg, #ffffff, #ffffff 45%, #f7f8fa 45%, #f1f2f4);
+  --th-shadow: inset -1px 0 0 #b9c0c9, inset 1px 0 0 #ffffff,
+    inset 0 -1px 0 #99a3ae;
+
+  --splitter-bg: transparent;
+  --splitter-grip-bg: transparent;
+  --splitter-grip-shadow: none;
+  --splitter-grip-active-shadow: inset 0 0 0 1px #7da2ce;
+
+  --sb-bg: #f0f0f0;
+  --sb-shadow: inset 1px 0 0 #e3e3e3;
+  --sb-track-bg: linear-gradient(90deg, #e5e5e5, #f0f0f0 20%, #f0f0f0 80%, #e5e5e5);
+  --sb-thumb-bg: linear-gradient(90deg, #f5f5f5, #e7e7e7 50%, #d9d9d9);
+  --sb-thumb-shadow: inset 0 0 0 1px #979797, inset 0 0 0 2px #ffffff;
+  --sb-thumb-radius: 3px;
+  --sb-btn-bg: linear-gradient(90deg, #f5f5f5, #e7e7e7 50%, #d9d9d9);
+  --sb-btn-shadow: inset 0 0 0 1px #979797, inset 0 0 0 2px #ffffff;
+  --sb-btn-active-shadow: inset 0 0 0 1px #6590bc, inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+  --sb-btn-radius: 3px;
+  --sb-arrow-color: #333333;
+  --sb-color-thumb: #cdcdcd;
+  --sb-color-track: #f0f0f0;
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: #ffffff;
+  --grid-header-image: linear-gradient(180deg, #ffffff 45%, #f7f8fa 45%, #f1f2f4);
+  --grid-row-hover: #e8f5fd;
+  --grid-border: #e3e8ee;
+}
+
+@layer components {
+  /* Win7 tree uses ▷ / ◢ glyphs instead of +/- boxes */
+  [data-theme='win7'] .ui-tree-expander-glyph {
+    display: none;
+  }
+  [data-theme='win7'] .ui-tree-expander::before {
+    content: '';
+    border-style: solid;
+    border-color: transparent;
+    border-width: 4px 0 4px 5px;
+    border-left-color: currentColor;
+  }
+  [data-theme='win7'] .ui-tree-expander[data-expanded='true']::before {
+    border-width: 0 0 5px 5px;
+    border-color: transparent transparent currentColor transparent;
+  }
+  [data-theme='win7'] .ui-tree-expander:hover {
+    color: #1cc4f7;
+  }
+}
+
+/* Win7 menus draw icons and check marks inside the grey gutter on the left
+   (see --menu-bg) and start the label after it. Unlayered on purpose: it has
+   to beat the per-component padding utilities, and it only changes layout
+   for this theme. */
+[data-theme='win7'] .ui-menu .ui-menu-item {
+  padding-left: 2px;
+}
+[data-theme='win7'] .ui-menu .ui-menu-lead {
+  display: grid;
+  place-items: center;
+  width: 22px;
+}
+[data-theme='win7'] .ui-menu .ui-menu-sep {
+  margin-left: 28px;
+}

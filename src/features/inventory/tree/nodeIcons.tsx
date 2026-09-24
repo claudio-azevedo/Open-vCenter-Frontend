@@ -14,29 +14,29 @@ import { TRANSITIONAL_VM_STATES } from "~/api/types";
 import type { VmState } from "~/api/types";
 
 export function ClusterIcon() {
-  return <Icon icon={Layers} size={16} className="text-title-active" />;
+  return <Icon icon={Layers} size={16} className="text-accent" />;
 }
 
 export function HostIcon({ online }: { online: boolean }) {
   return online ? (
-    <Icon icon={Server} size={16} className="text-black" />
+    <Icon icon={Server} size={16} className="text-fg" />
   ) : (
     <Icon icon={ServerOff} size={16} className="text-disabled-text" />
   );
 }
 
 export function FolderIcon() {
-  return <Icon icon={Folder} size={16} className="text-[#b8860b]" />;
+  return <Icon icon={Folder} size={16} className="text-warning" />;
 }
 
 export function TemplateIcon() {
-  return <Icon icon={Package} size={14} className="text-[#4169e1]" />;
+  return <Icon icon={Package} size={14} className="text-info" />;
 }
 
-const GREEN = "text-[#008000]";
-const RED = "text-[#c00000]";
-const AMBER = "text-[#b8860b]";
-const BLUE = "text-[#4169e1]";
+const GREEN = "text-success";
+const RED = "text-danger";
+const AMBER = "text-warning";
+const BLUE = "text-info";
 const GRAY = "text-disabled-text";
 
 // Same transport-control icons as the power buttons - play / square / pause.

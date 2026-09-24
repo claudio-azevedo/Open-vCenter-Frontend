@@ -125,15 +125,15 @@ This app **never serves anything under `/webrdp`** itself, but it does
 _proxy_ one specific path there server-to-server - see below. Its own server
 surface is:
 
-| Path                                   | Served by the frontend                                        |
-| -------------------------------------- | ------------------------------------------------------------- |
-| `/`, `/inventory`, `/login`, …         | SSR page routes                                               |
-| `/assets/*`                            | built JS / CSS                                                |
-| `/frontend-api/fn/*`                   | server-function (RPC) calls                                   |
-| `/frontend-api/auth/*`                 | better-auth OAuth endpoints (OIDC redirect + callback)        |
-| `/frontend-api/api/*`                  | reverse proxy to `ovc-backend` (adds the bearer token)        |
-| `/webrdp/tunnel`                       | reverse proxy to `ovc-webrdp` (plain route, see below)        |
-| `/favicon.ico`, `/site.webmanifest`, … | files in `public/`                                            |
+| Path                                   | Served by the frontend                                 |
+| -------------------------------------- | ------------------------------------------------------ |
+| `/`, `/inventory`, `/login`, …         | SSR page routes                                        |
+| `/assets/*`                            | built JS / CSS                                         |
+| `/frontend-api/fn/*`                   | server-function (RPC) calls                            |
+| `/frontend-api/auth/*`                 | better-auth OAuth endpoints (OIDC redirect + callback) |
+| `/frontend-api/api/*`                  | reverse proxy to `ovc-backend` (adds the bearer token) |
+| `/webrdp/tunnel`                       | reverse proxy to `ovc-webrdp` (plain route, see below) |
+| `/favicon.ico`, `/site.webmanifest`, … | files in `public/`                                     |
 
 The browser only ever calls the frontend: REST goes through `/frontend-api/api/*`
 (the frontend server then reaches `ovc-backend` at `API_URL`, container-to-container),
@@ -276,3 +276,9 @@ See [`LLM.md`](LLM.md) for a deeper architecture note and known gotchas, and
 
 The Win95/98 visual language inspired and some parts borrowed from
 [**98.css**](https://github.com/jdan/98.css) by Jordan Scales (MIT licensed), big thanks!
+
+The Windows XP and Windows 7 themes port colours and gradients from
+[**XP.css**](https://github.com/botoxparty/XP.css) and
+[**7.css**](https://github.com/khang-nd/7.css) (both MIT
+licensed)
+The Modern theme uses [shadcn/ui](https://ui.shadcn.com)'s zinc palette.

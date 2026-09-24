@@ -14,8 +14,10 @@ import { useInventorySelection } from "../selection";
 import { statusMessage } from "../actions/statusMessage";
 import { organizeDialog } from "../organize/dialogStore";
 import { useNewVmTarget } from "../useNewVmTarget";
+import { useTreeBehavior } from "~/preferences";
 import {
   buildInventoryTree,
+  initialExpansion,
   nodeIdToSelection,
   selectionToNodeId,
 } from "./treeModel";
@@ -70,32 +72,27 @@ export function InventoryTree() {
   );
 
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
-
-  // First populated render: expand all clusters + hosts so the tree is useful.
-  const seeded = React.useRef(false);
-  React.useEffect(() => {
-    if (seeded.current || !nodes.length) return;
-    seeded.current = true;
-    // Expand every top-level node (clusters + standalone hosts) and each cluster's
-    // hosts, but leave folders collapsed.
-    const next = new Set<string>();
-    for (const top of nodes) {
-      next.add(top.id);
-      for (const child of top.children ?? []) {
-        if (child.id.startsWith("host:")) next.add(child.id);
-      }
-    }
-    setExpanded(next);
-  }, [nodes]);
-
+  const { treeBehavior } = useTreeBehavior();
   const selectedId = selectionToNodeId(selection);
+
+  // Seed the expansion on the first populated render, and again whenever the
+  // user switches Preferences › Tree Behavior - but not on every data refetch,
+  // which would undo the user's manual expand/collapse.
+  const seededFor = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!nodes.length || seededFor.current === treeBehavior) return;
+    seededFor.current = treeBehavior;
+    setExpanded(initialExpansion(nodes, treeBehavior, selectedId));
+    // selectedId is read at seeding time only: selecting a node later must not
+    // re-seed the tree.
+  }, [nodes, treeBehavior]);
 
   const loading = clusters.isLoading || hosts.isLoading || vms.isLoading;
   const failed = clusters.isError && hosts.isError && !nodes.length;
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-[2px] flex items-center gap-1 border-b border-black/20 bg-surface px-1 py-[2px]">
+      <div className="mb-[2px] flex items-center gap-1 border-b border-fg/20 bg-surface px-1 py-[2px]">
         <TreeToolButton
           icon={RefreshCw}
           label="Refresh"

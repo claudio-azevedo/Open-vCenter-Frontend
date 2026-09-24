@@ -42,9 +42,9 @@ export function InventoryStatusBar() {
         <span
           className={
             connection === 'Disconnected'
-              ? 'text-title-active'
+              ? 'text-accent'
               : connection === 'Connected'
-                ? 'text-[#008000]'
+                ? 'text-success'
                 : ''
           }
         >

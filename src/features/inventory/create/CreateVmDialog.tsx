@@ -585,7 +585,7 @@ export function CreateVmDialog({
                   placeholder="SRV-APP-01"
                 />
                 {name && !nameValid ? (
-                  <span className="text-[#c00000]">
+                  <span className="text-danger">
                     Letters, digits, - and _ only.
                   </span>
                 ) : null}
@@ -776,7 +776,7 @@ export function CreateVmDialog({
                     ) : null}
                   </div>
                   {mode === "new" && memoryDynamic && !dynMemValid ? (
-                    <p className="text-[#c00000]">
+                    <p className="text-danger">
                       Need 1 GB ≤ minimum ≤ startup ({memoryMb / 1024} GB) ≤
                       maximum.
                     </p>
@@ -858,7 +858,7 @@ export function CreateVmDialog({
                     </div>
                   ))}
                   {!disksValid ? (
-                    <p className="text-[#c00000]">
+                    <p className="text-danger">
                       Disk names must be alphanumeric, 1–6 characters.
                     </p>
                   ) : null}
@@ -951,7 +951,7 @@ export function CreateVmDialog({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  className="bevel-sunken w-full resize-none bg-window px-1.5 py-[3px] text-base text-black outline-none"
+                  className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
                 />
               </label>
             </>

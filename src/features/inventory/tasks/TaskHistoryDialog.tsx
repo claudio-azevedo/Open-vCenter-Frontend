@@ -66,7 +66,7 @@ export function TaskHistoryDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         {tasks.isError ? (
-          <p className="text-[#c00000]">
+          <p className="text-danger">
             {tasks.error instanceof ApiError
               ? tasks.error.message
               : "Could not load task history."}
@@ -127,7 +127,7 @@ export function TaskHistoryDialog({ onClose }: { onClose: () => void }) {
                     {t.error ? (
                       <tr>
                         <Td />
-                        <td colSpan={6} className="px-1 pb-1 text-[#c00000]">
+                        <td colSpan={6} className="px-1 pb-1 text-danger">
                           {t.error}
                         </td>
                       </tr>

@@ -4,8 +4,8 @@ import { TitleBar } from './TitleBar'
 import type { TitleBarProps } from './TitleBar'
 
 /**
- * A Win95 window frame. In milestone 1 there is exactly one, maximised to the
- * viewport, but the component stays generic (dialogs reuse it).
+ * A window frame (title bar + body). The Explorer is one maximised to the
+ * viewport; `Dialog`, the login card and the access-denied page reuse it.
  */
 export function Window({
   title,
@@ -15,18 +15,20 @@ export function Window({
   onClose,
   className,
   bodyClassName,
+  style,
   children,
+  ...props
 }: Pick<TitleBarProps, 'title' | 'icon' | 'onMinimize' | 'onMaximize' | 'onClose'> & {
   className?: string
   bodyClassName?: string
+  style?: React.CSSProperties
   children: React.ReactNode
-}) {
+} & Pick<React.HTMLAttributes<HTMLDivElement>, 'role' | 'aria-modal'>) {
   return (
     <div
-      className={cn(
-        'bevel-raised flex flex-col bg-surface p-[3px] pt-[2px]',
-        className,
-      )}
+      className={cn('ui-window flex flex-col', className)}
+      style={style}
+      {...props}
     >
       <TitleBar
         title={title}
@@ -35,7 +37,12 @@ export function Window({
         onMaximize={onMaximize}
         onClose={onClose}
       />
-      <div className={cn('flex min-h-0 flex-1 flex-col', bodyClassName)}>
+      <div
+        className={cn(
+          'ui-window-body flex min-h-0 flex-1 flex-col',
+          bodyClassName,
+        )}
+      >
         {children}
       </div>
     </div>

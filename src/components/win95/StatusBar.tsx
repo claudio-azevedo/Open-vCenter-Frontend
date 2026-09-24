@@ -11,7 +11,7 @@ export function StatusBar({
   return (
     <div
       className={cn(
-        'flex items-stretch gap-[3px] bg-surface px-[2px] py-[2px] text-base',
+        'ui-statusbar flex items-stretch gap-[3px] px-[2px] py-[2px] text-base',
         className,
       )}
     >
@@ -32,7 +32,7 @@ export function StatusBarPanel({
   return (
     <div
       className={cn(
-        'bevel-thin-sunken flex items-center gap-1 px-1.5 py-[1px] truncate',
+        'ui-statusbar-panel flex items-center gap-1 px-1.5 py-[1px] truncate',
         grow ? 'flex-1' : 'shrink-0',
         className,
       )}

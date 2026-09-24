@@ -2,7 +2,8 @@ import * as React from "react";
 import { KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { clearAuthCookies, signInFn } from "~/auth";
-import { Button, Icon } from "~/components/win95";
+import { Button, Dropdown, Icon, Window } from "~/components/win95";
+import { THEMES, isThemeId, useTheme } from "~/preferences";
 
 export function Login({
   redirectTo,
@@ -14,6 +15,7 @@ export function Login({
   const callSignIn = useServerFn(signInFn);
   const callClear = useServerFn(clearAuthCookies);
   const [loading, setLoading] = React.useState(false);
+  const { theme, setTheme } = useTheme();
 
   const providerName = import.meta.env.VITE_OIDC_PROVIDER_NAME;
   const buttonLabel = providerName ? `Sign in with ${providerName}` : "Sign in";
@@ -35,33 +37,43 @@ export function Login({
   };
 
   return (
-    <div className="grid h-full w-full place-items-center bg-surface p-8">
-      <div className="bevel-raised w-[340px] bg-surface p-[3px] pt-[2px]">
-        <div className="flex h-[22px] items-center gap-1 bg-title-active bg-gradient-to-r from-title-active to-title-active-2 px-2 text-title-text">
-          <Icon icon={KeyRound} size={14} />
-          <span className="text-base font-bold">
-            Open vCenter - Sign In
-          </span>
-        </div>
+    <div className="grid h-full w-full place-items-center p-8">
+      <Window
+        title="Open vCenter - Sign In"
+        icon={<Icon icon={KeyRound} size={14} />}
+        className="w-[340px]"
+      >
         <div className="flex flex-col gap-3 p-4">
           <img
             src="/ovc-logo.svg"
             alt="Open vCenter"
-            className="h-auto w-full"
+            className="ui-logo h-auto w-full"
           />
           <p className="text-base">
             Sign in with your organization account to continue.
           </p>
           {error ? (
-            <p className="text-base text-title-active">
+            <p className="text-base text-accent">
               Sign-in failed. Please try again.
             </p>
           ) : null}
           <Button block disabled={loading} onClick={signIn}>
             {loading ? "Redirecting…" : buttonLabel}
           </Button>
+          <div className="flex items-center gap-2 text-base">
+            <label htmlFor="login-theme" className="shrink-0">
+              Theme:
+            </label>
+            <Dropdown
+              id="login-theme"
+              className="flex-1"
+              value={theme}
+              onChange={(v) => isThemeId(v) && setTheme(v)}
+              options={THEMES.map((t) => ({ value: t.id, label: t.label }))}
+            />
+          </div>
         </div>
-      </div>
+      </Window>
     </div>
   );
 }

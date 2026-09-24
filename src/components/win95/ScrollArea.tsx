@@ -1,10 +1,12 @@
 import * as React from "react";
 import { cn } from "./bevel";
+import { useTheme } from "~/preferences";
 
 /**
- * A scroll container that hides the native scrollbars and paints Win95 ones
- * (arrow buttons, dithered track, raised thumb) on top - so the chrome is
- * identical in every browser, not just Blink/WebKit.
+ * A scroll container that hides the native scrollbars and paints themed ones
+ * (arrow buttons, track, thumb) on top - so the chrome is identical in every
+ * browser, not just Blink/WebKit. Themes with `nativeScrollbars` (Modern) get
+ * a plain native scroller instead.
  *
  * The global stylesheet already themes native `::-webkit-scrollbar`, so plain
  * `overflow-auto` is fine in this (Chromium) app. Reach for this component when
@@ -16,24 +18,53 @@ import { cn } from "./bevel";
  * occupied side) so content is never hidden behind a bar.
  */
 const BAR = 16; // px - classic scrollbar thickness
+const MIN_THUMB = 18; // px - keep the thumb grabbable on long content
 const LINE = 32; // px per arrow-button click
 const REPEAT_DELAY = 300;
 const REPEAT_EVERY = 40;
 
 type Axis = "x" | "y";
 
-export function ScrollArea({
-  children,
-  className,
-  viewportClassName,
-  orientation = "both",
-}: {
+type ScrollAreaProps = {
   children: React.ReactNode;
   className?: string;
   viewportClassName?: string;
   /** Which bars may appear (each still only shows when its axis overflows). */
   orientation?: "vertical" | "horizontal" | "both";
-}) {
+};
+
+export function ScrollArea(props: ScrollAreaProps) {
+  const { def } = useTheme();
+  if (def.nativeScrollbars) {
+    const { children, className, viewportClassName, orientation = "both" } =
+      props;
+    return (
+      <div className={cn("relative overflow-hidden", className)}>
+        <div
+          className={cn(
+            "absolute inset-0",
+            orientation === "vertical"
+              ? "overflow-x-hidden overflow-y-auto"
+              : orientation === "horizontal"
+                ? "overflow-x-auto overflow-y-hidden"
+                : "overflow-auto",
+            viewportClassName,
+          )}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+  return <PaintedScrollArea {...props} />;
+}
+
+function PaintedScrollArea({
+  children,
+  className,
+  viewportClassName,
+  orientation = "both",
+}: ScrollAreaProps) {
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const [m, setM] = React.useState({
     showY: false,
@@ -62,15 +93,20 @@ export function ScrollArea({
     // detection is stable even though we toggle gutter padding below.
     const showY = allowY && scrollHeight - clientHeight > 1;
     const showX = allowX && scrollWidth - clientWidth > 1;
-    const yTrack = clientHeight - (showX ? BAR : 0);
-    const xTrack = clientWidth - (showY ? BAR : 0);
+    // The track is what's left between the two arrow buttons (and the corner
+    // square when both bars show) - the thumb must stay inside it.
+    // Use the fractional box size: clientHeight/Width are rounded, which would
+    // let the thumb overhang the arrow button by a sub-pixel.
+    const box = el.getBoundingClientRect();
+    const yTrack = Math.max(0, box.height - (showX ? BAR : 0) - 2 * BAR);
+    const xTrack = Math.max(0, box.width - (showY ? BAR : 0) - 2 * BAR);
     const maxTop = scrollHeight - clientHeight;
     const maxLeft = scrollWidth - clientWidth;
     const yThumb = showY
-      ? clamp((clientHeight / scrollHeight) * yTrack, 18, yTrack)
+      ? clamp((clientHeight / scrollHeight) * yTrack, Math.min(MIN_THUMB, yTrack), yTrack)
       : 0;
     const xThumb = showX
-      ? clamp((clientWidth / scrollWidth) * xTrack, 18, xTrack)
+      ? clamp((clientWidth / scrollWidth) * xTrack, Math.min(MIN_THUMB, xTrack), xTrack)
       : 0;
     const yPos =
       showY && maxTop > 0 ? (scrollTop / maxTop) * (yTrack - yThumb) : 0;
@@ -158,6 +194,7 @@ export function ScrollArea({
     const trackLen =
       (axis === "y" ? el.clientHeight : el.clientWidth) -
       ((axis === "y" ? m.showX : m.showY) ? BAR : 0) -
+      2 * BAR -
       (axis === "y" ? m.yThumb : m.xThumb);
 
     const onMove = (ev: PointerEvent) => {
@@ -206,7 +243,7 @@ export function ScrollArea({
 
       {m.showY ? (
         <div
-          className="bevel-thin-sunken absolute top-0 right-0 flex flex-col bg-surface"
+          className="ui-sb absolute top-0 right-0 flex flex-col"
           style={{ width: BAR, bottom: m.showX ? BAR : 0 }}
         >
           <ArrowButton
@@ -215,14 +252,14 @@ export function ScrollArea({
             onRelease={endHold}
           />
           <div
-            className="scroll-track relative flex-1"
+            className="ui-sb-track relative flex-1"
             onPointerDown={pageOnTrack("y")}
           >
             <div
               role="scrollbar"
               aria-orientation="vertical"
               onPointerDown={dragThumb("y")}
-              className="bevel-raised absolute right-0 left-0 bg-surface"
+              className="ui-sb-thumb absolute right-0 left-0"
               style={{ top: m.yPos, height: m.yThumb }}
             />
           </div>
@@ -236,7 +273,7 @@ export function ScrollArea({
 
       {m.showX ? (
         <div
-          className="bevel-thin-sunken absolute bottom-0 left-0 flex bg-surface"
+          className="ui-sb absolute bottom-0 left-0 flex"
           style={{ height: BAR, right: m.showY ? BAR : 0 }}
         >
           <ArrowButton
@@ -245,14 +282,14 @@ export function ScrollArea({
             onRelease={endHold}
           />
           <div
-            className="scroll-track relative flex-1"
+            className="ui-sb-track relative flex-1"
             onPointerDown={pageOnTrack("x")}
           >
             <div
               role="scrollbar"
               aria-orientation="horizontal"
               onPointerDown={dragThumb("x")}
-              className="bevel-raised absolute top-0 bottom-0 bg-surface"
+              className="ui-sb-thumb absolute top-0 bottom-0"
               style={{ left: m.xPos, width: m.xThumb }}
             />
           </div>
@@ -266,7 +303,7 @@ export function ScrollArea({
 
       {m.showY && m.showX ? (
         <div
-          className="bevel-thin-sunken absolute right-0 bottom-0 bg-surface"
+          className="ui-sb absolute right-0 bottom-0"
           style={{ width: BAR, height: BAR }}
         />
       ) : null}
@@ -280,10 +317,10 @@ function clamp(n: number, lo: number, hi: number) {
 
 // CSS-triangle arrows (crisper than glyphs at this size)
 const ARROW: Record<"up" | "down" | "left" | "right", string> = {
-  up: "border-x-[3px] border-b-[4px] border-x-transparent border-b-black",
-  down: "border-x-[3px] border-t-[4px] border-x-transparent border-t-black",
-  left: "border-y-[3px] border-r-[4px] border-y-transparent border-r-black",
-  right: "border-y-[3px] border-l-[4px] border-y-transparent border-l-black",
+  up: "border-x-[3px] border-b-[4px] border-x-transparent border-b-current",
+  down: "border-x-[3px] border-t-[4px] border-x-transparent border-t-current",
+  left: "border-y-[3px] border-r-[4px] border-y-transparent border-r-current",
+  right: "border-y-[3px] border-l-[4px] border-y-transparent border-l-current",
 };
 
 function ArrowButton({
@@ -306,7 +343,7 @@ function ArrowButton({
       }}
       onPointerUp={onRelease}
       onPointerLeave={onRelease}
-      className="bevel-raised active:bevel-pressed grid shrink-0 place-items-center bg-surface"
+      className="ui-sb-btn grid shrink-0 place-items-center"
       style={{ width: BAR, height: BAR }}
     >
       <span className={cn("block h-0 w-0", ARROW[dir])} />

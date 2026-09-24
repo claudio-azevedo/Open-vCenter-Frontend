@@ -1,4 +1,4 @@
-import { Dialog } from "~/components/win95";
+import { Button, Dialog } from "~/components/win95";
 import type { useAuth } from "~/auth";
 
 export function AuthDebugDialog({
@@ -13,13 +13,7 @@ export function AuthDebugDialog({
       title="Auth Debug"
       onClose={onClose}
       footer={
-        <button
-          type="button"
-          onClick={onClose}
-          className="bevel-raised active:bevel-pressed min-w-[75px] bg-surface px-3 py-[3px]"
-        >
-          OK
-        </button>
+        <Button onClick={onClose}>OK</Button>
       }
     >
       <div className="space-y-2 text-base">

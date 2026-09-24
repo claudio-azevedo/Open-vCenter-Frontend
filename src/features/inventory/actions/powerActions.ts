@@ -15,9 +15,9 @@ export interface PowerActionDef {
 }
 
 // classic transport-control colours
-const GREEN = "text-[#008000]";
-const RED = "text-[#c00000]";
-const AMBER = "text-[#b8860b]";
+const GREEN = "text-success";
+const RED = "text-danger";
+const AMBER = "text-warning";
 
 export const POWER_ACTIONS: PowerActionDef[] = [
   {

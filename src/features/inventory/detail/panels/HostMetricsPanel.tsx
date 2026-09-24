@@ -56,7 +56,7 @@ export function HostMetricsPanel({ hostId }: { hostId: string }) {
           series={[
             {
               label: 'CPU',
-              color: '#008000',
+              color: 'var(--color-chart-1)',
               values: gauge(samples, (s) => s.cpuPercent),
             },
           ]}
@@ -72,7 +72,7 @@ export function HostMetricsPanel({ hostId }: { hostId: string }) {
           series={[
             {
               label: 'Used',
-              color: '#000080',
+              color: 'var(--color-chart-2)',
               values: hasMemBytes ? memBytes : gauge(samples, (s) => s.memPercent),
             },
           ]}
@@ -87,12 +87,12 @@ export function HostMetricsPanel({ hostId }: { hostId: string }) {
           series={[
             {
               label: 'Receive',
-              color: '#008080',
+              color: 'var(--color-chart-3)',
               values: gauge(samples, (s) => s.netRxBps),
             },
             {
               label: 'Send',
-              color: '#a000a0',
+              color: 'var(--color-chart-4)',
               values: gauge(samples, (s) => s.netTxBps),
             },
           ]}
@@ -107,7 +107,7 @@ export function HostMetricsPanel({ hostId }: { hostId: string }) {
           series={[
             {
               label: 'Avg latency',
-              color: '#c00000',
+              color: 'var(--color-chart-5)',
               values: gauge(samples, (s) => s.diskLatencyMs),
             },
           ]}

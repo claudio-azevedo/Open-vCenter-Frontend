@@ -57,7 +57,7 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 | ------------------------ | -------------------------------------------------------------------------------------------------------- |
 | `/`                      | redirect → `/inventory`                                                                                  |
 | `/login`                 | "Sign in" card, with a Theme dropdown                                                                    |
-| `/logout`                | clears the session (demo and stub modes: back to `/inventory`)                                           |
+| `/logout`                | clears the session (stub mode: back to `/inventory`)                                            |
 | `/access-denied`         | signed in, but the token carries zero roles                                                              |
 | `/inventory` (`_authed`) | the Explorer. Search params `?sel=<kind>:<id>&tab=<tabId>`                                               |
 | `/console` (`_authed`)   | standalone console in its own browser tab: `?vm=<vmId>` (Hyper-V console) or `?host=<hostId>` (host RDP) |
@@ -73,8 +73,8 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 
 1. **Menu bar** (`InventoryMenuBar.tsx`):
    - **File**: Cluster Management…, Hosts Management…, Agent Management… (admin),
-     Refresh (labelled F5; invalidates every query), Sign Out (demo mode: **Reset
-     Demo Data…** instead).
+     Refresh (labelled F5; invalidates every query), Sign Out (demo mode adds **Reset
+     Demo Data…** above it).
    - **Action**: Move VM to Folder… (needs a VM selected with ≥ 1 reachable folder),
      Move Host… (needs a host selected), Delete Folder… (needs a folder selected).
    - **View**: Refresh, Task History…, VM Locks… (admin).
@@ -493,8 +493,8 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   - Pause / Resume Node and Restart Host;
   - the data behind the Setup Agent tab (admin-only endpoints).
 - Everything else is visible to any role, and the backend has the final say.
-- **Demo mode**: nobody logs in; every visitor is `demo@ovc.demo` with
-  `ADMINISTRATOR`, so every admin feature is on.
+- **Demo mode**: the login screen asks for no credentials. "Sign in" opens a demo
+  session as `demo@ovc.demo` with `ADMINISTRATOR`, so every admin feature is on.
 
 ### Clusters and hosts
 
@@ -880,10 +880,15 @@ needed. `docker-compose.demo.yml` runs it.
 
 - **Server flag**: `demo/env.ts` `isDemoEnv()`. It is imported only by server code,
   the same way as `auth/bypass.ts`.
+  - **Login works like `OVC_AUTH_MODE=stub`, but keeps the screen.** `/login` shows
+    as usual, with a demo hint. "Sign in" (`signInFn`) contacts no IdP: it sets the
+    `ovc-demo-session` cookie (httpOnly, 7 days) and returns the callback URL.
   - `fetchCurrentUser` returns the fixed `DEMO_USER` (`demo@ovc.demo`,
-    `[ADMINISTRATOR]`) with `demo: true` and `authDisabled: false`, so there is no
-    login and no `DevBypassWarning`.
-  - `logoutFn` redirects to `/inventory`.
+    `[ADMINISTRATOR]`) while that cookie exists, else `null`. It always sends
+    `demo: true` and `authDisabled: false` (no `DevBypassWarning`). The normal
+    guards then apply: no cookie → `/login`.
+  - `clearAuthCookies` is a no-op. `logoutFn` deletes the cookie and redirects to
+    `/login`.
   - `/frontend-api/api/*` and `/webrdp/tunnel` answer `503 DEMO_MODE`.
   - `auth/auth.ts` gives better-auth a throwaway secret and base URL, and leaves
     the OIDC plugin out. better-auth initialises eagerly and would otherwise refuse
@@ -900,8 +905,9 @@ needed. `docker-compose.demo.yml` runs it.
   it). The page paints empty, and the browser loads the inventory after hydration.
 - **UI differences**:
   - the status bar shows the **DEMO MODE** badge and `● Simulated`;
-  - File ▸ **Reset Demo Data…** replaces Sign Out. It confirms, generates a new
-    inventory, clears `activeTasks`, drops the selection and resets every query;
+  - File ▸ **Reset Demo Data…** (above Sign Out) confirms, generates a new
+    inventory, clears `activeTasks`, drops the selection and resets every query.
+    Signing out keeps the inventory; only Reset replaces it;
   - the consoles show a notice instead of connecting;
   - the `.rdp` download is hidden.
 

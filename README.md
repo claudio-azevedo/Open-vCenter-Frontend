@@ -86,7 +86,9 @@ Set **`OVC_DEMO_MODE=true`** (server-side, read at runtime - the same image serv
 both modes) to run the frontend **standalone**, for product demos: no ovc-backend,
 agent, RabbitMQ, database, OIDC provider or ovc-webrdp. Nothing else needs to be set.
 
-- No login: every visitor is `demo@ovc.demo` with the `ADMINISTRATOR` role.
+- Login like stub mode: the login screen shows, but **Sign in** contacts no
+  provider. It just opens a demo session as `demo@ovc.demo` with the
+  `ADMINISTRATOR` role. **Sign Out** returns to the login screen.
 - The browser simulates the backend (`src/demo/`), following the same REST contract,
   validations and error codes. On first visit it generates a random inventory:
   2-5 clusters with 2-5 hosts each, 2-6 standalone hosts, 5-10 VMs per host, plus

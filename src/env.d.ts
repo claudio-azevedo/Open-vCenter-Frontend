@@ -64,7 +64,8 @@ declare namespace NodeJS {
      */
     OVC_AUTH_MODE?: "stub" | "oidc"
     /**
-     * "true" ⇒ standalone demo: no login (every visitor is demo@ovc.demo,
+     * "true" ⇒ standalone demo: the login screen opens a demo session with no
+     * IdP (like OVC_AUTH_MODE=stub; every visitor is demo@ovc.demo,
      * ADMINISTRATOR), no ovc-backend / agent / ovc-webrdp. The browser serves
      * every API call from the simulator in src/demo/ and keeps a random
      * inventory in localStorage. Read at runtime - the same image serves both

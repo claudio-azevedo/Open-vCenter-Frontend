@@ -1,9 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
+import {
+  deleteCookie,
+  getCookie,
+  getRequest,
+  setCookie,
+} from "@tanstack/react-start/server";
 import { redirect } from "@tanstack/react-router";
 import { auth, OIDC_PROVIDER_ID } from "./auth";
 import { DEV_BYPASS_USER, isDevBypass } from "./bypass";
-import { DEMO_USER, isDemoEnv } from "~/demo/env";
+import { DEMO_SESSION_COOKIE, DEMO_USER, isDemoEnv } from "~/demo/env";
 import type { AuthUser } from "./types";
 
 /**
@@ -18,7 +23,14 @@ export const fetchCurrentUser = createServerFn({ method: "GET" }).handler(
     /** OVC_DEMO_MODE - standalone demo, no backend (see src/demo/). */
     demo: boolean;
   }> => {
-    if (isDemoEnv()) return { user: DEMO_USER, authDisabled: false, demo: true };
+    // Demo: signed in once "Sign in" set the demo session cookie - no IdP.
+    if (isDemoEnv()) {
+      return {
+        user: getCookie(DEMO_SESSION_COOKIE) ? DEMO_USER : null,
+        authDisabled: false,
+        demo: true,
+      };
+    }
     if (isDevBypass()) return { user: DEV_BYPASS_USER, authDisabled: true, demo: false };
 
     const data = await auth.api.getSession({ headers: getRequest().headers });
@@ -46,6 +58,17 @@ export const fetchCurrentUser = createServerFn({ method: "GET" }).handler(
 export const signInFn = createServerFn({ method: "POST" })
   .validator((d: { callbackURL?: string }) => d)
   .handler(async ({ data }) => {
+    // Demo mode: like the stub, no provider is contacted - just open a demo
+    // session and go straight to the app.
+    if (isDemoEnv()) {
+      setCookie(DEMO_SESSION_COOKIE, "1", {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+      return { url: data.callbackURL || "/inventory" };
+    }
     // better-auth's genericOAuth plugin registers each configured provider as
     // a first-class social provider (no plugin-specific sign-in endpoint) -
     // go through the core signInSocial API, not a dedicated OAuth2 method.
@@ -67,6 +90,7 @@ export const signInFn = createServerFn({ method: "POST" })
 /** Clear stale better-auth cookies before starting a fresh OAuth flow. */
 export const clearAuthCookies = createServerFn({ method: "POST" }).handler(
   async () => {
+    if (isDemoEnv()) return; // no better-auth session in demo mode
     try {
       await auth.api.signOut({ headers: getRequest().headers });
     } catch {
@@ -76,8 +100,13 @@ export const clearAuthCookies = createServerFn({ method: "POST" }).handler(
 );
 
 export const logoutFn = createServerFn().handler(async () => {
-  // Nothing to sign out of while the dev bypass or the demo is active.
-  if (isDevBypass() || isDemoEnv()) throw redirect({ href: "/inventory" });
+  // Nothing to sign out of while the dev bypass is active.
+  if (isDevBypass()) throw redirect({ href: "/inventory" });
+  // Demo: end the demo session and show the login screen again.
+  if (isDemoEnv()) {
+    deleteCookie(DEMO_SESSION_COOKIE, { path: "/" });
+    throw redirect({ href: "/login" });
+  }
   try {
     await auth.api.signOut({ headers: getRequest().headers });
   } catch {

@@ -72,10 +72,13 @@ export function InventoryMenuBar() {
         { type: 'separator' },
         { label: 'Refresh', shortcut: 'F5', onSelect: () => queryClient.invalidateQueries() },
         { type: 'separator' },
-        // the demo has no session to end - offer a fresh inventory instead
-        demo
-          ? { label: 'Reset Demo Data…', onSelect: resetDemo }
-          : { label: 'Sign Out', onSelect: () => navigate({ to: '/logout' }) },
+        ...(demo
+          ? ([
+              { label: 'Reset Demo Data…', onSelect: resetDemo },
+              { type: 'separator' },
+            ] as MenuEntry[])
+          : []),
+        { label: 'Sign Out', onSelect: () => navigate({ to: '/logout' }) },
       ],
     },
     {

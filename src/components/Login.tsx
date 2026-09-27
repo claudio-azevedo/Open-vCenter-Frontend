@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { clearAuthCookies, signInFn } from "~/auth";
 import { Button, Dropdown, Icon, Window } from "~/components/win95";
 import { THEMES, isThemeId, useTheme } from "~/preferences";
+import { isDemoMode } from "~/demo/mode";
 
 export function Login({
   redirectTo,
@@ -17,8 +18,11 @@ export function Login({
   const [loading, setLoading] = React.useState(false);
   const { theme, setTheme } = useTheme();
 
+  // Demo mode: same screen, but signing in opens a demo session - no IdP.
+  const demo = isDemoMode();
   const providerName = import.meta.env.VITE_OIDC_PROVIDER_NAME;
-  const buttonLabel = providerName ? `Sign in with ${providerName}` : "Sign in";
+  const buttonLabel =
+    providerName && !demo ? `Sign in with ${providerName}` : "Sign in";
 
   const signIn = async () => {
     setLoading(true);
@@ -50,7 +54,9 @@ export function Login({
             className="ui-logo h-auto w-full"
           />
           <p className="text-base">
-            Sign in with your organization account to continue.
+            {demo
+              ? "Demo mode - no account needed. Sign in to explore a simulated environment."
+              : "Sign in with your organization account to continue."}
           </p>
           {error ? (
             <p className="text-base text-accent">
@@ -58,7 +64,7 @@ export function Login({
             </p>
           ) : null}
           <Button block disabled={loading} onClick={signIn}>
-            {loading ? "Redirecting…" : buttonLabel}
+            {loading ? (demo ? "Signing in…" : "Redirecting…") : buttonLabel}
           </Button>
           <div className="flex items-center gap-2 text-base">
             <label htmlFor="login-theme" className="shrink-0">

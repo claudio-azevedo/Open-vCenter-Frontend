@@ -8,8 +8,9 @@ import { DEMO_USER_EMAIL } from "./mode";
  * `/frontend-api/api` proxy and the `/webrdp/tunnel` proxy - never by
  * client code.
  *
- * In demo mode the frontend runs standalone: no OIDC login (a fixed
- * administrator is signed in), no ovc-backend, no ovc-webrdp. The browser
+ * In demo mode the frontend runs standalone: the login screen shows, but
+ * "Sign in" only opens a demo session (like OVC_AUTH_MODE=stub, no IdP is
+ * contacted) as a fixed administrator; no ovc-backend, no ovc-webrdp. The browser
  * serves every API call from the simulator in `src/demo/` and keeps the
  * state in localStorage.
  */
@@ -20,12 +21,16 @@ const ENABLED =
 
 if (ENABLED) {
   console.warn(
-    "[demo] OVC_DEMO_MODE active - no backend, no login. Every visitor is " +
-      "demo@ovc.demo (ADMINISTRATOR) with simulated data kept in their own browser.",
+    "[demo] OVC_DEMO_MODE active - no backend; the login screen opens a demo " +
+      "session without any IdP. Every visitor is demo@ovc.demo (ADMINISTRATOR) " +
+      "with simulated data kept in their own browser.",
   );
 }
 
 export const isDemoEnv = (): boolean => ENABLED;
+
+/** Set by "Sign in" in demo mode (no IdP) - its presence is the session. */
+export const DEMO_SESSION_COOKIE = "ovc-demo-session";
 
 export const DEMO_USER: AuthUser = {
   id: "demo-admin",

@@ -9,7 +9,8 @@ consoles).
 
 **Demo mode** (this `demo` branch only; CI publishes it as the `:demo` image;
 `OVC_DEMO_MODE=true`, runtime env) runs it standalone for product
-demos: no backend or login. `request()` hands every call to an in-browser simulator
+demos: no backend, and the login screen opens a demo session with no IdP (like
+stub mode). `request()` hands every call to an in-browser simulator
 (`src/demo/`) that keeps a random inventory in localStorage. See LLM.md › Demo mode.
 
 **`LLM.md` is the full reference**: screens, every REST contract, the icon tables,

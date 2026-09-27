@@ -2,8 +2,9 @@
 #
 # No ovc-backend, agent, RabbitMQ, database, OIDC provider or ovc-webrdp: the
 # browser simulates the whole backend and keeps a random inventory (clusters,
-# hosts, VMs, tasks, metrics) in each visitor's localStorage. Nobody logs in -
-# every visitor is an administrator of their own simulated inventory.
+# hosts, VMs, tasks, metrics) in each visitor's localStorage. The login screen
+# needs no credentials ("Sign in" opens a demo session, no IdP) - every visitor
+# is an administrator of their own simulated inventory.
 #
 #   docker compose -f docker-compose.demo.yml up --build -d
 #   open http://localhost:3000

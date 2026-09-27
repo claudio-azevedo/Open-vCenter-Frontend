@@ -96,7 +96,9 @@ See [`src/api/types.ts`](../src/api/types.ts) for the exact TypeScript shapes. S
 | `HostAgentInstall`      | `url, command, expiresAt, filename`: a tokenized `install.ps1` URL plus a paste-ready elevated-PowerShell one-liner |
 | `Folder`                | `id, name, clusterId, hostId`: a logical VM folder, **application-managed** (not agent-reported). Scoped to exactly one of a cluster or a standalone host. Flat (no nesting) |
 | `Vlan`                  | `id, name, vlanId (1-4094 tag), description, isDefault, clusterId, hostId`: an 802.1Q VLAN, **application-managed**. Scoped like `Folder`; a clustered host uses its cluster's VLANs |
-| `Vm`                    | `id, vmUuid, hostId, folderId, name, state, firmware ("BIOS" \| "UEFI"), uptimeSec, vcpu, cpuUsagePercent, memory {assignedBytes,minBytes,maxBytes,dynamic,demandBytes}, disks[] {id,path,controller,sizeBytes,usedBytes,type (Fixed/Dynamic/Differencing),format (VHDX/VHD/passthrough)}, nics[] {id,name,switchName,vlanId,macAddress,ipAddresses[],connected}, snapshots[] {id,name,createdAt,parentId,type}, secureBoot, secureBootTemplate, nestedVirtualization, autoStartAction, autoStartDelaySec, autoStopAction, configPath, dvdPath, highlyAvailable, notes, metricsEnabled, createdAt, lastSeen, lock` |
+| `TagCategory`           | `id, name`: a group of mutually exclusive tags - a VM carries **at most one** tag per category. Global (not scoped to a cluster or host), **application-managed** |
+| `Tag`                   | `id, name, categoryId, color, vmCount`: a global VM label, standalone (`categoryId: null`) or in one category. `color` is a palette name: `gray \| red \| orange \| yellow \| green \| teal \| blue \| navy \| purple \| pink` (the frontend maps it to a theme token). `vmCount` counts the VMs carrying it **within the caller's scope**. Names are `[A-Za-z0-9_-]{1,64}` (no spaces), unique case-insensitively within a category (standalone tags among themselves); category names likewise |
+| `Vm`                    | `id, vmUuid, hostId, folderId, name, state, firmware ("BIOS" \| "UEFI"), uptimeSec, vcpu, cpuUsagePercent, memory {assignedBytes,minBytes,maxBytes,dynamic,demandBytes}, disks[] {id,path,controller,sizeBytes,usedBytes,type (Fixed/Dynamic/Differencing),format (VHDX/VHD/passthrough)}, nics[] {id,name,switchName,vlanId,macAddress,ipAddresses[],connected}, snapshots[] {id,name,createdAt,parentId,type}, secureBoot, secureBootTemplate, nestedVirtualization, autoStartAction, autoStartDelaySec, autoStopAction, configPath, dvdPath, highlyAvailable, notes, tagIds[], metricsEnabled, createdAt, lastSeen, lock`. `tagIds` are the ids of its tags (`GET /tags` resolves them) |
 | `VmState`               | `Running \| Off \| Paused \| Saved \| Starting \| Stopping \| Saving \| Pausing \| Resuming \| Restarting \| Deleting \| Unknown` |
 | `VmLock`                | `taskId, kind, requestedBy, acquiredAt`: set on `Vm.lock` while a mutating task runs, else `null` |
 | `VmLockEntry`           | `VmLock & { vmId, vmName, ttl, taskStatus }`: one row of `GET /vm-locks` |
@@ -149,6 +151,8 @@ Notes on the task fields:
 | GET    | `/hosts/:id/agent-install-url` | -                                    | `HostAgentInstall`. **Admin only**. Mints a short-lived HMAC-tokenized `agent-install.ps1` URL (TTL `OVC_AGENT_INSTALL_URL_TTL_SECONDS`). Used by the "Setup Agent" tab |
 | GET    | `/folders`                | `hostId?`, `clusterId?`                   | `Folder[]` (no filter → every folder the caller may see) |
 | GET    | `/vlans`                  | `hostId?`, `clusterId?`                   | `Vlan[]`. `hostId` resolves to the host's own VLANs **plus** its cluster's (if any) |
+| GET    | `/tag-categories`         | -                                         | `TagCategory[]`, by name. Any role |
+| GET    | `/tags`                   | -                                         | `Tag[]`: categorized tags (by category name, then tag name), then standalone tags. Any role |
 | GET    | `/vms`                    | `hostId?`, `folderId?`, `state?`          | `Vm[]` |
 | GET    | `/vms/:id`                | -                                         | `Vm` |
 | GET    | `/vms/:id/metrics`        | -                                         | `VmMetricSample[]`: the last hour, oldest first. Empty until metering is enabled on the VM |
@@ -184,9 +188,18 @@ authenticated by a short-lived token in the URL:
 | PATCH  | `/vlans/:id`    | any subset of `{ name, description, isDefault }` (the tag is immutable) | `Vlan` |
 | DELETE | `/vlans/:id`    | - | `204`. VMs already tagged with it are not changed |
 | PATCH  | `/vms/:id`      | `{ folderId }` (`null` → remove from its folder) | `Vm`. The folder must be reachable from the VM's host: a cluster folder needs the host in that cluster; a host folder needs the host to be that (standalone) host. Otherwise `400 INVALID` |
+| POST   | `/tag-categories`     | `{ name }` | `201 TagCategory`. **Admin only**. A bad name → `400 INVALID`; a name already in use (case-insensitive) → `409 DUPLICATE` |
+| PATCH  | `/tag-categories/:id` | `{ name }` | `TagCategory` (rename). **Admin only**. Same name rules |
+| DELETE | `/tag-categories/:id` | - | `204`. **Admin only**. Deletes the category **and all of its tags**, which removes them from every VM. The VMs themselves are not touched |
+| POST   | `/tags`               | `{ name, categoryId?, color? }` (`null` / omitted category → standalone; color defaults to `gray`) | `201 Tag`. **Admin only**. Unknown category → `404`; bad name or a colour outside the palette → `400 INVALID`; name taken in that category (or among standalone tags) → `409 DUPLICATE` |
+| PATCH  | `/tags/:id`           | any subset of `{ name, categoryId, color }`. Only keys present are applied; `categoryId: null` → standalone | `Tag`. **Admin only**. Moving the tag into a category where a VM carrying it already has another tag of that category → `409 TAG_CONFLICT` |
+| DELETE | `/tags/:id`           | - | `204`. **Admin only**. The tag is removed from every VM; the VMs stay |
+| PUT    | `/vms/:id/tags`       | `{ tagIds: string[] }` - the VM's complete tag set (replaces the current one; duplicates ignored) | `Vm`. Any caller who can see the VM. Unknown tag → `404`; two tags of one category → `409 TAG_CONFLICT`. Allowed while the VM is locked or its host is offline (DB-only) |
 
-Folders are created by the frontend and never reported by the agent. `host_inventory`
-carries hardware only.
+Folders, tags and tag categories are created by the frontend and never reported by
+the agent. `host_inventory` carries hardware only. Tags live on the backend's VM row,
+so they survive inventory refreshes and a live migration inside a cluster; a VM whose
+row is recreated (removed from inventory, or moved to an unrelated host) loses them.
 
 ### VM power / lifecycle actions
 
@@ -444,7 +457,7 @@ metering is on.
 | `FORBIDDEN` | 403 | outside the caller's scope, an admin-only endpoint, or an invalid/expired install token |
 | `NOT_FOUND` | 404 | unknown entity or route |
 | `UNKNOWN_ACTION` | 404 | unknown VM or host action |
-| `INVALID` | 400 | a domain rule was violated (non-empty cluster, unreachable folder, hypervisor mismatch, …) |
+| `INVALID` | 400 | a domain rule was violated (non-empty cluster, unreachable folder, hypervisor mismatch, a tag or category name outside `[A-Za-z0-9_-]{1,64}`, a tag colour outside the palette, …) |
 | `VALIDATION_ERROR` | 400 / 422 | a missing or malformed field (422 for request-schema errors) |
 | `STORAGE_NOT_ALLOWED` | 400 | the VM placement rules were violated |
 | `VM_LOCKED` | 409 | another task holds the VM lock (`details.lock`) |
@@ -454,7 +467,8 @@ metering is on.
 | `HA_REQUIRED` | 409 | migrate on a non-HA VM |
 | `SOURCE_NOT_OFF`, `CROSS_HOST_CLONE`, `TEMPLATE_UNREACHABLE` | 409 | clone / deploy preconditions |
 | `NOT_CLUSTERED`, `HOST_ACTION_IN_PROGRESS` | 409 | host action preconditions |
-| `DUPLICATE` | 409 | agent binary `(version, hypervisor)` already exists |
+| `DUPLICATE` | 409 | agent binary `(version, hypervisor)` already exists; a tag or tag category name already in use |
+| `TAG_CONFLICT` | 409 | a VM would carry two tags of one category (`PUT /vms/:id/tags`, or `PATCH /tags/:id` moving a tag into a category) |
 | `ACTIVE_BINARY` | 409 | deleting the active agent build |
 | `AGENT_UPGRADE_IN_PROGRESS`, `AGENT_ALREADY_CURRENT`, `NO_ACTIVE_AGENT_BINARY`, `AGENT_DOWNLOAD_UNAVAILABLE` | 409 | agent upgrade preconditions |
 | `TOO_LARGE` | 413 | agent binary upload over 128 MiB |
@@ -496,6 +510,7 @@ reverts.
 | Data                                     | Interval                                          | Reason |
 | ---------------------------------------- | ------------------------------------------------- | ------ |
 | `/clusters`                              | 30 s                                              | rarely changes |
+| `/tags`, `/tag-categories`               | 30 s                                              | rarely changes; refetched after every tag write |
 | `/hosts`, `/hosts/:id`, `/folders`       | 15 s                                              | keep agent status / online fresh |
 | `/vms`, `/vms/:id`, `/hosts/:id/vms`     | 10 s                                              | catch state changes between agent inventory posts |
 | `/tasks/:id`                             | 1.5 s while running, stops when terminal          | responsive actions |

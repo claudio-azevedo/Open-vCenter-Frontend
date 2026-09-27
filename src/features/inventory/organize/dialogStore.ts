@@ -4,6 +4,7 @@ export type OrganizeDialog =
   | { kind: 'cluster-management' }
   | { kind: 'host-management' }
   | { kind: 'agent-management' }
+  | { kind: 'tag-management' }
   | { kind: 'new-folder'; clusterId?: string; hostId?: string }
   | {
       kind: 'new-vm'

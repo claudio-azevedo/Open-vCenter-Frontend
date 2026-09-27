@@ -13,6 +13,7 @@ import type { Vm } from "~/api/types";
 import { foldersQuery, hostQuery } from "~/api/queries";
 import { bytes, dateTime, duration, percent, relTime } from "../../format";
 import { vmActionDialog } from "../vmActions/dialogStore";
+import { VmTagsBox } from "./VmTagsBox";
 
 export function VmSummaryPanel({ vm }: { vm: Vm }) {
   const folders = useQuery(foldersQuery({}));
@@ -120,15 +121,18 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
         </div>
       </GroupBox>
 
-      <GroupBox label="Notes">
-        <textarea
-          readOnly
-          value={vm.notes ?? ""}
-          rows={5}
-          placeholder="No notes"
-          className="ui-field w-full resize-none px-1.5 py-[3px] text-base outline-none"
-        />
-      </GroupBox>
+      <div className="grid gap-3 md:grid-cols-2">
+        <GroupBox label="Notes">
+          <textarea
+            readOnly
+            value={vm.notes ?? ""}
+            rows={5}
+            placeholder="No notes"
+            className="ui-field w-full flex-1 resize-none px-1.5 py-[3px] text-base outline-none"
+          />
+        </GroupBox>
+        <VmTagsBox vm={vm} />
+      </div>
 
       {vm.nics.length ? (
         <GroupBox label="Network adapters">

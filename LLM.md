@@ -68,7 +68,7 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 
 1. **Menu bar** (`InventoryMenuBar.tsx`):
    - **File**: Cluster Management…, Hosts Management…, Agent Management… (admin),
-     Refresh (labelled F5; invalidates every query), Sign Out.
+     Tag Management… (admin), Refresh (labelled F5; invalidates every query), Sign Out.
    - **Action**: Move VM to Folder… (needs a VM selected with ≥ 1 reachable folder),
      Move Host… (needs a host selected), Delete Folder… (needs a folder selected).
    - **View**: Refresh, Task History…, VM Locks… (admin).
@@ -144,6 +144,10 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 | template                                                   | Package · name · "cluster › host" · Deploy new VM…                                             | property list + notes                                                                                                                                                                                                             |
 | vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, Console ▾, More ▾, lock badge | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** · **Tasks**                                                                                                                               |
 
+The VM **Summary** tab (`panels/VmSummaryPanel.tsx`) stacks: the offline-host notice,
+Virtual Machine Information + Configuration, Advanced, then **Notes** and **Tags**
+side by side (half width each, `VmTagsBox`), then Network adapters and Disks.
+
 The active tab lives in `?tab=`. An unknown tab falls back to the first one.
 Selecting a node of the same kind keeps the current tab; selecting a node of a
 different kind resets it.
@@ -171,7 +175,9 @@ the real state and lock (for example after `VM_LOCKED`).
 
 Organization mutations (clusters, hosts, folders, VLANs, moving a VM to a folder) are
 synchronous DB operations. They invalidate `clusters/hosts/folders/vlans/vms` and set
-the status message (`organize/mutations.ts`).
+the status message (`organize/mutations.ts`). Tag mutations are synchronous too: catalog
+writes invalidate `tags/tag-categories/vms`; `useSetVmTags` writes the returned VM into
+`qk.vm(id)` and invalidates `vms` and `tags`.
 
 Components read data with `useQuery` (not suspense), so a backend outage degrades to
 "Disconnected" instead of throwing. The `/inventory` loader calls `ensureQueryData`
@@ -234,6 +240,7 @@ point. To add a call:
   | backend, generic          | `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `UNKNOWN_ACTION`, `INVALID`, `VALIDATION_ERROR`, `INTERNAL`                                                                                                             |
   | backend, VMs              | `VM_LOCKED`, `VM_NOT_READY`, `HOST_OFFLINE`, `HOST_ONLINE`, `HA_REQUIRED`, `STORAGE_NOT_ALLOWED`, `SOURCE_NOT_OFF`, `CROSS_HOST_CLONE`, `TEMPLATE_UNREACHABLE`                                                       |
   | backend, hosts and agents | `NOT_CLUSTERED`, `HOST_ACTION_IN_PROGRESS`, `DUPLICATE`, `TOO_LARGE`, `STORAGE_ERROR`, `ACTIVE_BINARY`, `AGENT_UPGRADE_IN_PROGRESS`, `AGENT_ALREADY_CURRENT`, `NO_ACTIVE_AGENT_BINARY`, `AGENT_DOWNLOAD_UNAVAILABLE` |
+  | backend, tags             | `DUPLICATE` (name in use), `TAG_CONFLICT` (two tags of one category on a VM), `INVALID` (bad name)                                                                                                                  |
 
 #### Endpoints the frontend calls (source of truth: `src/api/endpoints/*`)
 
@@ -267,6 +274,12 @@ point. To add a call:
 |              | `POST /vms/:id/actions/<action>`                                        | `{ params }` (omitted when there are no params)                                                                      | `202 { task }`                                         |
 |              | `DELETE /vms/:id`                                                       | `?remove_files=true` to also wipe the files                                                                          | `202 { task }`                                         |
 |              | `DELETE /vms/:id/from-inventory`                                        | - (DB only)                                                                                                          | `{ removed }`                                          |
+|              | `PUT /vms/:id/tags`                                                     | `{ tagIds: string[] }` (the complete set; ≤ 1 per category)                                                          | `Vm`                                                   |
+| tags         | `GET /tag-categories` · `GET /tags`                                     | -                                                                                                                    | `TagCategory[]` · `Tag[]` (with `vmCount`)             |
+|              | `POST /tag-categories` · `PATCH /tag-categories/:id` (admin)            | `{ name }`                                                                                                           | `TagCategory`                                          |
+|              | `DELETE /tag-categories/:id` (admin)                                    | - (also deletes its tags)                                                                                            | `204`                                                  |
+|              | `POST /tags` · `PATCH /tags/:id` (admin)                                | `{ name, categoryId, color }` · any of `{ name, categoryId, color }` (`null` = standalone)                           | `Tag`                                                  |
+|              | `DELETE /tags/:id` (admin)                                              | -                                                                                                                    | `204`                                                  |
 | vm locks     | `GET /vm-locks` · `DELETE /vm-locks/:vmId` · `DELETE /vm-locks` (admin) | -                                                                                                                    | `VmLockEntry[]` · `{ released }`                       |
 | tasks        | `GET /tasks`                                                            | `?vmId&hostId&status&limit` (limit: default 50, max 200)                                                             | `Task[]` (newest first)                                |
 |              | `GET /tasks/:id`                                                        | -                                                                                                                    | `TaskDetail`                                           |
@@ -321,6 +334,7 @@ task whose agent never answers still ends as `timeout` through the backend sweep
 | agent config / install URL             | `['hosts', id, 'agent-config' \| 'agent-install']`                               | staleTime 5 min / 30 s (tokenized URL) |
 | folders                                | `['folders', params]`                                                            | 15 s                                   |
 | vlans                                  | `['vlans', params]`                                                              | no polling                             |
+| tags / tag categories                  | `['tags']` / `['tag-categories']`                                                | 30 s                                   |
 | vms / vm / vm metrics / locks          | `['vms', params]` / `['vms', id]` / `['vms', id, 'metrics']` / `['vms','locks']` | 10 s                                   |
 | task                                   | `['tasks', id]`                                                                  | 1.5 s until terminal                   |
 | VM or host tasks                       | `['tasks', {vmId} \| {hostId}]`                                                  | 6 s                                    |
@@ -342,7 +356,8 @@ Always invalidate by prefix: `['vms']`, `['hosts']`, `['tasks']` and so on.
   - `activeTasks`: task ids in flight.
   - `statusMessage`: the status bar text.
   - `organizeDialog` (`organize/dialogStore.ts`): `cluster-management`,
-    `host-management`, `agent-management`, `new-folder {clusterId?|hostId?}`,
+    `host-management`, `agent-management`, `tag-management`,
+    `new-folder {clusterId?|hostId?}`,
     `new-vm {clusterId?, hostId?, mode?: 'new'|'template'|'clone', sourceVmId?, templateId?}`,
     `move-vm`, `move-host`, `delete-folder`.
   - `vmActionDialog` (`detail/vmActions/dialogStore.ts`): `rename`,
@@ -448,13 +463,13 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 | VM search dialog                         | field `Search` · state column `VmIcon` · Previous / Next page `ChevronLeft` / `ChevronRight`                                                                                                                                                                                                                                                                                                  |
 | VM header                                | Refresh `RefreshCw` · Console ▾ `Monitor` (Open HTML5 console in new tab `ExternalLink`, Download .rdp file `Download`) · More ▾ `MoreHorizontal` · lock badge `Lock`                                                                                                                                                                                                                         |
 | VM "More" menu                           | Edit VM `Pencil` · Rename `TextCursorInput` · Edit Notes `Pencil` · Move to Folder `FolderInput` · Move Storage `HardDrive` · Edit AutoStart `AlarmClock` · Mount / Eject DVD `Disc` · Migrate `Move` · Enable HA `ShieldCheck` · Disable HA `ShieldX` · Clone `Copy` · Export as Template `FileUp` · Enable / Disable Metrics `Gauge` · Remove from Inventory `Trash2` · Force unlock `Lock` |
-| VM Summary                               | Edit Network… `Network` · Edit Disks… `HardDrive`                                                                                                                                                                                                                                                                                                                                             |
+| VM Summary                               | Edit Network… `Network` · Edit Disks… `HardDrive` · Assign Tag… `Tag` · tag chip `Tag` · remove a tag `X`                                                                                                                                                                                                                                                                                    |
 | Host header                              | Console `Monitor` · Actions ▾ `MoreHorizontal`                                                                                                                                                                                                                                                                                                                                                |
 | Host Actions menu                        | Refresh Hardware `Cpu` · Refresh VMs `RefreshCw` · Resume Node `Play` · Pause Node `Pause` · Restart Host `Power` (danger item)                                                                                                                                                                                                                                                               |
 | Console toolbar (`GuacamoleConsole`)     | Disconnect `Unplug` · Reconnect `RefreshCw` · Clipboard `Clipboard` · Ctrl+Alt+Del `Keyboard` · Fullscreen `Maximize2`                                                                                                                                                                                                                                                                        |
 | Console VM controls (`ConsoleVmActions`) | Start `Play` · Shut Down `Power` · Turn Off `Square` · Restart `RotateCcw` · Mount DVD `Disc` · Eject DVD `DiscAlbum`                                                                                                                                                                                                                                                                         |
 | Console unavailable | `MonitorOff` (`text-console-muted` on `bg-console-bg`, text `text-console-fg`)                                                                                                                                                                                                                                                                                                                |
-| Cluster / Hosts Management tables        | Rename / Edit `Pencil` · Delete / Remove `Trash2` · Save `Check` · Cancel `X` · Create / Add `Plus`                                                                                                                                                                                                                                                                                           |
+| Cluster / Hosts / Tag Management tables  | Rename / Edit `Pencil` · Delete / Remove `Trash2` · Save `Check` · Cancel `X` · Create / Add `Plus`                                                                                                                                                                                                                                                                                           |
 | Virtual Networks panel                   | Add VLAN `Plus` · Edit `Pencil` · Delete `Trash2`                                                                                                                                                                                                                                                                                                                                             |
 | Create VM wizard                         | add disk / New VLAN `Plus` · remove disk `Trash2`                                                                                                                                                                                                                                                                                                                                             |
 | Edit VM dialog                           | add NIC / disk `Plus` · remove `Trash2` · Undo `RotateCcw` · notices `TriangleAlert`                                                                                                                                                                                                                                                                                                          |
@@ -491,6 +506,8 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   sends an identity or a scope.
 - **Admin-only UI** (`useAuth().isAdmin`):
   - File ▸ Agent Management;
+  - File ▸ Tag Management (creating, renaming and deleting tags and categories;
+    assigning tags to a VM is open to anyone who can see the VM);
   - View ▸ VM Locks;
   - "Force unlock (admin)";
   - the host "Update Agent → vX" button;
@@ -557,6 +574,51 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   does not change VMs already tagged with it.
 - "Untagged" = no VLAN: `vlanId: null` in create/clone bodies, `vlan_id: 0` in
   `vm_edit` NIC specs.
+
+### Tags
+
+- **Catalog** (`organize/TagManagementDialog.tsx`, File ▸ Tag Management…, admin):
+  global, not scoped to a cluster or host. A tag is standalone or belongs to one
+  **category**; a VM carries **at most one tag per category** (e.g. OS: Windows /
+  Linux / Others / Appliances; Datacenter: Datacenter-1…3).
+- **Colour**: every tag has one from a fixed palette of 10 names (`TAG_COLORS` in
+  `api/types.ts`: gray, red, orange, yellow, green, teal, blue, navy, purple, pink;
+  the backend rejects anything else with `INVALID`). Each name maps to the theme
+  tokens `--color-tag-<name>` (background) and `--color-tag-<name>-fg` (text), with
+  Classic values in `app.css`; no raw colour is stored or rendered. New tags default
+  to blue; tags created before colours existed are gray. `organize/TagChip.tsx` holds
+  `TagChip` (the coloured `Tag`-icon label used everywhere), `ColorSwatch` and
+  `TagColorDropdown`.
+- **Names** (tags and categories): `[A-Za-z0-9_-]`, 1–64 characters, no spaces
+  (`organize/tags.ts` `TAG_NAME_RE`; the backend re-checks). Unique
+  case-insensitively: categories among categories, tags within their category,
+  standalone tags among standalone tags. The dialog shows the rule under an invalid
+  name and disables Create; backend errors (`DUPLICATE`, `TAG_CONFLICT`) show inline
+  in red.
+- The dialog has a Categories table (Name · Tags · VMs) and a Tags table (the tag as a
+  chip · Category · VMs) with a **Show** filter (all / standalone / one category);
+  picking a category in the filter makes it the default for a new tag. New tag = name ·
+  category · colour. Editing a tag can rename it, recolour it and move it to another
+  category (or make it standalone); the backend refuses the move with `TAG_CONFLICT`
+  when a VM would end up with two tags of that category.
+- **Deleting a tag** removes it from every VM (the VMs stay). **Deleting a category
+  deletes its tags** too, so they leave every VM. Both confirm first and give the
+  number of affected VMs (`vmCount` is counted within the caller's scope).
+- **VM Tags box** (`detail/panels/VmTagsBox.tsx`, Summary tab): the VM's tags as
+  coloured chips labelled `Category: Tag` (category part dimmed) or just `Tag`, in
+  catalog order, each with a remove `X`, and an **Assign Tag…** button at the
+  bottom right.
+  Any user who can see the VM may tag it. It is a DB-only `PUT /vms/:id/tags`, so it
+  stays enabled while the VM is locked or its host is offline.
+- **Assign Tags dialog** (`detail/panels/AssignTagsDialog.tsx`, local state of the
+  Tags box): a Filter field (tag or category name) over the tags the VM doesn't have,
+  grouped one section per category ("one per VM", plus "replaces X" when the VM
+  already has one) and then "Standalone tags", each row a checkbox · chip · VM count.
+  Ticking a tag unticks any other tag of its category. **Assign (N)** sends one PUT
+  that adds the ticked tags and drops the VM's current tag of each touched category.
+  Admins also get **Manage Tags…**, which closes it and opens Tag Management.
+- Tags stay on the VM through inventory refreshes and in-cluster migrations; clones
+  and new VMs start untagged.
 
 ### VM power actions
 
@@ -882,7 +944,8 @@ Five visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
     `accent`, `success`, `danger`, `danger-bg`, `warning`, `info`, `info-bg`,
     `running`, `notice-bg`, `notice-text`, `selection`, `selection-text`,
     `disabled-text`, `link`, `line`, `bevel-*`, `title-*`,
-    `var(--color-chart-1..5)`, the remote-console set `console-bg`, `console-fg`,
+    `var(--color-chart-1..5)`, the tag palette `tag-<color>` / `tag-<color>-fg`
+    (through `organize/TagChip.tsx` only), the remote-console set `console-bg`, `console-fg`,
     `console-muted`, `console-text`, `console-subtle`, `console-error` (a screen,
     not chrome, so themes leave them alone), and `backdrop` (the modal backdrop,
     used as `bg-backdrop/20`). No raw hex values, and no `black`/`white` palette
@@ -930,7 +993,7 @@ src/
   auth/                       The ONLY place auth logic lives (see Auth).
   api/                        types.ts (entities, mirror of docs/api-contract.md),
                               client.ts (request + ApiError), endpoints/* (clusters, hosts,
-                              folders, vlans, vms, tasks, inventory, agentBinaries),
+                              folders, vlans, tags, vms, tasks, inventory, agentBinaries),
                               queries.ts (queryOptions + polling), queryKeys.ts (qk).
   features/inventory/         The Explorer.
     InventoryExplorer.tsx     window shell composition
@@ -1056,6 +1119,12 @@ provider), then set `VITE_API_URL=http://localhost:3000/frontend-api/api` in
   the client.
 - **Route every VM operation by `vm.id`**, never by `vmUuid`. The same `vmUuid` can
   exist on several hosts.
+- **`Dropdown`'s open list is portalled** to `<body>` with `position: fixed` and
+  `z-[1000]`, so it works inside scrolling tables and dialogs (`z-[100]`) without
+  being clipped or covered. It opens upwards when there's more room above, and it
+  closes on any outside scroll or window resize because a fixed list can't follow its
+  field. Outside-click detection covers both the field and the portalled list. Don't
+  wrap a `Dropdown` in something that needs the list in its own DOM subtree.
 - **Type is the native UI sans-serif per OS**: `Segoe UI` on Windows (the deploy
   target), San Francisco on macOS, Roboto elsewhere, at a 12px anti-aliased base.
   - An earlier build listed `MS Sans Serif` / `Tahoma` with `font-smooth: none` to

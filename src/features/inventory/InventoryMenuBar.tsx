@@ -45,6 +45,10 @@ export function InventoryMenuBar() {
                 label: 'Agent Management…',
                 onSelect: () => organizeDialog.open({ kind: 'agent-management' }),
               },
+              {
+                label: 'Tag Management…',
+                onSelect: () => organizeDialog.open({ kind: 'tag-management' }),
+              },
             ] as MenuEntry[])
           : []),
         { type: 'separator' },

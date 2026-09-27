@@ -20,6 +20,9 @@ export const qk = {
   vlans: (params: { hostId?: string; clusterId?: string } = {}) =>
     ['vlans', params] as const,
 
+  tags: () => ['tags'] as const,
+  tagCategories: () => ['tag-categories'] as const,
+
   vms: (params: VmListParams = {}) => ['vms', params] as const,
   vm: (id: string) => ['vms', id] as const,
   vmMetrics: (id: string) => ['vms', id, 'metrics'] as const,

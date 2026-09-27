@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from './bevel'
 
 export interface DropdownOption {
@@ -6,9 +7,27 @@ export interface DropdownOption {
   label: React.ReactNode
 }
 
+/** Tallest the option list gets (px) - `max-h-56`. */
+const LIST_MAX = 224
+/** Keep this much room from the viewport edge. */
+const EDGE = 8
+
+interface ListPlacement {
+  left: number
+  minWidth: number
+  maxHeight: number
+  top?: number
+  bottom?: number
+}
+
 /**
  * A themed combo box. Unlike the native `<select>` (see `Select`), the
  * option list is our own markup, so it matches the theme in every browser.
+ *
+ * The open list is portalled to `<body>` with fixed positioning, so a
+ * scrolling table, a dialog or the window chrome can't clip it or cover it.
+ * It opens upwards when there's more room above, and closes on outside
+ * scroll or resize (a fixed list would otherwise drift from its field).
  */
 export function Dropdown({
   label,
@@ -30,25 +49,76 @@ export function Dropdown({
   id?: string
 }) {
   const [open, setOpen] = React.useState(false)
+  const [placement, setPlacement] = React.useState<ListPlacement | null>(null)
   const ref = React.useRef<HTMLDivElement>(null)
+  const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const listRef = React.useRef<HTMLUListElement>(null)
   const autoId = React.useId()
   const fieldId = id ?? autoId
 
   const selected = options.find((o) => o.value === value)
 
+  // place the list against the field before paint, below it unless the
+  // viewport has more room above
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setPlacement(null)
+      return
+    }
+    const r = buttonRef.current?.getBoundingClientRect()
+    if (!r) return
+    const below = window.innerHeight - r.bottom - EDGE
+    const above = r.top - EDGE
+    const up = below < LIST_MAX && above > below
+    setPlacement({
+      left: r.left,
+      minWidth: r.width,
+      maxHeight: Math.min(LIST_MAX, up ? above : below),
+      // overlap the field's 2px bevel, like the in-flow list used to
+      ...(up
+        ? { bottom: window.innerHeight - r.top - 2 }
+        : { top: r.bottom - 2 }),
+    })
+  }, [open])
+
+  // keep the selected option in view when the list opens (scrollTop, not
+  // scrollIntoView, which could scroll an ancestor and trip the close-on-scroll)
+  React.useEffect(() => {
+    const list = listRef.current
+    const opt = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!list || !opt) return
+    if (opt.offsetTop + opt.offsetHeight > list.clientHeight) {
+      list.scrollTop = opt.offsetTop - (list.clientHeight - opt.offsetHeight) / 2
+    }
+  }, [placement])
+
   React.useEffect(() => {
     if (!open) return
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    const inside = (t: EventTarget | null) =>
+      !!t &&
+      (ref.current?.contains(t as Node) || listRef.current?.contains(t as Node))
+    function onDocDown(e: MouseEvent) {
+      if (!inside(e.target)) setOpen(false)
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)
     }
-    document.addEventListener('mousedown', onDocClick)
+    function onScroll(e: Event) {
+      // scrolling the list itself is fine; anything else moves the field
+      if (!listRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    function onResize() {
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocDown)
     document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
     return () => {
-      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('mousedown', onDocDown)
       document.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onResize)
     }
   }, [open])
 
@@ -59,9 +129,54 @@ export function Dropdown({
     if (next) onChange(next.value)
   }
 
+  const list =
+    open && !disabled && placement
+      ? createPortal(
+          <ul
+            ref={listRef}
+            role="listbox"
+            // Callers often wrap the field in a <label>. React bubbles this click
+            // through the portal to that label; cancelling the default keeps a
+            // pick from re-clicking the combobox and re-opening the list.
+            onClick={(e) => e.preventDefault()}
+            style={{
+              left: placement.left,
+              top: placement.top,
+              bottom: placement.bottom,
+              minWidth: placement.minWidth,
+              maxHeight: placement.maxHeight,
+            }}
+            // above every dialog (z-[100]) and its confirmations
+            className="ui-listbox fixed z-[1000] w-max max-w-[min(24rem,80vw)] overflow-auto p-[2px]"
+          >
+            {options.map((o) => {
+              const active = o.value === value
+              return (
+                <li key={o.value}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    className="ui-option block w-full truncate px-2 py-[2px] text-left text-base"
+                    onClick={() => {
+                      onChange(o.value)
+                      setOpen(false)
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>,
+          document.body,
+        )
+      : null
+
   const control = (
     <div ref={ref} className={cn('relative', className)}>
       <button
+        ref={buttonRef}
         type="button"
         id={fieldId}
         role="combobox"
@@ -94,37 +209,7 @@ export function Dropdown({
           <span className="block h-0 w-0 border-x-[4px] border-t-[4px] border-x-transparent border-t-current" />
         </span>
       </button>
-      {open && !disabled ? (
-        <ul
-          role="listbox"
-          // Callers often wrap the field in a <label>. A click in the list would
-          // then run the label's activation behaviour and re-click the combobox
-          // button, re-opening the list right after an option closed it.
-          // Cancelling the default here stops that for options and padding.
-          onClick={(e) => e.preventDefault()}
-          className="ui-listbox absolute top-full left-0 z-50 -mt-[2px] max-h-56 w-max min-w-full max-w-[min(24rem,80vw)] overflow-auto p-[2px]"
-        >
-          {options.map((o) => {
-            const active = o.value === value
-            return (
-              <li key={o.value}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={active}
-                  className="ui-option block w-full truncate px-2 py-[2px] text-left text-base"
-                  onClick={() => {
-                    onChange(o.value)
-                    setOpen(false)
-                  }}
-                >
-                  {o.label}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
+      {list}
     </div>
   )
 

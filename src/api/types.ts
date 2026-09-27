@@ -180,6 +180,39 @@ export interface Folder {
   hostId: string | null;
 }
 
+/** A group of mutually exclusive tags: a VM holds at most one tag per category. */
+export interface TagCategory {
+  id: string;
+  name: string;
+}
+
+/** The fixed tag colour palette (mirrors ovc-backend `models.tag.TAG_COLORS`).
+ *  Each name maps to the `--color-tag-<name>` / `-fg` theme tokens. */
+export const TAG_COLORS = [
+  "gray",
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "teal",
+  "blue",
+  "navy",
+  "purple",
+  "pink",
+] as const;
+export type TagColor = (typeof TAG_COLORS)[number];
+
+/** A global VM label, standalone (`categoryId: null`) or in one category.
+ *  Names are `[A-Za-z0-9_-]+`, unique (case-insensitively) within a category. */
+export interface Tag {
+  id: string;
+  name: string;
+  categoryId: string | null;
+  color: TagColor;
+  /** VMs carrying the tag, counted within the caller's visible scope. */
+  vmCount: number;
+}
+
 /** An 802.1Q VLAN definition, application-managed. Scoped to exactly one of a
  *  cluster or a standalone host (a host in a cluster uses its cluster's VLANs). */
 export interface Vlan {
@@ -293,6 +326,8 @@ export interface Vm {
   /** part of a HA / failover cluster resource group. */
   highlyAvailable: boolean;
   notes: string | null;
+  /** application-managed tags (`GET /tags` resolves the ids). */
+  tagIds: string[];
   metricsEnabled: boolean;
   createdAt: Iso8601;
   /** timestamp of the last inventory refresh that touched this row. */

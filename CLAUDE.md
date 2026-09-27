@@ -77,7 +77,7 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   4. on a terminal status it sets the status message and invalidates
      `vms` / `tasks` / `hosts`.
 - Power actions also set an optimistic transitional state and roll back on error.
-- Organization changes (clusters, hosts, folders, VLANs, VM → folder) are
+- Organization changes (clusters, hosts, folders, VLANs, VM → folder, tags) are
   synchronous DB operations.
 - The selection lives in the URL: `/inventory?sel=<kind>:<id>&tab=<tab>`. Dialogs
   open through the `organizeDialog` / `vmActionDialog` stores.
@@ -113,6 +113,13 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 - **Folders**: flat, scoped to one cluster or one standalone host. A VM only moves
   into folders of its host's scope. Deleting a folder detaches its VMs; changing a
   host's cluster clears its VMs' folders. Only an **empty** cluster can be deleted.
+- **Tags**: a global catalog that only admins manage (File ▸ Tag Management). A tag
+  is standalone or in one category, and a VM holds **at most one tag per category**.
+  Names are `[A-Za-z0-9_-]{1,64}`, unique per category (case-insensitive). Each tag
+  has a colour from a fixed 10-name palette (tokens `--color-tag-<name>` / `-fg`;
+  render it through `organize/TagChip.tsx`). Deleting a tag removes it from its VMs;
+  deleting a category also deletes its tags. Anyone who can see a VM can tag it
+  (Summary ▸ Tags ▸ Assign Tag…), even while it is locked.
 - **VM wizard**:
   - names: `[A-Za-z0-9_-]+`; disk names: 1–6 alphanumerics;
   - memory: ≥ 256 MB, and dynamic memory needs 1 GB ≤ min ≤ startup ≤ max;

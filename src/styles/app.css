@@ -68,6 +68,30 @@
   --color-chart-4: #a000a0;
   --color-chart-5: #c00000;
 
+  /* Tag colours: the fixed palette a tag picks from (api/types.ts TAG_COLORS).
+     Each has a chip background and a readable text colour on it. They are data
+     colours, not chrome - a theme may override them but doesn't have to. */
+  --color-tag-gray: #808080;
+  --color-tag-gray-fg: #ffffff;
+  --color-tag-red: #c00000;
+  --color-tag-red-fg: #ffffff;
+  --color-tag-orange: #d86a00;
+  --color-tag-orange-fg: #ffffff;
+  --color-tag-yellow: #f2d024;
+  --color-tag-yellow-fg: #000000;
+  --color-tag-green: #008000;
+  --color-tag-green-fg: #ffffff;
+  --color-tag-teal: #008080;
+  --color-tag-teal-fg: #ffffff;
+  --color-tag-blue: #1f5fd6;
+  --color-tag-blue-fg: #ffffff;
+  --color-tag-navy: #000080;
+  --color-tag-navy-fg: #ffffff;
+  --color-tag-purple: #800080;
+  --color-tag-purple-fg: #ffffff;
+  --color-tag-pink: #d63384;
+  --color-tag-pink-fg: #ffffff;
+
   /* Remote console (Guacamole display, its overlays and the "console
      unavailable" placeholder). This is a screen, not window chrome, so the
      themes leave it alone. */

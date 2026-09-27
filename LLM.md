@@ -116,7 +116,8 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 
 - **Node ids**, which are also the `?sel=` value: `cluster:<id>`, `host:<id>`,
   `folder:<id>`, `vm:<id>`, `template:<id>`, and `templatefolder:host:<id>` or
-  `templatefolder:cluster:<id>`.
+  `templatefolder:cluster:<id>`. Each `TreeView` row carries its id as
+  `data-node-id`.
 - Folders are always expandable (`hasChildren: true`), even when empty.
 - **Tree toolbar**, from left to right:
   - **Refresh**: invalidates clusters, hosts, vms, folders and vlans.
@@ -124,6 +125,19 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
   - **New Cluster**: opens Cluster Management.
   - **New Host**: opens Hosts Management.
   - **New Folder**: shown only while a **host** is selected.
+  - **Search VMs**: pinned to the right end. Opens the VM search dialog.
+- **VM search dialog** (`tree/VmSearchDialog.tsx`):
+  - Filters the cached `GET /vms` list (`vmsQuery()`) in the browser. It sends no
+    request of its own, and the backend has no name filter.
+  - The match is a case-insensitive substring of the VM name. Nothing is searched
+    until the trimmed query has **3 characters**.
+  - Results are sorted by name (natural order), then by host. They show in pages
+    of **10**, with the columns Name · State (`VmIcon` + state) · Host.
+  - The results area has a fixed height, so the dialog doesn't resize while you
+    type.
+  - Reopening the dialog restores the last query, pre-selected.
+  - Clicking a VM name closes the dialog and selects `vm:<id>`. The tree then
+    opens the VM's ancestors and scrolls its row into view (`block: 'nearest'`).
 
 ### Detail pane (`detail/DetailPane.tsx`)
 
@@ -440,7 +454,8 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 
 | Where                                    | Item → icon                                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tree toolbar                             | Refresh `RefreshCw` · New VM `MonitorUp` · New Cluster `Network` · New Host `Server` · New Folder `FolderPlus`                                                                                                                                                                                                                                                                                |
+| Tree toolbar                             | Refresh `RefreshCw` · New VM `MonitorUp` · New Cluster `Network` · New Host `Server` · New Folder `FolderPlus` · Search VMs `Search`                                                                                                                                                                                                                                                          |
+| VM search dialog                         | field `Search` · state column `VmIcon` · Previous / Next page `ChevronLeft` / `ChevronRight`                                                                                                                                                                                                                                                                                                  |
 | VM header                                | Refresh `RefreshCw` · Console ▾ `Monitor` (Open HTML5 console in new tab `ExternalLink`, Download .rdp file `Download`) · More ▾ `MoreHorizontal` · lock badge `Lock`                                                                                                                                                                                                                         |
 | VM "More" menu                           | Edit VM `Pencil` · Rename `TextCursorInput` · Edit Notes `Pencil` · Move to Folder `FolderInput` · Move Storage `HardDrive` · Edit AutoStart `AlarmClock` · Mount / Eject DVD `Disc` · Migrate `Move` · Enable HA `ShieldCheck` · Disable HA `ShieldX` · Clone `Copy` · Export as Template `FileUp` · Enable / Disable Metrics `Gauge` · Remove from Inventory `Trash2` · Force unlock `Lock` |
 | VM Summary                               | Edit Network… `Network` · Edit Disks… `HardDrive`                                                                                                                                                                                                                                                                                                                                             |
@@ -1068,6 +1083,10 @@ preference changes. Data refetches do not re-seed it, so manual expand/collapse
 sticks. In both modes the ancestors of the selected node are opened, so a deep link
 (`?sel=vm:…`) is never hidden. See `initialExpansion` in `tree/treeModel.ts`.
 
+Selecting a node later does not expand the tree, with one exception: a VM picked
+in the **VM search dialog**. `InventoryTree` adds that VM's `ancestorsOf` to the
+expanded set, keeping whatever else is open, then scrolls the row into view.
+
 ## Layout / architecture
 
 ```
@@ -1105,7 +1124,8 @@ src/
     format.ts                 bytes, bitsPerSec, duration, relTime, dateTime,
                               shortDateTime, uptimeSince, percent, timeOnly, clock
     AboutDialog, AuthDebugDialog (dev only)
-    tree/                     treeModel.ts, InventoryTree.tsx (+ tree toolbar), nodeIcons.tsx
+    tree/                     treeModel.ts, InventoryTree.tsx (+ tree toolbar), nodeIcons.tsx,
+                              VmSearchDialog.tsx (tree toolbar › Search VMs)
     organize/                 dialogStore, mutations (all org + create/clone mutations),
                               scope (folder scope / reachable folders), OrganizeDialogs
                               (new folder, move VM, move host, delete folder, new VM),

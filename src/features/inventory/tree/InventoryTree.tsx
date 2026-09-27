@@ -1,8 +1,15 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FolderPlus, MonitorUp, Network, RefreshCw, Server } from "lucide-react";
+import {
+  FolderPlus,
+  MonitorUp,
+  Network,
+  RefreshCw,
+  Search,
+  Server,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Button, Icon, TreeView } from "~/components/win95";
+import { Button, Icon, TreeView, cn } from "~/components/win95";
 import {
   clustersQuery,
   foldersQuery,
@@ -16,11 +23,13 @@ import { organizeDialog } from "../organize/dialogStore";
 import { useNewVmTarget } from "../useNewVmTarget";
 import { useTreeBehavior } from "~/preferences";
 import {
+  ancestorsOf,
   buildInventoryTree,
   initialExpansion,
   nodeIdToSelection,
   selectionToNodeId,
 } from "./treeModel";
+import { VmSearchDialog } from "./VmSearchDialog";
 
 function TreeToolButton({
   icon,
@@ -28,12 +37,14 @@ function TreeToolButton({
   title,
   onClick,
   disabled,
+  className,
 }: {
   icon: LucideIcon;
   label: string;
   title?: string;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <Button
@@ -41,7 +52,7 @@ function TreeToolButton({
       disabled={disabled}
       title={title ?? label}
       aria-label={label}
-      className="min-h-0 min-w-0 px-1.5 py-[2px]"
+      className={cn("min-h-0 min-w-0 px-1.5 py-[2px]", className)}
     >
       <Icon icon={icon} size={13} />
     </Button>
@@ -87,11 +98,32 @@ export function InventoryTree() {
     // re-seed the tree.
   }, [nodes, treeBehavior]);
 
+  // A node picked outside the tree (Search) gets its ancestors opened, then its
+  // row is scrolled into view once it has rendered.
+  const treeRef = React.useRef<HTMLDivElement>(null);
+  const [revealId, setRevealId] = React.useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = React.useState(false);
+
+  const reveal = (nodeId: string) => {
+    setExpanded(
+      (prev) => new Set([...prev, ...(ancestorsOf(nodes, nodeId) ?? [])]),
+    );
+    setRevealId(nodeId);
+  };
+
+  React.useEffect(() => {
+    if (!revealId) return;
+    treeRef.current
+      ?.querySelector(`[data-node-id="${CSS.escape(revealId)}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+    setRevealId(null);
+  }, [revealId]);
+
   const loading = clusters.isLoading || hosts.isLoading || vms.isLoading;
   const failed = clusters.isError && hosts.isError && !nodes.length;
 
   return (
-    <div className="flex h-full flex-col">
+    <div ref={treeRef} className="flex h-full flex-col">
       <div className="mb-[2px] flex items-center gap-1 border-b border-fg/20 bg-surface px-1 py-[2px]">
         <TreeToolButton
           icon={RefreshCw}
@@ -133,6 +165,12 @@ export function InventoryTree() {
             }
           />
         ) : null}
+        <TreeToolButton
+          icon={Search}
+          label="Search VMs"
+          className="ml-auto"
+          onClick={() => setSearchOpen(true)}
+        />
       </div>
       {failed ? (
         <div className="bevel-sunken flex-1 bg-window p-3 text-disabled-text">
@@ -157,6 +195,16 @@ export function InventoryTree() {
           }
         />
       )}
+      {searchOpen ? (
+        <VmSearchDialog
+          onClose={() => setSearchOpen(false)}
+          onPick={(vmId) => {
+            setSearchOpen(false);
+            select({ kind: "vm", id: vmId });
+            reveal(`vm:${vmId}`);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

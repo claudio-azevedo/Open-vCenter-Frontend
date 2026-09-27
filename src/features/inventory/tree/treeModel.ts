@@ -213,7 +213,7 @@ export function initialExpansion(
 }
 
 /** Ids of the nodes above `id`, root first; `null` when `id` isn't in the tree. */
-function ancestorsOf(nodes: TreeNode[], id: string): string[] | null {
+export function ancestorsOf(nodes: TreeNode[], id: string): string[] | null {
   for (const node of nodes) {
     if (node.id === id) return [];
     const below = ancestorsOf(node.children ?? [], id);

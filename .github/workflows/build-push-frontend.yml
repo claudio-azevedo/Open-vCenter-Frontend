@@ -96,4 +96,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # wrangler 4: applies public/_headers (Nitro emits one that makes the
+          # hashed /assets/* immutable for a year); the action defaults to v3
+          wranglerVersion: "4"
           command: deploy -c .output/server/wrangler.json

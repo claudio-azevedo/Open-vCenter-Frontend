@@ -938,6 +938,11 @@ The demo runs on the Workers **free plan**, so it needs no VM.
   the `demo` branch) with its secrets `CLOUDFLARE_API_TOKEN`
   ("Edit Cloudflare Workers" template, scoped to the zone) and
   `CLOUDFLARE_ACCOUNT_ID`.
+- **Caching**: Nitro emits `public/_headers` with `/assets/*` →
+  `cache-control: public, max-age=31536000, immutable` (the files are
+  content-hashed). Wrangler 4 applies it, so the CI pins `wranglerVersion: "4"`;
+  with the action's default wrangler 3, assets came back `max-age=0`. The edge
+  caches them either way (`cf-cache-status: HIT`).
 - **Local check on the real runtime**: `npx wrangler dev -c
   .output/server/wrangler.json`.
 - **Budget**: about 1.1 MB gzipped (free limit 3 MB); requests take 2–3 ms (free

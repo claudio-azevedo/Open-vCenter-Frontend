@@ -68,6 +68,19 @@
   --color-chart-4: #a000a0;
   --color-chart-5: #c00000;
 
+  /* Remote console (Guacamole display, its overlays and the "console
+     unavailable" placeholder). This is a screen, not window chrome, so the
+     themes leave it alone. */
+  --color-console-bg: #000000;
+  --color-console-fg: #00ff00; /* placeholder text - phosphor green */
+  --color-console-muted: #00aa00; /* placeholder icon */
+  --color-console-text: #ffffff; /* overlay text, spinner */
+  --color-console-subtle: #c0c0c0; /* overlay secondary text */
+  --color-console-error: #ff8080; /* overlay error title */
+
+  /* Modal backdrop (used with an opacity modifier, e.g. bg-backdrop/20) */
+  --color-backdrop: #000000;
+
   /* Native UI sans per OS: Segoe UI on Windows (the target - this is the real
      Windows UI font, ClearType-crisp), San Francisco on macOS, Roboto elsewhere.
      The old stack listed `MS Sans Serif`/`Tahoma` + `font-smooth: none`, but

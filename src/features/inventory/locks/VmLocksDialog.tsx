@@ -8,6 +8,10 @@ import { ApiError } from "~/api/client";
 import { statusClass, taskLabel } from "../tasks/taskLabels";
 import { duration, relTime } from "../format";
 import { confirm } from "../confirm";
+import { statusMessage } from "../actions/statusMessage";
+
+const errorText = (err: unknown) =>
+  err instanceof ApiError ? err.message : String(err);
 
 /** Admin view of every VM currently locked by a running operation. */
 export function VmLocksDialog({ onClose }: { onClose: () => void }) {
@@ -23,10 +27,9 @@ export function VmLocksDialog({ onClose }: { onClose: () => void }) {
       else await releaseAllVmLocks();
     },
     onSettled: refresh,
-    onError: (err) => {
-      const msg = err instanceof ApiError ? err.message : String(err);
-      window.alert(msg);
-    },
+    // shown inline below (the status bar sits behind this modal) and mirrored
+    // to the status bar for after the dialog closes
+    onError: (err) => statusMessage.set(`Lock release failed: ${errorText(err)}`),
   });
 
   const rows = locks.data ?? [];
@@ -87,6 +90,12 @@ export function VmLocksDialog({ onClose }: { onClose: () => void }) {
           operation can&rsquo;t race it. Locks clear on their own when the task
           finishes; release one here only if it is stuck.
         </p>
+
+        {release.isError ? (
+          <p className="text-danger">
+            Lock release failed: {errorText(release.error)}
+          </p>
+        ) : null}
 
         {locks.isError ? (
           <p className="text-danger">

@@ -15,9 +15,8 @@ type Invocation = {
 
 /**
  * Fires a non-power VM operation (rename, migrate, snapshot, …) and hands the
- * returned task id to <TaskWatcher> for polling. Most of these are backend
- * stubs today - the task will surface as `timeout` until the host agent
- * implements the function.
+ * returned task id to <TaskWatcher> for polling. A task whose agent never
+ * answers surfaces as `timeout` (the backend's sweeper).
  */
 export function useVmManagementAction(vm: Pick<Vm, "id" | "name">) {
   const queryClient = useQueryClient();

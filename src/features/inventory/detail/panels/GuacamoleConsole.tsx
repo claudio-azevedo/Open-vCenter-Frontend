@@ -49,10 +49,10 @@ const STATE_LABEL: Record<ConnState, string> = {
   error: "Error",
 };
 const STATE_DOT: Record<ConnState, string> = {
-  connecting: "bg-[#808000]",
+  connecting: "bg-warning",
   connected: "bg-success",
-  disconnected: "bg-[#808080]",
-  error: "bg-[#800000]",
+  disconnected: "bg-disabled-text",
+  error: "bg-danger",
 };
 
 export function GuacamoleConsole({
@@ -364,7 +364,7 @@ export function GuacamoleConsole({
         </div>
       ) : null}
 
-      <div className="relative min-h-0 flex-1 bg-black">
+      <div className="relative min-h-0 flex-1 bg-console-bg">
         <div
           ref={displayRef}
           className="bevel-sunken flex h-full w-full items-center justify-center overflow-hidden"
@@ -373,7 +373,7 @@ export function GuacamoleConsole({
 
         {connState === "connecting" ? (
           <Overlay>
-            <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-console-text border-t-transparent" />
             <p>Connecting to {hostname}…</p>
           </Overlay>
         ) : null}
@@ -385,8 +385,8 @@ export function GuacamoleConsole({
         ) : null}
         {connState === "error" ? (
           <Overlay>
-            <p className="mb-1 text-[#ff8080]">Connection error</p>
-            <p className="mb-3 max-w-sm text-[#c0c0c0]">{statusText}</p>
+            <p className="mb-1 text-console-error">Connection error</p>
+            <p className="mb-3 max-w-sm text-console-subtle">{statusText}</p>
             <OverlayButton onClick={reconnect}>Retry</OverlayButton>
           </Overlay>
         ) : null}
@@ -414,7 +414,7 @@ export function GuacamoleConsole({
 
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80 text-center text-white">
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-console-bg/80 text-center text-console-text">
       <div>{children}</div>
     </div>
   );

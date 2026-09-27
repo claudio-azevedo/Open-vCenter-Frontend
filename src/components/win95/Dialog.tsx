@@ -27,7 +27,7 @@ export function Dialog({
 
   return (
     <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-black/20"
+      className="fixed inset-0 z-[100] grid place-items-center bg-backdrop/20"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <Window

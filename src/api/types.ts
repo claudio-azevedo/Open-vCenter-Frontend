@@ -459,8 +459,8 @@ export const TERMINAL_TASK_STATUSES: ReadonlySet<TaskStatus> =
 export type VmPowerAction =
   "start" | "stop" | "shutdown" | "restart" | "pause" | "delete";
 
-/** Non-power VM operations. Most are backend stubs today (the task is queued and
- *  published, then times out until the host agent implements the function). */
+/** Non-power VM operations - each queues an agent task (`refresh` is read-only
+ *  and takes no VM lock). Params per action: docs/api-contract.md. */
 export type VmManagementAction =
   | "rename"
   | "edit"

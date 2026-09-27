@@ -41,8 +41,8 @@ export function VmConsolePanel({
   const fqdn = host.data?.fqdn ?? host.data?.ipAddress ?? null;
   if (!fqdn || !vm.vmUuid) {
     return (
-      <div className="bevel-sunken flex h-full min-h-[240px] flex-col items-center justify-center gap-2 bg-black text-[#00ff00]">
-        <Icon icon={MonitorOff} size={32} className="text-[#00aa00]" />
+      <div className="bevel-sunken flex h-full min-h-[240px] flex-col items-center justify-center gap-2 bg-console-bg text-console-fg">
+        <Icon icon={MonitorOff} size={32} className="text-console-muted" />
         <p>
           {!vm.vmUuid
             ? "Console unavailable - waiting for the host agent to report this VM."

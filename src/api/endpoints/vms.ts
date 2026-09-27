@@ -35,6 +35,10 @@ export const createVm = (body: VmCreateBody) =>
 export const moveVm = (id: string, folderId: string | null) =>
   request<Vm>(`/vms/${id}`, { method: "PATCH", body: { folderId } });
 
+/** Replace the VM's tags (at most one per category). DB-only, no task. */
+export const setVmTags = (id: string, tagIds: string[]) =>
+  request<Vm>(`/vms/${id}/tags`, { method: "PUT", body: { tagIds } });
+
 export type VmActionParams = Record<string, unknown>;
 
 /**

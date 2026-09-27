@@ -28,7 +28,7 @@ import {
 const STANDALONE = "__standalone__";
 
 /** Small square icon-only button for the per-row actions in the tables. */
-function IconBtn({
+export function IconBtn({
   icon,
   label,
   onClick,

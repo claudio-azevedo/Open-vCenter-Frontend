@@ -13,6 +13,7 @@ import {
 import { getAgentBinaries, getAgentStorage } from "./endpoints/agentBinaries";
 import { getFolders } from "./endpoints/folders";
 import { getVlans } from "./endpoints/vlans";
+import { getTagCategories, getTags } from "./endpoints/tags";
 import type { VlanListParams } from "./endpoints/vlans";
 import { getVm, getVmLocks, getVmMetrics, getVms } from "./endpoints/vms";
 import type { VmListParams } from "./endpoints/vms";
@@ -109,6 +110,20 @@ export const vlansQuery = (params: VlanListParams = {}) =>
   queryOptions({
     queryKey: qk.vlans(params),
     queryFn: ({ signal }) => getVlans(params, signal),
+  });
+
+export const tagCategoriesQuery = () =>
+  queryOptions({
+    queryKey: qk.tagCategories(),
+    queryFn: ({ signal }) => getTagCategories(signal),
+    refetchInterval: INTERVAL.clusters,
+  });
+
+export const tagsQuery = () =>
+  queryOptions({
+    queryKey: qk.tags(),
+    queryFn: ({ signal }) => getTags(signal),
+    refetchInterval: INTERVAL.clusters,
   });
 
 export const vmsQuery = (params: VmListParams = {}) =>

@@ -10,6 +10,7 @@ import {
   HostManagementDialog,
 } from "./ManagementDialogs";
 import { AgentManagementDialog } from "./AgentManagementDialog";
+import { TagManagementDialog } from "./TagManagementDialog";
 import { CreateVmDialog } from "../create/CreateVmDialog";
 import {
   useCreateFolder,
@@ -30,6 +31,8 @@ export function OrganizeDialogs() {
       return <HostManagementDialog />;
     case "agent-management":
       return <AgentManagementDialog />;
+    case "tag-management":
+      return <TagManagementDialog />;
     case "new-folder":
       return (
         <NewFolderDialog clusterId={dialog.clusterId} hostId={dialog.hostId} />

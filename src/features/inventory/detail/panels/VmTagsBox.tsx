@@ -25,9 +25,19 @@ export function VmTagsBox({ vm, className }: { vm: Vm; className?: string }) {
   return (
     <GroupBox label="Tags" className={className}>
       <div className="flex flex-1 flex-col gap-2">
-        <div className="ui-field flex min-h-[52px] flex-1 flex-wrap content-start gap-1 overflow-auto p-1">
+        <div className="flex justify-end">
+          <Button
+            icon={TagIcon}
+            className="min-w-0 px-2"
+            onClick={() => setAssigning(true)}
+          >
+            Assign Tag…
+          </Button>
+        </div>
+        {/* chips sit straight on the group box, no field around them */}
+        <div className="flex min-h-[52px] flex-1 flex-wrap content-start gap-1.5">
           {assigned.length === 0 ? (
-            <span className="px-0.5 text-disabled-text">
+            <span className="text-disabled-text">
               {catalog.isLoading ? "Loading…" : "No tags assigned"}
             </span>
           ) : (
@@ -49,15 +59,6 @@ export function VmTagsBox({ vm, className }: { vm: Vm; className?: string }) {
               />
             ))
           )}
-        </div>
-        <div className="flex justify-end">
-          <Button
-            icon={TagIcon}
-            className="min-w-0 px-2"
-            onClick={() => setAssigning(true)}
-          >
-            Assign Tag…
-          </Button>
         </div>
       </div>
       {assigning ? <AssignTagsDialog vm={vm} onClose={() => setAssigning(false)} /> : null}

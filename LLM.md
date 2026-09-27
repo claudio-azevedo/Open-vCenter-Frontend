@@ -618,9 +618,9 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   deletes its tags** too, so they leave every VM. Both confirm first and give the
   number of affected VMs (`vmCount` is counted within the caller's scope).
 - **VM Tags box** (`detail/panels/VmTagsBox.tsx`, Summary tab): the VM's tags as
-  coloured chips labelled `Category: Tag` (category part dimmed) or just `Tag`, in
-  catalog order, each with a remove `X`, and an **Assign Tag…** button at the
-  bottom right.
+  coloured chips laid straight on the group box (no field around them), labelled
+  `Category: Tag` (category part dimmed) or just `Tag`, in catalog order, each with a
+  remove `X`, under an **Assign Tag…** button at the top right.
   Any user who can see the VM may tag it. It is a DB-only `PUT /vms/:id/tags`, so it
   stays enabled while the VM is locked or its host is offline.
 - **Assign Tags dialog** (`detail/panels/AssignTagsDialog.tsx`, local state of the

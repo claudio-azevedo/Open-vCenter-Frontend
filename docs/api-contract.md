@@ -15,7 +15,9 @@ To run it locally:
 
 Keep this file in sync with the code: any change to an endpoint, body, param,
 response, error code or polling cadence updates it in the same change (see also
-`LLM.md` › Contracts).
+`LLM.md` › Contracts). The frontend's demo mode (`OVC_DEMO_MODE=true`) serves this
+same contract from an in-browser simulator, `src/demo/api.ts`. Update that
+simulator in the same change too.
 
 ---
 

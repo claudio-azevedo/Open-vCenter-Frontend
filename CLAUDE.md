@@ -7,6 +7,11 @@ its own server proxy. Sibling services: `ovc-backend` (Python), `ovc-agent` (Go,
 each Hyper-V host, reached via RabbitMQ by the backend) and `ovc-webrdp` (Guacamole
 consoles).
 
+**Demo mode** (this `demo` branch only; CI publishes it as the `:demo` image;
+`OVC_DEMO_MODE=true`, runtime env) runs it standalone for product
+demos: no backend or login. `request()` hands every call to an in-browser simulator
+(`src/demo/`) that keeps a random inventory in localStorage. See LLM.md › Demo mode.
+
 **`LLM.md` is the full reference**: screens, every REST contract, the icon tables,
 every business rule. Read the relevant section before changing behaviour. The REST
 contract written for the backend team is `docs/api-contract.md`, reconciled with
@@ -19,6 +24,8 @@ the code on 2026-09-27; it holds the full error-code table.
 - Local backend: `docker compose up` in `../ovc-backend` with `OVC_AUTH_MODE=stub` on
   both sides. Set `VITE_API_URL=http://localhost:3000/frontend-api/api` in
   `.env.local`.
+- No backend at all: `OVC_DEMO_MODE=true npm run dev`, or
+  `docker compose -f docker-compose.demo.yml up --build`.
 
 ## Stack
 
@@ -37,6 +44,8 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   (power, tasks, status bar), `tasks/`, `locks/`.
 - `src/components/win95/`: UI primitives. `src/auth/`: all auth logic.
   `src/preferences/`: theme + tree behaviour cookies. `src/styles/`: tokens + themes.
+- `src/demo/`: demo mode. `api.ts` (simulated endpoints), `sim.ts` (tasks + agent
+  effects), `seed.ts` (random inventory), `metrics.ts`, `store.ts` (localStorage).
 
 ## Hard rules
 
@@ -55,8 +64,9 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   `Square`, Unknown = gray `Square`, transitional = same icon + `animate-pulse`).
   Reuse `tree/nodeIcons.tsx` `STATE_ICON` / `VmIcon` and `actions/powerActions.ts`.
 - **HTTP only via `api/client.ts` `request()`**. A new call means an endpoint
-  function, a type, a `queryOptions` factory with a `qk` key, and an update to
-  `docs/api-contract.md`.
+  function, a type, a `queryOptions` factory with a `qk` key, an update to
+  `docs/api-contract.md`, **and the matching handler in `src/demo/api.ts`** (plus
+  `sim.ts` / `taskProfiles.ts` for a new agent function), so demo mode keeps working.
 - **Reads use `useQuery`, not suspense**, so a backend outage shows "Disconnected"
   instead of crashing. Invalidate by prefix (`['vms']`, `['hosts']`, `['tasks']`).
 - **Route VM operations by `vm.id`**, never by `vmUuid` (the Hyper-V GUID, which can
@@ -134,6 +144,6 @@ Every change ships with its doc update:
   the matching section of `LLM.md`;
 - a hard rule or a headline business rule changed → update this file too;
 - the REST surface changed (endpoint, body, param, response, error code, polling) →
-  update `docs/api-contract.md`.
+  update `docs/api-contract.md` and the demo simulator (`src/demo/`).
 
 A new rule violation you can't fix right away goes in `LLM.md` › Known deviations.

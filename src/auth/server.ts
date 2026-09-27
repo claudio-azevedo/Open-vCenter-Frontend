@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { redirect } from "@tanstack/react-router";
 import { auth, OIDC_PROVIDER_ID } from "./auth";
 import { DEV_BYPASS_USER, isDevBypass } from "./bypass";
+import { DEMO_USER, isDemoEnv } from "~/demo/env";
 import type { AuthUser } from "./types";
 
 /**
@@ -11,11 +12,17 @@ import type { AuthUser } from "./types";
  */
 
 export const fetchCurrentUser = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ user: AuthUser | null; authDisabled: boolean }> => {
-    if (isDevBypass()) return { user: DEV_BYPASS_USER, authDisabled: true };
+  async (): Promise<{
+    user: AuthUser | null;
+    authDisabled: boolean;
+    /** OVC_DEMO_MODE - standalone demo, no backend (see src/demo/). */
+    demo: boolean;
+  }> => {
+    if (isDemoEnv()) return { user: DEMO_USER, authDisabled: false, demo: true };
+    if (isDevBypass()) return { user: DEV_BYPASS_USER, authDisabled: true, demo: false };
 
     const data = await auth.api.getSession({ headers: getRequest().headers });
-    if (!data?.session) return { user: null, authDisabled: false };
+    if (!data?.session) return { user: null, authDisabled: false, demo: false };
     const u = data.user as {
       id: string;
       email: string;
@@ -30,6 +37,7 @@ export const fetchCurrentUser = createServerFn({ method: "GET" }).handler(
         roles: Array.isArray(u.roles) ? (u.roles as string[]) : [],
       },
       authDisabled: false,
+      demo: false,
     };
   },
 );
@@ -68,8 +76,8 @@ export const clearAuthCookies = createServerFn({ method: "POST" }).handler(
 );
 
 export const logoutFn = createServerFn().handler(async () => {
-  // Nothing to sign out of while the dev bypass is active.
-  if (isDevBypass()) throw redirect({ href: "/inventory" });
+  // Nothing to sign out of while the dev bypass or the demo is active.
+  if (isDevBypass() || isDemoEnv()) throw redirect({ href: "/inventory" });
   try {
     await auth.api.signOut({ headers: getRequest().headers });
   } catch {

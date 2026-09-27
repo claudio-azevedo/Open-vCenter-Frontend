@@ -1,4 +1,5 @@
 import axios from 'redaxios'
+import { isDemoMode } from '~/demo/mode'
 import type { ApiErrorBody } from './types'
 
 // The browser talks to the frontend's own server, which proxies to ovc-backend
@@ -38,6 +39,13 @@ export async function request<T>(
   path: string,
   opts: RequestOptions = {},
 ): Promise<T> {
+  // Demo mode (OVC_DEMO_MODE): no backend - the in-browser simulator answers
+  // the same contract. Loaded lazily so it stays out of the normal bundle.
+  if (isDemoMode()) {
+    const { demoRequest } = await import('~/demo/api')
+    return demoRequest<T>(path, opts)
+  }
+
   const headers: Record<string, string> = { Accept: 'application/json' }
 
   const params = new URLSearchParams()

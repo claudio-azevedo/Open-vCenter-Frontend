@@ -76,12 +76,47 @@ request is `admin@ovc.debug.app` with the `ADMINISTRATOR` role. Works in every
 build, including `production` - the UI shows a standing warning dialog while it's
 active.
 
+## Demo mode
+
+Demo mode lives on the **`demo` branch** (not `main`). Every push to `demo` makes CI
+publish the image as **`:demo`** (plus `:demo-<sha>`), with `OVC_DEMO_MODE=true`
+already set. Merge `main` into `demo` to bring new features into the demo.
+
+Set **`OVC_DEMO_MODE=true`** (server-side, read at runtime - the same image serves
+both modes) to run the frontend **standalone**, for product demos: no ovc-backend,
+agent, RabbitMQ, database, OIDC provider or ovc-webrdp. Nothing else needs to be set.
+
+- No login: every visitor is `demo@ovc.demo` with the `ADMINISTRATOR` role.
+- The browser simulates the backend (`src/demo/`), following the same REST contract,
+  validations and error codes. On first visit it generates a random inventory:
+  2-5 clusters with 2-5 hosts each, 2-6 standalone hosts, 5-10 VMs per host, plus
+  folders, VLANs, templates, ISOs, agent builds, a few hours of task history and a
+  template export still running.
+- Actions behave like the real thing: power buttons, Edit VM, create / clone /
+  deploy, snapshots, migrate, folders, host maintenance and agent upgrades all run
+  as tasks with live progress, lock the VM, and change its state when they finish.
+  Metrics are generated and follow the VMs' power state.
+- The inventory and every change live in the visitor's **localStorage**, so each
+  browser has its own demo that survives reloads. **File ▸ Reset Demo Data…** starts
+  over with a new random inventory.
+- The status bar shows **DEMO MODE**. The consoles show a notice instead of
+  connecting.
+
+```sh
+docker compose -f docker-compose.demo.yml up --build -d     # http://localhost:3000
+# or the published image:
+docker run --rm -p 3000:3000 ghcr.io/claudio-azevedo/ovc-frontend:demo
+# or locally:
+OVC_DEMO_MODE=true npm run dev
+```
+
 ## Environment
 
 Client vars are read by Vite and prefixed `VITE_`; the rest (`API_URL`, `OIDC_*`,
 `BETTER_AUTH_*`) are server-only and never reach the browser. `ovc-backend` is the
 only data source - run it (its `OVC_AUTH_MODE=stub` + seed give you data without a
-provider). There is no in-frontend mock.
+provider). The one exception is [demo mode](#demo-mode) (`OVC_DEMO_MODE=true`),
+where the browser simulates the backend.
 
 | Variable                                | Required     | Default                              | Purpose                                                                                                                                                                                                                                                                                                   |
 | --------------------------------------- | ------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -96,6 +131,7 @@ provider). There is no in-frontend mock.
 | `BETTER_AUTH_SECRET`                    | yes (server) | -                                    | 32-byte hex (`openssl rand -hex 32`) - seals the session cookies.                                                                                                                                                                                                                                         |
 | `BETTER_AUTH_URL`                       | yes (server) | -                                    | Public URL of the auth endpoints, e.g. `http://localhost:3000/frontend-api/auth`.                                                                                                                                                                                                                         |
 | `OVC_AUTH_MODE`                         | no (server)  | `oidc`                               | `stub` ⇒ skip OIDC, every request is `admin@ovc.debug.app` / `[ADMINISTRATOR]`. Same variable, same value as ovc-backend's `OVC_AUTH_MODE` - set both to `stub` and neither side needs an IdP. Works in every build, including `production`. When set, `OIDC_*` / `BETTER_AUTH_*` are not required.       |
+| `OVC_DEMO_MODE`                         | no (server)  | -                                    | `true` ⇒ [demo mode](#demo-mode): standalone, no backend / agent / login / console; the browser simulates the backend and keeps a random inventory in localStorage. When set, nothing else is required.                                                                                                     |
 
 Put them in `.env.local` (git-ignored). `.env.example` is the template.
 
@@ -223,6 +259,11 @@ src/
 
   routes/frontend-api/        auth/$.ts  - better-auth OAuth endpoints
                               api/$.ts   - server proxy to ovc-backend (+ bearer)
+
+  demo/                       Demo mode (OVC_DEMO_MODE): env.ts (server flag + demo
+                              user), mode.ts (client flag), api.ts (the simulated
+                              backend), seed.ts (random inventory), sim.ts (tasks +
+                              effects), metrics.ts, store.ts (localStorage)
 
   api/                        Typed HTTP layer.
     types.ts                  domain entities + enums (mirror of docs/api-contract.md)

@@ -12,6 +12,9 @@ multi-service suite:
 - **ovc-frontend** (this repo) - talks to `ovc-backend` over REST only, through
   its own server proxy. It never touches RabbitMQ.
 
+With `OVC_DEMO_MODE=true` the frontend runs **standalone** instead: no backend, no
+login, a simulated backend in the browser. See [Demo mode](#demo-mode).
+
 Companion docs: `CLAUDE.md` (short working summary of this file),
 `docs/api-contract.md` (REST contract written for the backend team),
 `README.md` (setup and deployment).
@@ -22,7 +25,9 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
   **English**, regardless of the language a contributor chats in.
 - Keep this file current. A change to a contract, icon, business rule or screen
   updates the matching section here, and `CLAUDE.md` when it touches a headline rule.
-- A change to the REST surface also updates `docs/api-contract.md`.
+- A change to the REST surface also updates `docs/api-contract.md` **and** the demo
+  simulator (`src/demo/api.ts`, plus `sim.ts` for a new agent function), so demo
+  mode keeps behaving like the real backend.
 
 ## Stack
 
@@ -52,14 +57,14 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 | ------------------------ | -------------------------------------------------------------------------------------------------------- |
 | `/`                      | redirect → `/inventory`                                                                                  |
 | `/login`                 | "Sign in" card, with a Theme dropdown                                                                    |
-| `/logout`                | clears the session                                                                                      |
+| `/logout`                | clears the session (demo and stub modes: back to `/inventory`)                                           |
 | `/access-denied`         | signed in, but the token carries zero roles                                                              |
 | `/inventory` (`_authed`) | the Explorer. Search params `?sel=<kind>:<id>&tab=<tabId>`                                               |
 | `/console` (`_authed`)   | standalone console in its own browser tab: `?vm=<vmId>` (Hyper-V console) or `?host=<hostId>` (host RDP) |
-| `/frontend-api/api/*`    | server proxy → ovc-backend. Injects the OIDC bearer                                                 |
+| `/frontend-api/api/*`    | server proxy → ovc-backend. Injects the OIDC bearer. Demo mode: `503 DEMO_MODE`                          |
 | `/frontend-api/auth/*`   | better-auth OAuth endpoints (sign-in, callback, sign-out)                                                |
 | `/frontend-api/fn/*`     | TanStack Start server functions                                                                          |
-| `/webrdp/tunnel`         | server proxy → ovc-webrdp (`WEBRDP_ORIGIN`, read per request)                                       |
+| `/webrdp/tunnel`         | server proxy → ovc-webrdp (`WEBRDP_ORIGIN`, read per request). Demo mode: `503 DEMO_MODE`                |
 
 ### The Explorer window
 
@@ -68,7 +73,8 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 
 1. **Menu bar** (`InventoryMenuBar.tsx`):
    - **File**: Cluster Management…, Hosts Management…, Agent Management… (admin),
-     Refresh (labelled F5; invalidates every query), Sign Out.
+     Refresh (labelled F5; invalidates every query), Sign Out (demo mode: **Reset
+     Demo Data…** instead).
    - **Action**: Move VM to Folder… (needs a VM selected with ≥ 1 reachable folder),
      Move Host… (needs a host selected), Delete Folder… (needs a folder selected).
    - **View**: Refresh, Task History…, VM Locks… (admin).
@@ -77,13 +83,15 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 2. **Split pane**: tree toolbar + inventory tree on the left, detail pane on the right.
 3. **Recent Tasks dock** (`tasks/TasksDock.tsx`).
 4. **Status bar** (`InventoryStatusBar.tsx`), with these panels in order:
+   - demo mode only: a **DEMO MODE** badge (`bg-notice-bg text-notice-text`, tooltip
+     explains the simulated, browser-local data);
    - a transient message (`statusMessage` store, default "Ready");
    - "N tasks running";
    - the selection as `kind: id`;
    - "H hosts · V VMs";
    - the connection state: `● Connected` (green), `Refreshing…`, or `● Disconnected`
      (accent). Disconnected shows only when the clusters, hosts and VMs queries all
-     fail and no data is cached.
+     fail and no data is cached. Demo mode always shows `● Simulated` (green).
 
 Mounted once inside the Explorer: `<TaskWatcher/>`, `<OrganizeDialogs/>`,
 `<VmActionDialogs/>`, `<ConfirmHost/>`. The `/console` route mounts its own
@@ -325,7 +333,7 @@ Always invalidate by prefix: `['vms']`, `['hosts']`, `['tasks']` and so on.
 - **Console tabs**: `vmConsoleTabUrl(id)` → `/console?vm=`, `hostConsoleTabUrl(id)` →
   `/console?host=`. Both open with `window.open(url, '_blank', 'noopener')`.
 - **Module-level stores** use `useSyncExternalStore`, not React context:
-  - `activeTasks`: task ids in flight.
+  - `activeTasks`: task ids in flight (`clear()` on a demo reset).
   - `statusMessage`: the status bar text.
   - `organizeDialog` (`organize/dialogStore.ts`): `cluster-management`,
     `host-management`, `agent-management`, `new-folder {clusterId?|hostId?}`,
@@ -346,7 +354,8 @@ Always invalidate by prefix: `['vms']`, `['hosts']`, `['tasks']` and so on.
   `danger` makes the confirm button bold.
 
 - **Cookies**: `ovc-theme` and `ovc-tree-behavior` (1 year, `SameSite=Lax`, `Secure`
-  on https), readable during SSR. **localStorage**: `ovc-tasks-dock-collapsed` only.
+  on https), readable during SSR. **localStorage**: `ovc-tasks-dock-collapsed`, and in
+  demo mode `ovc-demo-state` (the whole simulated inventory).
 
 ### Environment variables
 
@@ -358,6 +367,7 @@ Always invalidate by prefix: `['vms']`, `['hosts']`, `['tasks']` and so on.
 | `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`                                                    | server           | better-auth                                                                                 |
 | `VITE_OIDC_PROVIDER_NAME?`                                                                 | client           | login button label                                                                          |
 | `OVC_AUTH_MODE=stub`                                                                       | server           | auth bypass (set the same value on ovc-backend)                                             |
+| `OVC_DEMO_MODE=true`                                                                       | server (runtime) | [demo mode](#demo-mode): standalone, no backend / login / console. Nothing else is needed    |
 | `VITE_WEBRDP_URL`                                                                          | client           | Guacamole base. Default `/webrdp`                                                           |
 | `WEBRDP_ORIGIN`                                                                            | server (runtime) | where `/webrdp/tunnel` proxies to (the ovc-webrdp base, including its path)                 |
 
@@ -438,7 +448,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 | Host Actions menu                        | Refresh Hardware `Cpu` · Refresh VMs `RefreshCw` · Resume Node `Play` · Pause Node `Pause` · Restart Host `Power` (danger item)                                                                                                                                                                                                                                                               |
 | Console toolbar (`GuacamoleConsole`)     | Disconnect `Unplug` · Reconnect `RefreshCw` · Clipboard `Clipboard` · Ctrl+Alt+Del `Keyboard` · Fullscreen `Maximize2`                                                                                                                                                                                                                                                                        |
 | Console VM controls (`ConsoleVmActions`) | Start `Play` · Shut Down `Power` · Turn Off `Square` · Restart `RotateCcw` · Mount DVD `Disc` · Eject DVD `DiscAlbum`                                                                                                                                                                                                                                                                         |
-| Console unavailable | `MonitorOff` (`text-console-muted` on `bg-console-bg`, text `text-console-fg`)                                                                                                                                                                                                                                                                                                                |
+| Console unavailable (`ConsoleUnavailable`) | `MonitorOff` (`text-console-muted` on `bg-console-bg`, text `text-console-fg`)                                                                                                                                                                                                                                                                                                                |
 | Cluster / Hosts Management tables        | Rename / Edit `Pencil` · Delete / Remove `Trash2` · Save `Check` · Cancel `X` · Create / Add `Plus`                                                                                                                                                                                                                                                                                           |
 | Virtual Networks panel                   | Add VLAN `Plus` · Edit `Pencil` · Delete `Trash2`                                                                                                                                                                                                                                                                                                                                             |
 | Create VM wizard                         | add disk / New VLAN `Plus` · remove disk `Trash2`                                                                                                                                                                                                                                                                                                                                             |
@@ -457,6 +467,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Task status (`statusClass`)                             | succeeded `text-success` · failed / timeout bold `text-danger` · running `text-running` · queued `text-disabled-text`                     |
 | Status bar connection                                   | Connected `text-success` · Disconnected `text-accent`                                                                                     |
+| Demo mode (status bar)                                  | **DEMO MODE** badge `bg-notice-bg text-notice-text` · connection `● Simulated` `text-success`                                            |
 | Console connection dot (`GuacamoleConsole` `STATE_DOT`) | connecting `bg-warning` · connected `bg-success` · disconnected `bg-disabled-text` · error `bg-danger`                                    |
 | Console display and overlays                            | `bg-console-bg` (overlay `bg-console-bg/80`) · text `text-console-text` · detail `text-console-subtle` · error title `text-console-error` |
 | Metric chart series                                     | `var(--color-chart-1…5)`: CPU 1, memory 2, network rx 3 / tx 4, disk 5                                                                    |
@@ -482,6 +493,8 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   - Pause / Resume Node and Restart Host;
   - the data behind the Setup Agent tab (admin-only endpoints).
 - Everything else is visible to any role, and the backend has the final say.
+- **Demo mode**: nobody logs in; every visitor is `demo@ovc.demo` with
+  `ADMINISTRATOR`, so every admin feature is on.
 
 ### Clusters and hosts
 
@@ -843,8 +856,125 @@ ACTIVE_BINARY`.
 - **Tunnel routing**: the browser calls `/webrdp/tunnel` on the same origin, and
   `src/routes/webrdp/tunnel.ts` proxies it to `WEBRDP_ORIGIN`. In split-origin dev,
   `VITE_WEBRDP_URL` can point straight at ovc-webrdp, which sends permissive CORS.
+- **Demo mode**: both consoles show the `ConsoleUnavailable` notice ("Console
+  unavailable in demo mode…") instead of the credentials form, and the VM's
+  Console menu drops "Download .rdp file" (the host is fictional).
 
 ---
+
+## Demo mode
+
+**Branch**: demo mode exists only on the `demo` branch; `main` stays free of it.
+Pushing `demo` makes CI (`.github/workflows/build-push-frontend.yml`) publish
+`ghcr.io/<owner>/ovc-frontend:demo` and `:demo-<sha>`, built with the
+`OVC_DEMO_MODE=true` Docker build-arg, so the image starts in demo mode with no env.
+To carry new features into the demo, merge `main` into `demo`, then update the
+simulator for any REST change (see *Keeping the demo in sync*).
+
+`OVC_DEMO_MODE=true` (server-only, read at **runtime**, so one image serves both
+modes) runs the frontend standalone for product demos. There is no ovc-backend,
+agent, RabbitMQ, database, OIDC provider or ovc-webrdp, and no other env var is
+needed. `docker-compose.demo.yml` runs it.
+
+### How it is wired
+
+- **Server flag**: `demo/env.ts` `isDemoEnv()`. It is imported only by server code,
+  the same way as `auth/bypass.ts`.
+  - `fetchCurrentUser` returns the fixed `DEMO_USER` (`demo@ovc.demo`,
+    `[ADMINISTRATOR]`) with `demo: true` and `authDisabled: false`, so there is no
+    login and no `DevBypassWarning`.
+  - `logoutFn` redirects to `/inventory`.
+  - `/frontend-api/api/*` and `/webrdp/tunnel` answer `503 DEMO_MODE`.
+  - `auth/auth.ts` gives better-auth a throwaway secret and base URL, and leaves
+    the OIDC plugin out. better-auth initialises eagerly and would otherwise refuse
+    to boot in production (no secret) or log discovery errors.
+- **Client flag**: `demo/mode.ts` `isDemoMode()`.
+  - The root `beforeLoad` returns `demo` in the router context; it is serialized to
+    the client on SSR.
+  - `__root` calls `setDemoMode(demo)` in `beforeLoad` and again while rendering,
+    before any child query runs.
+- **The seam**: `api/client.ts` `request()` lazy-imports `demo/api.ts` and hands it
+  every call. Endpoints, queries, mutations, TaskWatcher and polling don't change.
+  The simulator is its own chunk (~56 KB), never loaded outside demo mode.
+- **SSR**: `demoRequest` throws `503 DEMO_MODE` on the server (the loader swallows
+  it). The page paints empty, and the browser loads the inventory after hydration.
+- **UI differences**:
+  - the status bar shows the **DEMO MODE** badge and `● Simulated`;
+  - File ▸ **Reset Demo Data…** replaces Sign Out. It confirms, generates a new
+    inventory, clears `activeTasks`, drops the selection and resets every query;
+  - the consoles show a notice instead of connecting;
+  - the `.rdp` download is hidden.
+
+### The simulated backend (`src/demo/`)
+
+- **`api.ts`**: a small router over every endpoint in `api/endpoints/*`, returning
+  the REST shapes with the backend's validations and error codes:
+  - `VM_LOCKED`, `HOST_OFFLINE`, `VM_NOT_READY`, `HA_REQUIRED`;
+  - `STORAGE_NOT_ALLOWED`, `SOURCE_NOT_OFF`, `CROSS_HOST_CLONE`,
+    `TEMPLATE_UNREACHABLE`;
+  - `NOT_CLUSTERED`, `HOST_ACTION_IN_PROGRESS`;
+  - `INVALID` (e.g. deleting a non-empty cluster), `DUPLICATE`, `ACTIVE_BINARY`, …
+
+  Each call adds 40–300 ms of latency so pending states show. Responses are deep
+  copies.
+- **`seed.ts`**: the random first inventory, from a seeded PRNG:
+  - clusters: 2–5 (always `CL-PROD-01`, others from DEV / DR / VDI / EDGE / PROD-02
+    profiles), each with 2–5 hosts;
+  - standalone hosts: 2–6 (branches, labs, edge, test, backup);
+  - VMs: 5–10 per host, named `<SITE>-<ROLE>-<nn>` (e.g. `PRD-SQL-01`);
+  - roughly 72% Running, 18% Off, 6% Saved and 4% Paused;
+  - realistic hardware (CPUs, NICs, SET vSwitches, FC HBAs, CSVs), folders, VLANs,
+    templates, ISOs and two agent builds (1.4.2 active; a few hosts still on 1.3.9,
+    so "Update Agent" shows);
+  - 35–45 historical tasks (mostly succeeded, some failed or timed out; a third in
+    the last hour);
+  - one `vm_export_template` still running (~2.5 min), which ends by registering a
+    `_TEMPLATE_…_GOLD` template;
+  - every host online.
+- **`sim.ts`**: read views, the task lifecycle and the agent effects.
+  - **Timeline**: a task is queued (~0.4–0.9 s), then running (`taskProfiles.ts`:
+    1–25 s per function, with step messages and a percentage on long ones), then
+    terminal.
+  - **No timers**: `advance()` runs before every call and applies each finished
+    task's effect in completion order, then releases its VM lock.
+  - **Power actions**: they set the transitional state and lock the VM right away,
+    like the backend.
+  - **Refusals**: a power action from the wrong state (e.g. start on a running VM),
+    and rename or export while running, queue a task that **fails** with the agent's
+    message.
+  - **Effects implemented**:
+    - VMs: power, delete, create and clone (from the placeholder `Unknown` row to
+      a real VM with disks and NICs), rename, the full `vm_edit` param set,
+      migrate, move storage, AutoStart, DVD, HA, notes, snapshots, export template,
+      metrics toggle, refresh;
+    - hosts: node pause/drain (live-migrates running HA VMs to the other Up nodes)
+      and resume/failback; restart (the host goes offline for most of the ~25 s
+      reboot, and fails if VMs run or a cluster node isn't paused); agent upgrade.
+  - **New hosts**: a host added in Hosts Management stays "never seen" (Setup Agent
+    tab, fake `config.ini` / install command) for 45 s, then its simulated agent
+    checks in with generated hardware.
+- **`metrics.ts`**: host and VM samples are pure functions of (entity, minute).
+  - Each poll returns a stable last-hour window of 60 samples, and nothing is stored.
+  - VM CPU and memory follow the power state (a stopped VM keeps its history up to
+    `stoppedAt`).
+  - Host load is the sum of its running VMs.
+  - VM samples exist only while `metricsEnabled`.
+- **`store.ts`**: the state lives in localStorage `ovc-demo-state` (~200–400 KB).
+  - It is per browser, so every visitor gets their own inventory, and it survives
+    reloads.
+  - Other tabs (e.g. a console tab) stay in sync through the `storage` event.
+  - It falls back to memory only when storage is unavailable.
+  - `DEMO_STATE_VERSION` (`model.ts`) discards incompatible saved states. Bump it
+    when the stored shape changes.
+- IDs come from `crypto.getRandomValues` (`random.ts`), not `randomUUID`, which
+  needs a secure context. Demo containers are often reached over plain http.
+
+### Keeping the demo in sync
+
+The simulator mirrors the REST contract. Any change to an endpoint, body, param,
+error code or agent function must be mirrored in `demo/api.ts` (and in `sim.ts` for
+a new task kind or effect, `taskProfiles.ts` for its timing). A new stored field
+needs a seed value and a `DEMO_STATE_VERSION` bump.
 
 ## Themes
 
@@ -909,6 +1039,10 @@ src/
                               ScrollArea, Icon, ClientOnly. bevel.ts = cn() + cva recipes.
   components/                 Login.tsx, DefaultCatchBoundary, NotFound.
   auth/                       The ONLY place auth logic lives (see Auth).
+  demo/                       Demo mode (see Demo mode): env.ts (server flag, demo
+                              user, 503 helper), mode.ts (client flag), api.ts (the
+                              simulated backend), seed.ts, sim.ts, metrics.ts,
+                              taskProfiles.ts, paths.ts, random.ts, store.ts, model.ts
   api/                        types.ts (entities, mirror of docs/api-contract.md),
                               client.ts (request + ApiError), endpoints/* (clusters, hosts,
                               folders, vlans, vms, tasks, inventory, agentBinaries),
@@ -942,7 +1076,8 @@ src/
                               (TasksPanel), HostHardware(+Details), HostMetrics,
                               HostConfiguration, HostSetupAgent, HostAgent, HostConsole,
                               VirtualNetworks, VmStartupOrdering, SectionList, MetricChart,
-                              GuacamoleConsole, ConsoleVmActions, webrdp.ts, rdpFile.ts
+                              GuacamoleConsole, ConsoleVmActions, ConsoleUnavailable,
+                              webrdp.ts, rdpFile.ts
     actions/                  powerActions, useVmPowerAction, useVmBatchPowerAction,
                               useVmManagementAction, TaskWatcher, activeTasks, statusMessage
     tasks/                    TasksDock, TaskHistoryDialog, TaskDetailsDialog, taskLabels
@@ -1015,6 +1150,9 @@ behind one domain". For local dev, run the backend with `docker compose up` in
 `../ovc-backend` (its `OVC_AUTH_MODE=stub` and seed data give you data without a
 provider), then set `VITE_API_URL=http://localhost:3000/frontend-api/api` in
 `.env.local`.
+
+For a product demo with no backend at all, run the same image with
+`OVC_DEMO_MODE=true` (`docker-compose.demo.yml`; see [Demo mode](#demo-mode)).
 
 ## Gotchas
 

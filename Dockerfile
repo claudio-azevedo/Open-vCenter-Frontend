@@ -24,6 +24,11 @@ LABEL org.opencontainers.image.licenses=APACHE-2.0
 
 ENV NODE_ENV=production
 ENV PORT=3000
+# Demo mode (see README): the CI build of the `demo` branch passes
+# OVC_DEMO_MODE=true so the :demo image needs no env. Empty = normal mode; a
+# runtime `-e OVC_DEMO_MODE=...` still overrides it.
+ARG OVC_DEMO_MODE=
+ENV OVC_DEMO_MODE=${OVC_DEMO_MODE}
 
 WORKDIR /app
 

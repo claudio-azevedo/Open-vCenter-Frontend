@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { demoUnavailable, isDemoEnv } from "~/demo/env";
 
 /**
  * Server-side reverse proxy to ovc-webrdp's Guacamole HTTP tunnel. The
@@ -30,6 +31,8 @@ function webrdpBase(): string {
 }
 
 async function proxy(request: Request): Promise<Response> {
+  // Demo mode has no ovc-webrdp (the console panels say so before connecting).
+  if (isDemoEnv()) return demoUnavailable("The remote console");
   const incoming = new URL(request.url);
   const target = `${webrdpBase()}/tunnel${incoming.search}`;
 

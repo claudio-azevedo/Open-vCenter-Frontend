@@ -1,0 +1,22 @@
+# Open vCenter frontend in DEMO mode - a standalone product demo.
+#
+# No ovc-backend, agent, RabbitMQ, database, OIDC provider or ovc-webrdp: the
+# browser simulates the whole backend and keeps a random inventory (clusters,
+# hosts, VMs, tasks, metrics) in each visitor's localStorage. Nobody logs in -
+# every visitor is an administrator of their own simulated inventory.
+#
+#   docker compose -f docker-compose.demo.yml up --build -d
+#   open http://localhost:3000
+#
+# Or the image CI publishes from the `demo` branch (demo mode already on):
+#   docker run --rm -p 3000:3000 ghcr.io/claudio-azevedo/ovc-frontend:demo
+
+services:
+  ovc-frontend-demo:
+    build: .
+    image: ovc-frontend:demo
+    environment:
+      OVC_DEMO_MODE: "true"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

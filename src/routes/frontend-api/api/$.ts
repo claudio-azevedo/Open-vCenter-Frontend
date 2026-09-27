@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAccessToken } from "~/auth/token.server";
 import { isDevBypass } from "~/auth/bypass";
+import { demoUnavailable, isDemoEnv } from "~/demo/env";
 
 /**
  * Server-side reverse proxy to ovc-backend's REST API. The browser calls
@@ -31,6 +32,8 @@ function jsonError(status: number, code: string, message: string) {
 }
 
 async function proxy(request: Request): Promise<Response> {
+  // Demo mode has no backend - the browser's simulator answers every call.
+  if (isDemoEnv()) return demoUnavailable("ovc-backend");
   // Dev bypass: forward with no bearer - ovc-backend must run OVC_AUTH_MODE=stub.
   const token = isDevBypass() ? null : await getAccessToken();
   if (!token && !isDevBypass()) {

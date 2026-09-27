@@ -24,6 +24,13 @@ export const activeTasks = {
   remove(id: string) {
     if (ids.delete(id)) emit()
   },
+  /** Forget every tracked task (demo reset - their ids no longer exist). */
+  clear() {
+    if (ids.size) {
+      ids.clear()
+      emit()
+    }
+  },
   subscribe(listener: () => void) {
     listeners.add(listener)
     return () => listeners.delete(listener)

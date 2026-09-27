@@ -4,6 +4,7 @@ import { clustersQuery, hostsQuery, vmsQuery } from '~/api/queries'
 import { useInventorySelection } from './selection'
 import { useActiveTaskIds } from './actions/activeTasks'
 import { useStatusMessage } from './actions/statusMessage'
+import { isDemoMode } from '~/demo/mode'
 
 export function InventoryStatusBar() {
   const clusters = useQuery(clustersQuery())
@@ -18,14 +19,27 @@ export function InventoryStatusBar() {
     clusters.isFetching || hosts.isFetching || vms.isFetching
   const allError = clusters.isError && hosts.isError && vms.isError
 
-  const connection = allError && !anyData
-    ? 'Disconnected'
-    : anyFetching
-      ? 'Refreshing…'
-      : 'Connected'
+  const demo = isDemoMode()
+  const connection = demo
+    ? 'Simulated'
+    : allError && !anyData
+      ? 'Disconnected'
+      : anyFetching
+        ? 'Refreshing…'
+        : 'Connected'
 
   return (
     <StatusBar>
+      {demo ? (
+        <StatusBarPanel>
+          <span
+            className="bg-notice-bg px-1 font-bold text-notice-text"
+            title="Demo mode: no backend - the data is simulated and kept in this browser. File ▸ Reset Demo Data starts over."
+          >
+            DEMO MODE
+          </span>
+        </StatusBarPanel>
+      ) : null}
       <StatusBarPanel grow>{message}</StatusBarPanel>
       {activeTasks.length ? (
         <StatusBarPanel>
@@ -43,7 +57,7 @@ export function InventoryStatusBar() {
           className={
             connection === 'Disconnected'
               ? 'text-accent'
-              : connection === 'Connected'
+              : connection === 'Connected' || connection === 'Simulated'
                 ? 'text-success'
                 : ''
           }

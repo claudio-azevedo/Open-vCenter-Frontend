@@ -12,6 +12,10 @@ import { VmLocksDialog } from './locks/VmLocksDialog'
 import { TaskHistoryDialog } from './tasks/TaskHistoryDialog'
 import { AboutDialog } from './AboutDialog'
 import { AuthDebugDialog } from './AuthDebugDialog'
+import { confirm } from './confirm'
+import { activeTasks } from './actions/activeTasks'
+import { statusMessage } from './actions/statusMessage'
+import { isDemoMode } from '~/demo/mode'
 
 export function InventoryMenuBar() {
   const navigate = useNavigate()
@@ -22,10 +26,28 @@ export function InventoryMenuBar() {
   const [locksOpen, setLocksOpen] = React.useState(false)
   const [historyOpen, setHistoryOpen] = React.useState(false)
   const [authDebugOpen, setAuthDebugOpen] = React.useState(false)
-  const { selection } = useInventorySelection()
+  const { selection, select } = useInventorySelection()
   const vmFolders = useVmFolderTargets(selection?.kind === 'vm' ? selection.id : undefined)
   const { theme, setTheme } = useTheme()
   const { treeBehavior, setTreeBehavior } = useTreeBehavior()
+  const demo = isDemoMode()
+
+  const resetDemo = async () => {
+    const ok = await confirm({
+      title: 'Reset Demo Data',
+      message:
+        'Throw away every change made in this demo and generate a new random inventory?',
+      confirmLabel: 'Reset',
+      danger: true,
+    })
+    if (!ok) return
+    const { resetDemo: reset } = await import('~/demo/api')
+    reset()
+    activeTasks.clear()
+    select(null)
+    await queryClient.resetQueries()
+    statusMessage.set('Demo data reset - new random inventory generated')
+  }
 
   const menus: MenuDef[] = [
     {
@@ -50,7 +72,10 @@ export function InventoryMenuBar() {
         { type: 'separator' },
         { label: 'Refresh', shortcut: 'F5', onSelect: () => queryClient.invalidateQueries() },
         { type: 'separator' },
-        { label: 'Sign Out', onSelect: () => navigate({ to: '/logout' }) },
+        // the demo has no session to end - offer a fresh inventory instead
+        demo
+          ? { label: 'Reset Demo Data…', onSelect: resetDemo }
+          : { label: 'Sign Out', onSelect: () => navigate({ to: '/logout' }) },
       ],
     },
     {

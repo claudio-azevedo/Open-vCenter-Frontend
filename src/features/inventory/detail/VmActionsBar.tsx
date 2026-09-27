@@ -41,6 +41,7 @@ import { taskLabel } from "../tasks/taskLabels";
 import { relTime } from "../format";
 import { confirm } from "../confirm";
 import { useInventorySelection } from "../selection";
+import { isDemoMode } from "~/demo/mode";
 
 export function VmActionsBar({ vm }: { vm: Vm }) {
   const queryClient = useQueryClient();
@@ -76,11 +77,17 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
       icon: ExternalLink,
       onSelect: openConsoleTab,
     },
-    {
-      label: "Download .rdp file",
-      icon: Download,
-      onSelect: () => consoleAddr && downloadVmConsoleRdpFile(vm, consoleAddr),
-    },
+    // a demo host is fictional - an .rdp file for it would lead nowhere
+    ...(isDemoMode()
+      ? []
+      : [
+          {
+            label: "Download .rdp file",
+            icon: Download,
+            onSelect: () =>
+              consoleAddr && downloadVmConsoleRdpFile(vm, consoleAddr),
+          },
+        ]),
   ];
 
   const forceUnlock = async () => {

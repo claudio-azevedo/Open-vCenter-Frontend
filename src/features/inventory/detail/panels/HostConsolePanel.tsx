@@ -1,15 +1,15 @@
 import * as React from "react";
-import { MonitorOff } from "lucide-react";
 import {
   Button,
   ClientOnly,
   GroupBox,
-  Icon,
   TextField,
 } from "~/components/win95";
 import type { Host } from "~/api/types";
 import { GuacamoleConsole } from "./GuacamoleConsole";
 import { TUNNEL_URL } from "./webrdp";
+import { ConsoleUnavailable, DEMO_CONSOLE_MESSAGE } from "./ConsoleUnavailable";
+import { isDemoMode } from "~/demo/mode";
 
 /**
  * Standard RDP (port 3389) to the Hyper-V host itself, through the same
@@ -25,14 +25,10 @@ export function HostConsolePanel({ host }: { host: Host }) {
   const [password, setPassword] = React.useState("");
 
   const addr = host.fqdn ?? host.ipAddress ?? null;
+  if (isDemoMode()) return <ConsoleUnavailable message={DEMO_CONSOLE_MESSAGE} />;
   if (!addr) {
     return (
-      <div className="bevel-sunken flex h-full min-h-[240px] flex-col items-center justify-center gap-2 bg-console-bg text-console-fg">
-        <Icon icon={MonitorOff} size={32} className="text-console-muted" />
-        <p>
-          Console unavailable - the host agent has not reported an address yet.
-        </p>
-      </div>
+      <ConsoleUnavailable message="Console unavailable - the host agent has not reported an address yet." />
     );
   }
 

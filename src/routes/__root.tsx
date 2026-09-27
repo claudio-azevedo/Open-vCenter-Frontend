@@ -23,18 +23,22 @@ import {
   useTheme,
 } from '~/preferences'
 import type { Preferences } from '~/preferences'
+import { setDemoMode } from '~/demo/mode'
 
 export interface RouterContext {
   queryClient: QueryClient
   user: AuthUser | null
   authDisabled: boolean
+  /** OVC_DEMO_MODE - API calls are served by the in-browser simulator. */
+  demo: boolean
   preferences: Preferences
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {
-    const { user, authDisabled } = await fetchCurrentUser()
-    return { user, authDisabled, preferences: getPreferences() }
+    const { user, authDisabled, demo } = await fetchCurrentUser()
+    setDemoMode(demo)
+    return { user, authDisabled, demo, preferences: getPreferences() }
   },
   head: () => ({
     meta: [
@@ -67,8 +71,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootComponent() {
-  const { user, authDisabled, queryClient, preferences } =
+  const { user, authDisabled, demo, queryClient, preferences } =
     Route.useRouteContext()
+  // Also set during render: on hydration beforeLoad's context arrives from the
+  // server, and this runs before any child query fires.
+  setDemoMode(demo)
   return (
     <PreferencesProvider initial={preferences}>
     <RootDocument>

@@ -63,5 +63,13 @@ declare namespace NodeJS {
      * (or unset) uses real OIDC login.
      */
     OVC_AUTH_MODE?: "stub" | "oidc"
+    /**
+     * "true" ⇒ standalone demo: no login (every visitor is demo@ovc.demo,
+     * ADMINISTRATOR), no ovc-backend / agent / ovc-webrdp. The browser serves
+     * every API call from the simulator in src/demo/ and keeps a random
+     * inventory in localStorage. Read at runtime - the same image serves both
+     * modes; no other variable is needed.
+     */
+    OVC_DEMO_MODE?: string
   }
 }

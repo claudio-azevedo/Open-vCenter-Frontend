@@ -42,7 +42,13 @@ export function getRouter() {
 
   return createRouter({
     routeTree,
-    context: { queryClient, user: null, authDisabled: false, preferences: DEFAULT_PREFERENCES },
+    context: {
+      queryClient,
+      user: null,
+      authDisabled: false,
+      demo: false,
+      preferences: DEFAULT_PREFERENCES,
+    },
     defaultPreload: 'intent',
     defaultErrorComponent: DefaultCatchBoundary,
     defaultNotFoundComponent: () => <NotFound />,

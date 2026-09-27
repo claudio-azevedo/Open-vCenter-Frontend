@@ -1,17 +1,17 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MonitorOff } from "lucide-react";
 import {
   Button,
   ClientOnly,
   GroupBox,
-  Icon,
   TextField,
 } from "~/components/win95";
 import type { Vm } from "~/api/types";
 import { hostQuery } from "~/api/queries";
 import { GuacamoleConsole } from "./GuacamoleConsole";
 import { ConsoleVmActions } from "./ConsoleVmActions";
+import { ConsoleUnavailable, DEMO_CONSOLE_MESSAGE } from "./ConsoleUnavailable";
+import { isDemoMode } from "~/demo/mode";
 import { TUNNEL_URL, vmConsoleTabUrl } from "./webrdp";
 
 /**
@@ -34,6 +34,8 @@ export function VmConsolePanel({
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
 
+  if (isDemoMode()) return <ConsoleUnavailable message={DEMO_CONSOLE_MESSAGE} />;
+
   if (!host.data && !host.isError) {
     return <div className="p-3 text-disabled-text">Loading host…</div>;
   }
@@ -41,14 +43,13 @@ export function VmConsolePanel({
   const fqdn = host.data?.fqdn ?? host.data?.ipAddress ?? null;
   if (!fqdn || !vm.vmUuid) {
     return (
-      <div className="bevel-sunken flex h-full min-h-[240px] flex-col items-center justify-center gap-2 bg-console-bg text-console-fg">
-        <Icon icon={MonitorOff} size={32} className="text-console-muted" />
-        <p>
-          {!vm.vmUuid
+      <ConsoleUnavailable
+        message={
+          !vm.vmUuid
             ? "Console unavailable - waiting for the host agent to report this VM."
-            : "Console unavailable - the host agent has not reported an address yet."}
-        </p>
-      </div>
+            : "Console unavailable - the host agent has not reported an address yet."
+        }
+      />
     );
   }
   const vmGuid = vm.vmUuid;

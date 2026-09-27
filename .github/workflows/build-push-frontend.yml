@@ -2,7 +2,8 @@ name: Build and push frontend image
 
 on:
   push:
-    branches: [main]
+    # `demo` builds the standalone demo image (OVC_DEMO_MODE baked in) as :demo
+    branches: [main, demo]
     tags:
       - "*.*.*"
   workflow_dispatch: {}
@@ -30,8 +31,13 @@ jobs:
       - name: Compute image tags
         id: tags
         run: |
+          DEMO=false
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAGS="${{ env.IMAGE }}:${{ github.ref_name }}"
+          elif [ "${{ github.ref_name }}" = "demo" ]; then
+            DEMO=true
+            TAGS="${{ env.IMAGE }}:demo
+          ${{ env.IMAGE }}:demo-${{ github.sha }}"
           else
             TAGS="${{ env.IMAGE }}:latest
           ${{ env.IMAGE }}:${{ github.sha }}"
@@ -40,6 +46,7 @@ jobs:
             echo "list<<EOF"
             echo "$TAGS"
             echo "EOF"
+            echo "demo=$DEMO"
           } >> "$GITHUB_OUTPUT"
 
       - name: Build and push
@@ -49,3 +56,6 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.list }}
+          # the :demo image starts in demo mode with no env at all
+          build-args: |
+            OVC_DEMO_MODE=${{ steps.tags.outputs.demo == 'true' && 'true' || '' }}

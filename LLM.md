@@ -934,7 +934,8 @@ The demo runs on the Workers **free plan**, so it needs no VM.
     time). Cloudflare creates the DNS record and the certificate automatically,
     because the zone is in the same account.
 - **Deploy**: `npx wrangler deploy -c .output/server/wrangler.json`. On push, the
-  CI job `deploy-demo-worker` does it with repo secrets `CLOUDFLARE_API_TOKEN`
+  CI job `deploy-demo-worker` does it (GitHub environment `demo`, restricted to
+  the `demo` branch) with its secrets `CLOUDFLARE_API_TOKEN`
   ("Edit Cloudflare Workers" template, scoped to the zone) and
   `CLOUDFLARE_ACCOUNT_ID`.
 - **Local check on the real runtime**: `npx wrangler dev -c

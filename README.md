@@ -114,8 +114,8 @@ OVC_DEMO_MODE=true npm run dev
 
 **Public demo on Cloudflare Workers (free plan).** Every push to `demo` also
 deploys the demo as the Worker `ovc-demo` at **https://demo.openvcenter.com**
-(DNS and SSL are created by Cloudflare). This needs two repo secrets:
-`CLOUDFLARE_API_TOKEN` (template "Edit Cloudflare Workers", scoped to the zone) and
+(DNS and SSL are created by Cloudflare). This needs two secrets in the
+GitHub environment `demo` (restricted to the `demo` branch): `CLOUDFLARE_API_TOKEN` (template "Edit Cloudflare Workers", scoped to the zone) and
 `CLOUDFLARE_ACCOUNT_ID`. To do it by hand:
 
 ```sh

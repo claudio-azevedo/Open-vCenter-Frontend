@@ -62,11 +62,15 @@ jobs:
 
   # Demo branch only: deploy the demo as a Cloudflare Worker (served at the
   # custom domain set in vite.config.ts -> nitro.cloudflare.wrangler).
-  # Needs repo secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template,
-  # scoped to the openvcenter.com zone) and CLOUDFLARE_ACCOUNT_ID.
+  # Secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template, scoped to
+  # the openvcenter.com zone) and CLOUDFLARE_ACCOUNT_ID live in the GitHub
+  # environment "demo" (deployments restricted to the demo branch).
   deploy-demo-worker:
     if: github.ref == 'refs/heads/demo'
     runs-on: ubuntu-latest
+    environment:
+      name: demo
+      url: https://demo.openvcenter.com
     permissions:
       contents: read
     steps:

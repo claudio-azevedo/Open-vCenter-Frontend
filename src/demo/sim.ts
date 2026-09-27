@@ -676,6 +676,7 @@ export function placeholderVm(input: {
     dvdPath: null,
     highlyAvailable: input.ha,
     notes: input.notes,
+    tagIds: [],
     metricsEnabled: false,
     createdAt: iso(input.now),
     runningSince: null,

@@ -3,15 +3,18 @@ import type { RequestOptions } from "~/api/client";
 import type {
   AgentBinary,
   Folder,
+  Tag,
+  TagCategory,
+  TagColor,
   Vlan,
   VmCloneBody,
   VmCreateBody,
   VmLockEntry,
   VmState,
 } from "~/api/types";
-import { TERMINAL_TASK_STATUSES } from "~/api/types";
+import { TAG_COLORS, TERMINAL_TASK_STATUSES } from "~/api/types";
 import { DEMO_USER_EMAIL } from "./mode";
-import type { DemoHost, DemoState, DemoVm } from "./model";
+import type { DemoHost, DemoState, DemoTag, DemoVm } from "./model";
 import { hostMetrics, vmMetrics } from "./metrics";
 import { placementError } from "./paths";
 import { randomHex, uuid } from "./random";
@@ -521,6 +524,155 @@ route("PATCH", "/vlans/:id", (ctx) => {
 route("DELETE", "/vlans/:id", ({ state, params }) => {
   getOr404(state.vlans, params.id, "VLAN");
   state.vlans = state.vlans.filter((v) => v.id !== params.id);
+});
+
+// ---- tags (global catalog; mirrors ovc-backend services/tags.py) ----------------------
+
+const TAG_NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+function tagName(what: string, raw: unknown): string {
+  const name = String(raw ?? "").trim();
+  if (!TAG_NAME_RE.test(name)) {
+    throw invalid(
+      `${what} names use letters, digits, '_' and '-' only (1-64 characters, no spaces)`,
+    );
+  }
+  return name;
+}
+
+function tagColor(raw: unknown): TagColor {
+  if (!TAG_COLORS.includes(raw as TagColor)) {
+    throw invalid(`Tag colors are one of: ${TAG_COLORS.join(", ")}`);
+  }
+  return raw as TagColor;
+}
+
+const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+const byNameCI = <T extends { name: string }>(a: T, b: T) =>
+  a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+
+function tagOut(state: DemoState, t: DemoTag): Tag {
+  return { ...t, vmCount: state.vms.filter((v) => v.tagIds.includes(t.id)).length };
+}
+
+function requireUniqueTag(state: DemoState, name: string, categoryId: string | null, selfId?: string) {
+  const dup = state.tags.find(
+    (t) => t.id !== selfId && t.categoryId === categoryId && sameName(t.name, name),
+  );
+  if (dup) {
+    const where = categoryId
+      ? `category '${state.tagCategories.find((c) => c.id === categoryId)?.name}'`
+      : "the standalone tags";
+    throw conflict("DUPLICATE", `A tag named '${name}' already exists in ${where}`);
+  }
+}
+
+route("GET", "/tag-categories", ({ state }): TagCategory[] => [...state.tagCategories].sort(byNameCI));
+
+route("POST", "/tag-categories", (ctx) => {
+  const name = tagName("Category", body<{ name: string }>(ctx).name);
+  if (ctx.state.tagCategories.some((c) => sameName(c.name, name))) {
+    throw conflict("DUPLICATE", `A category named '${name}' already exists`);
+  }
+  const category: TagCategory = { id: uuid(), name };
+  ctx.state.tagCategories.push(category);
+  return category;
+});
+
+route("PATCH", "/tag-categories/:id", (ctx) => {
+  const category = getOr404(ctx.state.tagCategories, ctx.params.id, "Tag category");
+  const name = tagName("Category", body<{ name: string }>(ctx).name);
+  if (ctx.state.tagCategories.some((c) => c.id !== category.id && sameName(c.name, name))) {
+    throw conflict("DUPLICATE", `A category named '${name}' already exists`);
+  }
+  category.name = name;
+  return category;
+});
+
+route("DELETE", "/tag-categories/:id", ({ state, params }) => {
+  const category = getOr404(state.tagCategories, params.id, "Tag category");
+  const gone = new Set(state.tags.filter((t) => t.categoryId === category.id).map((t) => t.id));
+  state.tags = state.tags.filter((t) => !gone.has(t.id));
+  for (const vm of state.vms) vm.tagIds = vm.tagIds.filter((id) => !gone.has(id));
+  state.tagCategories = state.tagCategories.filter((c) => c.id !== category.id);
+});
+
+route("GET", "/tags", ({ state }): Tag[] => {
+  const categoryName = (t: DemoTag) =>
+    state.tagCategories.find((c) => c.id === t.categoryId)?.name.toLowerCase() ?? "";
+  return [...state.tags]
+    .sort(
+      (a, b) =>
+        Number(a.categoryId === null) - Number(b.categoryId === null) ||
+        categoryName(a).localeCompare(categoryName(b)) ||
+        byNameCI(a, b),
+    )
+    .map((t) => tagOut(state, t));
+});
+
+route("POST", "/tags", (ctx) => {
+  const b = body<{ name: string; categoryId: string | null; color: TagColor }>(ctx);
+  const name = tagName("Tag", b.name);
+  const color = tagColor(b.color ?? "gray");
+  const categoryId = b.categoryId ?? null;
+  if (categoryId) getOr404(ctx.state.tagCategories, categoryId, "Tag category");
+  requireUniqueTag(ctx.state, name, categoryId);
+  const tag: DemoTag = { id: uuid(), name, categoryId, color };
+  ctx.state.tags.push(tag);
+  return tagOut(ctx.state, tag);
+});
+
+route("PATCH", "/tags/:id", (ctx) => {
+  const tag = getOr404(ctx.state.tags, ctx.params.id, "Tag");
+  const b = body<{ name: string; categoryId: string | null; color: TagColor }>(ctx);
+  const name = b.name !== undefined ? tagName("Tag", b.name) : tag.name;
+  const color = b.color !== undefined ? tagColor(b.color) : tag.color;
+  const categoryId = "categoryId" in b ? (b.categoryId ?? null) : tag.categoryId;
+  const category = categoryId
+    ? getOr404(ctx.state.tagCategories, categoryId, "Tag category")
+    : null;
+  requireUniqueTag(ctx.state, name, categoryId, tag.id);
+  if (category && category.id !== tag.categoryId) {
+    const siblings = new Set(
+      ctx.state.tags.filter((t) => t.categoryId === category.id && t.id !== tag.id).map((t) => t.id),
+    );
+    const clashes = ctx.state.vms.filter(
+      (v) => v.tagIds.includes(tag.id) && v.tagIds.some((id) => siblings.has(id)),
+    ).length;
+    if (clashes) {
+      throw conflict(
+        "TAG_CONFLICT",
+        `${clashes} VM(s) with tag '${tag.name}' already have a tag of category '${category.name}' - a VM holds one tag per category`,
+      );
+    }
+  }
+  tag.name = name;
+  tag.color = color;
+  tag.categoryId = categoryId;
+  return tagOut(ctx.state, tag);
+});
+
+route("DELETE", "/tags/:id", ({ state, params }) => {
+  const tag = getOr404(state.tags, params.id, "Tag");
+  state.tags = state.tags.filter((t) => t.id !== tag.id);
+  for (const vm of state.vms) vm.tagIds = vm.tagIds.filter((id) => id !== tag.id);
+});
+
+route("PUT", "/vms/:id/tags", (ctx) => {
+  const vm = vmById(ctx.state, ctx.params.id);
+  const ids = [...new Set(body<{ tagIds: string[] }>(ctx).tagIds ?? [])];
+  const tags = ids.map((id) => getOr404(ctx.state.tags, id, "Tag"));
+  for (const category of ctx.state.tagCategories) {
+    const group = tags.filter((t) => t.categoryId === category.id);
+    if (group.length > 1) {
+      throw conflict(
+        "TAG_CONFLICT",
+        `A VM holds one tag per category - pick one of ${group.map((t) => t.name).sort().join(", ")} (category '${category.name}')`,
+      );
+    }
+  }
+  vm.tagIds = ids;
+  return vmOut(ctx.state, vm, ctx.now);
 });
 
 // ---- VMs: reads & organization ---------------------------------------------------------

@@ -3,6 +3,7 @@ import type {
   Folder,
   HostHardwareInventory,
   Iso,
+  TagColor,
   Template,
   Vlan,
   VmDisk,
@@ -379,11 +380,49 @@ export function generateDemoState(now = Date.now(), seed = randomSeed()): DemoSt
     hosts: [],
     folders: [],
     vlans: [],
+    tagCategories: [],
+    tags: [],
     vms: [],
     templates: [],
     isos: [],
     tasks: [],
     agentBinaries: [],
+  };
+
+  // ---- tag catalog: OS + Datacenter categories and a few standalone tags ----
+  const addCategory = (name: string) => {
+    const c = { id: rngUuid(rng), name };
+    state.tagCategories.push(c);
+    return c.id;
+  };
+  const addTag = (name: string, categoryId: string | null, color: TagColor) => {
+    const t = { id: rngUuid(rng), name, categoryId, color };
+    state.tags.push(t);
+    return t.id;
+  };
+  const osCategory = addCategory("OS");
+  const osTag = {
+    windows: addTag("Windows", osCategory, "blue"),
+    linux: addTag("Linux", osCategory, "orange"),
+  };
+  addTag("Others", osCategory, "gray");
+  addTag("Appliances", osCategory, "purple");
+  const dcCategory = addCategory("Datacenter");
+  const dcTags = (["teal", "navy", "green"] as const).map((color, i) =>
+    addTag(`Datacenter-${i + 1}`, dcCategory, color),
+  );
+  const looseTags = (
+    [
+      ["production", "red"],
+      ["backup", "yellow"],
+      ["pci-scope", "pink"],
+    ] as const
+  ).map(([name, color]) => addTag(name, null, color));
+  // each site sits in one datacenter
+  const siteDc = new Map<string, string>();
+  const dcTagFor = (site: string) => {
+    if (!siteDc.has(site)) siteDc.set(site, dcTags[siteDc.size % dcTags.length]);
+    return siteDc.get(site)!;
   };
 
   const nameCounters = new Map<string, number>();
@@ -627,6 +666,11 @@ export function generateDemoState(now = Date.now(), seed = randomSeed()): DemoSt
         dvdPath: input.isos.length && rng.chance(0.1) ? rng.pick(input.isos).path : null,
         highlyAvailable: clustered && rng.chance(0.85),
         notes: rng.chance(0.3) ? rng.pick(VM_NOTES) : null,
+        tagIds: [
+          linux ? osTag.linux : osTag.windows,
+          dcTagFor(site.tag),
+          ...(rng.chance(0.35) ? [rng.pick(looseTags)] : []),
+        ],
         metricsEnabled: rng.chance(0.3),
         createdAt: new Date(now - rng.int(5, 700) * DAY).toISOString(),
         runningSince:

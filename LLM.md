@@ -1038,7 +1038,8 @@ The demo runs on the Workers **free plan**, so it needs no VM.
   - `STORAGE_NOT_ALLOWED`, `SOURCE_NOT_OFF`, `CROSS_HOST_CLONE`,
     `TEMPLATE_UNREACHABLE`;
   - `NOT_CLUSTERED`, `HOST_ACTION_IN_PROGRESS`;
-  - `INVALID` (e.g. deleting a non-empty cluster), `DUPLICATE`, `ACTIVE_BINARY`, …
+  - `INVALID` (e.g. deleting a non-empty cluster, a bad tag name or colour),
+    `DUPLICATE`, `TAG_CONFLICT`, `ACTIVE_BINARY`, …
 
   Each call adds 40–300 ms of latency so pending states show. Responses are deep
   copies.
@@ -1051,6 +1052,10 @@ The demo runs on the Workers **free plan**, so it needs no VM.
   - realistic hardware (CPUs, NICs, SET vSwitches, FC HBAs, CSVs), folders, VLANs,
     templates, ISOs and two agent builds (1.4.2 active; a few hosts still on 1.3.9,
     so "Update Agent" shows);
+  - a tag catalog: category **OS** (Windows blue, Linux orange, Others gray,
+    Appliances purple), category **Datacenter** (Datacenter-1…3; each site sits in
+    one) and standalone tags (production red, backup yellow, pci-scope pink). Every
+    VM gets its OS and Datacenter tag, and about a third a standalone one;
   - 35–45 historical tasks (mostly succeeded, some failed or timed out; a third in
     the last hour);
   - one `vm_export_template` still running (~2.5 min), which ends by registering a

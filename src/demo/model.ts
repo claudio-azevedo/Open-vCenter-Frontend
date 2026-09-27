@@ -4,6 +4,8 @@ import type {
   HostHardwareInventory,
   Hypervisor,
   Iso,
+  Tag,
+  TagCategory,
   Template,
   Vlan,
   Vm,
@@ -19,7 +21,7 @@ import type {
  * Bump `DEMO_STATE_VERSION` whenever this shape changes - an older saved state
  * is then discarded and a fresh inventory generated.
  */
-export const DEMO_STATE_VERSION = 1;
+export const DEMO_STATE_VERSION = 3;
 
 export interface DemoVolume {
   path: string;
@@ -82,6 +84,9 @@ export type DemoVm = Omit<Vm, "uptimeSec" | "cpuUsagePercent" | "lastSeen" | "lo
   drainedFrom: string | null;
 };
 
+/** A catalog tag as stored - `vmCount` is derived per request. */
+export type DemoTag = Omit<Tag, "vmCount">;
+
 export type TaskOutcome = "succeeded" | "failed" | "timeout";
 
 export interface DemoTask {
@@ -119,6 +124,8 @@ export interface DemoState {
   hosts: DemoHost[];
   folders: Folder[];
   vlans: Vlan[];
+  tagCategories: TagCategory[];
+  tags: DemoTag[];
   vms: DemoVm[];
   templates: Template[];
   isos: Iso[];

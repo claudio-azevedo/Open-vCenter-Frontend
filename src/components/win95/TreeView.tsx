@@ -60,6 +60,7 @@ function TreeRow({
     <li>
       <div
         role="treeitem"
+        data-node-id={node.id}
         aria-selected={selected}
         aria-expanded={expandable ? expanded : undefined}
         onClick={() => onSelect(node.id)}

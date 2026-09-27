@@ -31,10 +31,10 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 
 - `src/api/`: `types.ts` (entities), `client.ts` (`request()`, `ApiError`),
   `endpoints/*`, `queries.ts` (polling), `queryKeys.ts` (`qk`).
-- `src/features/inventory/`: the Explorer. `tree/` (model + icons), `detail/`
-  (per-entity views, `VmActionsBar`, `HostActionsMenu`, `vmActions/`, `panels/`),
-  `organize/` (dialogs, mutations, folder scope), `create/` (VM wizard), `actions/`
-  (power, tasks, status bar), `tasks/`, `locks/`.
+- `src/features/inventory/`: the Explorer. `tree/` (model, icons, VM search
+  dialog), `detail/` (per-entity views, `VmActionsBar`, `HostActionsMenu`,
+  `vmActions/`, `panels/`), `organize/` (dialogs, mutations, folder scope),
+  `create/` (VM wizard), `actions/` (power, tasks, status bar), `tasks/`, `locks/`.
 - `src/components/win95/`: UI primitives. `src/auth/`: all auth logic.
   `src/preferences/`: theme + tree behaviour cookies. `src/styles/`: tokens + themes.
 

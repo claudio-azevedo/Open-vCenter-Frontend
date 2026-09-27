@@ -59,3 +59,37 @@ jobs:
           # the :demo image starts in demo mode with no env at all
           build-args: |
             OVC_DEMO_MODE=${{ steps.tags.outputs.demo == 'true' && 'true' || '' }}
+
+  # Demo branch only: deploy the demo as a Cloudflare Worker (served at the
+  # custom domain set in vite.config.ts -> nitro.cloudflare.wrangler).
+  # Needs repo secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template,
+  # scoped to the openvcenter.com zone) and CLOUDFLARE_ACCOUNT_ID.
+  deploy-demo-worker:
+    if: github.ref == 'refs/heads/demo'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the Worker
+        run: npm run build
+        env:
+          NITRO_PRESET: cloudflare_module
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy -c .output/server/wrangler.json

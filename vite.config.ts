@@ -20,6 +20,21 @@ export default defineConfig({
     // quirks (relative to the entry file's dir, not cwd).
     nitro({
       serveStatic: true,
+      // Demo branch: `NITRO_PRESET=cloudflare_module npm run build` turns the
+      // server into a Cloudflare Worker; this becomes .output/server/wrangler.json.
+      // Other presets (the default node server / Docker image) ignore it.
+      cloudflare: {
+        wrangler: {
+          name: "ovc-demo",
+          vars: { OVC_DEMO_MODE: "true" },
+          routes: [
+            {
+              pattern: process.env.DEMO_DOMAIN ?? "demo.openvcenter.com",
+              custom_domain: true,
+            },
+          ],
+        },
+      },
     }),
     tanstackStart({
       // This app's server-function (RPC) endpoints live under /frontend-api/* so a

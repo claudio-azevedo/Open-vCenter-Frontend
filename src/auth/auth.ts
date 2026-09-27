@@ -43,21 +43,23 @@ function decodeClaims(token: unknown): Record<string, unknown> | null {
 }
 
 /**
- * Demo mode (OVC_DEMO_MODE) never signs anyone in, so a demo container needs no
- * auth env at all. better-auth still initialises eagerly, though: it refuses to
- * start in production without a secret, and warns about a missing base URL -
- * hand it throwaway values. The OIDC provider is left out entirely (see
- * `plugins`), so no discovery request is attempted either.
+ * Demo mode (OVC_DEMO_MODE) never opens a better-auth session (its login is a
+ * plain demo cookie), so a demo deployment needs no auth env at all.
+ * better-auth still initialises eagerly, though: it refuses to start in
+ * production without a secret, and warns about a missing base URL - hand it
+ * placeholder values. The secret is a constant on purpose: nothing is sealed
+ * with it, and Cloudflare Workers forbid generating random values at module
+ * scope. The OIDC provider is left out entirely (see `plugins`), so no
+ * discovery request is attempted either.
  */
 const DEMO = isDemoEnv();
 
 function demoOverrides(): { secret?: string; baseURL?: string } {
   if (!DEMO) return {};
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(32));
   return {
     secret:
       process.env.BETTER_AUTH_SECRET ||
-      [...bytes].map((b) => b.toString(16).padStart(2, "0")).join(""),
+      "ovc-demo-mode-placeholder-secret-nothing-is-sealed-with-it",
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000/frontend-api/auth",
   };
 }

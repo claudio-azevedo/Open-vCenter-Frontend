@@ -27,6 +27,10 @@ the code on 2026-09-27; it holds the full error-code table.
   `.env.local`.
 - No backend at all: `OVC_DEMO_MODE=true npm run dev`, or
   `docker compose -f docker-compose.demo.yml up --build`.
+- Cloudflare Workers (the public demo): `NITRO_PRESET=cloudflare_module npm run
+  build`, then `npx wrangler dev|deploy -c .output/server/wrangler.json`. Workers
+  forbid random values, timers and I/O at module scope; the app screens stay
+  `ssr: false` (10 ms CPU budget).
 
 ## Stack
 

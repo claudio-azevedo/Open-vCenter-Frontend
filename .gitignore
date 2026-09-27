@@ -9,6 +9,7 @@ dist
 .vercel
 .output
 .tanstack
+.wrangler
 /build/
 /server/build
 

@@ -112,6 +112,18 @@ docker run --rm -p 3000:3000 ghcr.io/claudio-azevedo/ovc-frontend:demo
 OVC_DEMO_MODE=true npm run dev
 ```
 
+**Public demo on Cloudflare Workers (free plan).** Every push to `demo` also
+deploys the demo as the Worker `ovc-demo` at **https://demo.openvcenter.com**
+(DNS and SSL are created by Cloudflare). This needs two repo secrets:
+`CLOUDFLARE_API_TOKEN` (template "Edit Cloudflare Workers", scoped to the zone) and
+`CLOUDFLARE_ACCOUNT_ID`. To do it by hand:
+
+```sh
+NITRO_PRESET=cloudflare_module npm run build   # DEMO_DOMAIN=... to change the domain
+npx wrangler dev -c .output/server/wrangler.json      # try it on the Workers runtime
+npx wrangler deploy -c .output/server/wrangler.json
+```
+
 ## Environment
 
 Client vars are read by Vite and prefixed `VITE_`; the rest (`API_URL`, `OIDC_*`,

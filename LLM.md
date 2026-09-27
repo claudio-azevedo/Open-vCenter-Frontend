@@ -868,6 +868,8 @@ ACTIVE_BINARY`.
 Pushing `demo` makes CI (`.github/workflows/build-push-frontend.yml`) publish
 `ghcr.io/<owner>/ovc-frontend:demo` and `:demo-<sha>`, built with the
 `OVC_DEMO_MODE=true` Docker build-arg, so the image starts in demo mode with no env.
+The same push also deploys it to **Cloudflare Workers** at
+`https://demo.openvcenter.com` (see *Cloudflare Workers deployment*).
 To carry new features into the demo, merge `main` into `demo`, then update the
 simulator for any REST change (see *Keeping the demo in sync*).
 
@@ -890,9 +892,11 @@ needed. `docker-compose.demo.yml` runs it.
   - `clearAuthCookies` is a no-op. `logoutFn` deletes the cookie and redirects to
     `/login`.
   - `/frontend-api/api/*` and `/webrdp/tunnel` answer `503 DEMO_MODE`.
-  - `auth/auth.ts` gives better-auth a throwaway secret and base URL, and leaves
+  - `auth/auth.ts` gives better-auth a placeholder secret and base URL, and leaves
     the OIDC plugin out. better-auth initialises eagerly and would otherwise refuse
-    to boot in production (no secret) or log discovery errors.
+    to boot in production (no secret) or log discovery errors. The secret is a
+    constant: nothing is sealed with it, and Workers forbid random values at
+    module scope.
 - **Client flag**: `demo/mode.ts` `isDemoMode()`.
   - The root `beforeLoad` returns `demo` in the router context; it is serialized to
     the client on SSR.
@@ -901,8 +905,14 @@ needed. `docker-compose.demo.yml` runs it.
 - **The seam**: `api/client.ts` `request()` lazy-imports `demo/api.ts` and hands it
   every call. Endpoints, queries, mutations, TaskWatcher and polling don't change.
   The simulator is its own chunk (~56 KB), never loaded outside demo mode.
-- **SSR**: `demoRequest` throws `503 DEMO_MODE` on the server (the loader swallows
-  it). The page paints empty, and the browser loads the inventory after hydration.
+- **SSR**: the `_authed` layout sets `ssr: false` (demo branch only), so the app
+  screens (`/inventory`, `/console`) render in the browser only.
+  - Their data lives in the browser anyway, and a full Explorer SSR costs far more
+    CPU than the Workers free plan allows (~1 s vs. 10 ms per request).
+  - The server returns a shell in ~3 ms, and the `_authed` guard runs client-side:
+    no session → `/login`.
+  - `/login` keeps SSR. `demoRequest` still refuses to run on the server
+    (`503 DEMO_MODE`).
 - **UI differences**:
   - the status bar shows the **DEMO MODE** badge and `● Simulated`;
   - File ▸ **Reset Demo Data…** (above Sign Out) confirms, generates a new
@@ -910,6 +920,32 @@ needed. `docker-compose.demo.yml` runs it.
     Signing out keeps the inventory; only Reset replaces it;
   - the consoles show a notice instead of connecting;
   - the `.rdp` download is hidden.
+
+### Cloudflare Workers deployment
+
+The demo runs on the Workers **free plan**, so it needs no VM.
+
+- **Build**: `NITRO_PRESET=cloudflare_module npm run build`. Nitro emits a Worker
+  plus `.output/server/wrangler.json` from `vite.config.ts` →
+  `nitro.cloudflare.wrangler`:
+  - worker `ovc-demo`;
+  - var `OVC_DEMO_MODE=true`;
+  - custom domain `demo.openvcenter.com` (override with `DEMO_DOMAIN` at build
+    time). Cloudflare creates the DNS record and the certificate automatically,
+    because the zone is in the same account.
+- **Deploy**: `npx wrangler deploy -c .output/server/wrangler.json`. On push, the
+  CI job `deploy-demo-worker` does it with repo secrets `CLOUDFLARE_API_TOKEN`
+  ("Edit Cloudflare Workers" template, scoped to the zone) and
+  `CLOUDFLARE_ACCOUNT_ID`.
+- **Local check on the real runtime**: `npx wrangler dev -c
+  .output/server/wrangler.json`.
+- **Budget**: about 1.1 MB gzipped (free limit 3 MB); requests take 2–3 ms (free
+  limit 10 ms CPU). Static assets are free and don't count against the 100k
+  requests/day.
+- **Workers constraints to respect on this branch**:
+  - no I/O, timers or random values at module scope;
+  - `process.env` is populated through `nodejs_compat`;
+  - keep the app screens `ssr: false`.
 
 ### The simulated backend (`src/demo/`)
 

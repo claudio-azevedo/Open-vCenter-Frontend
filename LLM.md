@@ -103,9 +103,9 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 
 ```
 <cluster>                    Layers icon
+  <host>…                    leaf nodes (a clustered host has no children)
   Templates                  pseudo-folder, only if the cluster's hosts have templates
     <template>…              sorted by name
-  <host>…                    leaf nodes (a clustered host has no children)
   <folder>…                  cluster-scoped folders, each holding its VMs (from any member host)
   <vm>…                      loose cluster VMs (no folder, or a folder outside this cluster)
 <standalone host>            at the ROOT, after every cluster (no wrapper node)

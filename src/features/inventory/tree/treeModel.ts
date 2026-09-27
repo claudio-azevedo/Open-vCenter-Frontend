@@ -76,8 +76,8 @@ function folderNode(folder: Folder, folderVms: Vm[]): TreeNode {
 }
 
 /**
- * Cluster children, in order: the "Templates" folder (only when the cluster has
- * templates) → hosts (leaf nodes) → folders (with their VMs) → loose VMs (in the
+ * Cluster children, in order: hosts (leaf nodes) → the "Templates" folder (only
+ * when the cluster has templates) → folders (with their VMs) → loose VMs (in the
  * cluster, not assigned to a folder). Standalone hosts are not grouped under any
  * node - they sit at the tree root, after the clusters.
  */
@@ -99,6 +99,11 @@ function clusterNode(
     label: cluster.name,
     icon: createElement(ClusterIcon),
     children: [
+      ...hosts.map((h) => ({
+        id: `host:${h.id}`,
+        label: h.name,
+        icon: createElement(HostIcon, { online: h.online }),
+      })),
       ...(clusterTemplates.length
         ? [
             templatesFolderNode(
@@ -107,11 +112,6 @@ function clusterNode(
             ),
           ]
         : []),
-      ...hosts.map((h) => ({
-        id: `host:${h.id}`,
-        label: h.name,
-        icon: createElement(HostIcon, { online: h.online }),
-      })),
       ...clusterFolders.map((f) =>
         folderNode(
           f,

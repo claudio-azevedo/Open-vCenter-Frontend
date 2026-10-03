@@ -17,6 +17,10 @@ the code on 2026-09-27; it holds the full error-code table.
 
 - Node 24 required. Commands: `npm run dev`, `npm run build`, and `npx tsc --noEmit`
   to typecheck. There are no automated tests.
+- Releases: SemVer, tag without `v` (`0.1.2`). Follow README "Releasing":
+  `CHANGELOG.md` section, `npm version <patch|minor|major>` (bumps
+  `package.json` + lock, commits, tags), `git push github main --follow-tags`,
+  then a GitHub Release from the tag.
 - Local backend: `docker compose up` in `../ovc-backend` with `OVC_AUTH_MODE=stub` on
   both sides. Set `VITE_API_URL=http://localhost:3000/frontend-api/api` in
   `.env.local`.

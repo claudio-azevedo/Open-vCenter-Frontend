@@ -9,6 +9,7 @@ import {
   hostsQuery,
 } from "~/api/queries";
 import { HYPERVISOR_LABEL } from "~/api/types";
+import { useAuth } from "~/auth";
 import { HostIcon } from "../tree/nodeIcons";
 import { useInventorySelection } from "../selection";
 import { relTime } from "../format";
@@ -22,6 +23,7 @@ import { HostMetricsPanel } from "./panels/HostMetricsPanel";
 import { HostSetupAgentPanel } from "./panels/HostSetupAgentPanel";
 import { VmGrid } from "./VmGrid";
 import { TasksPanel } from "./panels/VmTasksPanel";
+import { EventsPanel } from "./panels/EventsPanel";
 
 // Tabs once the agent has checked in at least once.
 const CONNECTED_TABS: TabItem[] = [
@@ -34,6 +36,8 @@ const CONNECTED_TABS: TabItem[] = [
 
 // The only tab before that - everything else would be empty anyway.
 const SETUP_TABS: TabItem[] = [{ id: "setup", label: "Setup Agent" }];
+// admin only, appended to either set - the audit log (also who added the host)
+const EVENTS_TAB: TabItem = { id: "events", label: "Events" };
 
 export function HostDetail({ hostId }: { hostId: string }) {
   const host = useQuery(hostQuery(hostId));
@@ -41,6 +45,7 @@ export function HostDetail({ hostId }: { hostId: string }) {
   const clusters = useQuery(clustersQuery());
   const vms = useQuery(hostVmsQuery(hostId));
   const { tab, setTab } = useInventorySelection();
+  const { isAdmin } = useAuth();
 
   if (host.isError) {
     return <div className="p-3 text-disabled-text">Host unavailable.</div>;
@@ -54,12 +59,14 @@ export function HostDetail({ hostId }: { hostId: string }) {
   const listEntry = hosts.data?.find((x) => x.id === hostId);
   const known = h ?? listEntry;
   const agentResponded = known ? known.agent.lastSeen != null : true;
-  const tabs = agentResponded ? CONNECTED_TABS : SETUP_TABS;
-  const active = agentResponded
-    ? tab && CONNECTED_TABS.some((t) => t.id === tab)
+  const baseTabs = agentResponded ? CONNECTED_TABS : SETUP_TABS;
+  const tabs = isAdmin ? [...baseTabs, EVENTS_TAB] : baseTabs;
+  const active =
+    tab && tabs.some((t) => t.id === tab)
       ? tab
-      : "summary"
-    : "setup";
+      : agentResponded
+        ? "summary"
+        : "setup";
 
   const clusterName = h?.clusterId
     ? (clusters.data?.find((c) => c.id === h.clusterId)?.name ?? h.clusterId)
@@ -144,6 +151,7 @@ export function HostDetail({ hostId }: { hostId: string }) {
           <HostConfigurationPanel host={h} vms={vms.data ?? []} />
         ) : null}
         {active === "tasks" ? <TasksPanel hostId={hostId} /> : null}
+        {active === "events" ? <EventsPanel hostId={hostId} /> : null}
       </Tabs>
     </div>
   );

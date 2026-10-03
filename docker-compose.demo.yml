@@ -1,6 +1,6 @@
 # Open vCenter frontend in DEMO mode - a standalone product demo.
 #
-# No ovc-backend, agent, RabbitMQ, database, OIDC provider or ovc-webrdp: the
+# No ovc-backend, agent, RabbitMQ, database, OIDC provider or guacd: the
 # browser simulates the whole backend and keeps a random inventory (clusters,
 # hosts, VMs, tasks, metrics) in each visitor's localStorage. The login screen
 # needs no credentials ("Sign in" opens a demo session, no IdP) - every visitor

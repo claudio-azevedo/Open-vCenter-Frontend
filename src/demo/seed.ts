@@ -11,6 +11,16 @@ import type {
   VmSnapshot,
   VmState,
 } from "~/api/types";
+import {
+  TASK_AUDIT_ACTION,
+  audit,
+  binaryTarget,
+  clusterTarget,
+  folderTarget,
+  hostTarget,
+  tagTarget,
+  vmTarget,
+} from "./audit";
 import { DEMO_STATE_VERSION } from "./model";
 import type {
   DemoCluster,
@@ -410,6 +420,7 @@ export function generateDemoState(now = Date.now(), seed = randomSeed()): DemoSt
     isos: [],
     tasks: [],
     agentBinaries: [],
+    auditEvents: [],
   };
 
   // ---- tag catalog: OS + Datacenter categories and a few standalone tags ----
@@ -841,7 +852,80 @@ export function generateDemoState(now = Date.now(), seed = randomSeed()): DemoSt
     };
   }
 
+  seedAuditHistory(rng, state, now);
   return state;
+}
+
+/** A believable audit log: who built the inventory over the last weeks, the
+ *  events of the history tasks above, and a couple of VMs deleted outside OVC. */
+function seedAuditHistory(rng: Rng, state: DemoState, now: number) {
+  const [lead, ...others] = DEMO_OPERATORS;
+  const opts = (actor: string | null, extra: Parameters<typeof audit>[4] = {}) => ({
+    ...extra,
+    actor,
+    id: rngUuid(rng),
+  });
+
+  // the inventory was built 60-90 days ago, folders and tags a bit later
+  let at = now - rng.int(60, 90) * DAY;
+  for (const c of state.clusters) {
+    audit(state, at, "cluster.create", clusterTarget(c), opts(lead, { details: { hypervisor: c.hypervisor } }));
+    at += rng.int(1, 3) * HOUR;
+  }
+  for (const h of state.hosts) {
+    audit(state, at, "host.create", hostTarget(h), opts(lead, { details: { hypervisor: h.hypervisor } }));
+    at += rng.int(10, 90) * MIN;
+  }
+  for (const f of state.folders) {
+    audit(state, now - rng.int(20, 50) * DAY, "folder.create", folderTarget(f), opts(rng.pick(DEMO_OPERATORS)));
+  }
+  for (const t of state.tags) {
+    audit(state, now - rng.int(25, 55) * DAY, "tag.create", tagTarget(t), opts(lead, { details: { name: t.name, color: t.color } }));
+  }
+  for (const b of state.agentBinaries) {
+    audit(state, Date.parse(b.createdAt), "agent_binary.upload", binaryTarget(b), opts(b.uploadedBy, {
+      details: { hypervisor: b.hypervisor, sizeBytes: b.sizeBytes, sha256: b.checksumSha256, makeActive: b.isActive },
+    }));
+  }
+  for (const vm of rng.shuffle(state.vms.filter((v) => v.folderId)).slice(0, 8)) {
+    const folder = state.folders.find((f) => f.id === vm.folderId)!;
+    audit(state, now - rng.int(1, 15) * DAY - rng.int(0, 600) * MIN, "vm.move_folder", vmTarget(state, vm), opts(rng.pick(others), {
+      details: { before: { folder: null }, after: { folder: { id: folder.id, name: folder.name } } },
+    }));
+  }
+
+  // the history tasks: one event each, already settled (except one in flight)
+  for (const t of state.tasks) {
+    const action = TASK_AUDIT_ACTION[t.kind];
+    if (!action) continue;
+    const vm = t.targetType === "vm" ? state.vms.find((v) => v.id === t.targetId) : undefined;
+    const host = state.hosts.find((h) => h.id === t.targetId);
+    const target = vm ? vmTarget(state, vm) : host ? hostTarget(host) : null;
+    if (!target) continue;
+    const { vm_id: _vmId, action: _action, ...params } = t.params;
+    const e = audit(state, t.createdAt, action, target, opts(t.requestedBy, {
+      task: t,
+      details: Object.keys(params).length ? { params } : null,
+    }));
+    if (t.applied) {
+      e.outcome = t.outcome;
+      e.error = t.error;
+    }
+  }
+
+  // VMs someone deleted straight in Hyper-V Manager
+  for (const name of ["TMP-BUILD-07", "OLD-SQL-TEST"].slice(0, rng.int(1, 2))) {
+    const host = rng.pick(state.hosts);
+    audit(state, now - rng.int(2, 9) * DAY, "vm.inventory_remove", {
+      type: "vm",
+      id: rngUuid(rng),
+      name,
+      hostId: host.id,
+      clusterId: host.clusterId,
+    }, opts(null, { details: { reason: "no longer reported by its host agent" } }));
+  }
+
+  state.auditEvents.sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 }
 
 function agentBinary(

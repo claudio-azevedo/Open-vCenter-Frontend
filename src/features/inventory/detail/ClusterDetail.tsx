@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Table, Tabs, Td, Th } from "~/components/win95";
 import type { TabItem } from "~/components/win95";
 import { clustersQuery, hostsQuery, vmsQuery } from "~/api/queries";
+import { useAuth } from "~/auth";
 import { ClusterIcon } from "../tree/nodeIcons";
 import { useInventorySelection } from "../selection";
 import { relTime } from "../format";
 import { DetailHeader } from "./DetailHeader";
+import { EventsPanel } from "./panels/EventsPanel";
 import { VirtualNetworksPanel } from "./panels/VirtualNetworksPanel";
 import { VmStartupOrderingPanel } from "./panels/VmStartupOrderingPanel";
 
@@ -14,12 +16,16 @@ const TABS: TabItem[] = [
   { id: "startup", label: "VM Startup Ordering" },
   { id: "vnets", label: "Virtual Networks" },
 ];
+// admin only - the audit log
+const EVENTS_TAB: TabItem = { id: "events", label: "Events" };
 
 export function ClusterDetail({ clusterId }: { clusterId: string }) {
   const clusters = useQuery(clustersQuery());
   const hosts = useQuery(hostsQuery());
   const { select, tab, setTab } = useInventorySelection();
-  const active = tab && TABS.some((t) => t.id === tab) ? tab : "hosts";
+  const { isAdmin } = useAuth();
+  const tabs = isAdmin ? [...TABS, EVENTS_TAB] : TABS;
+  const active = tab && tabs.some((t) => t.id === tab) ? tab : "hosts";
   const vms = useQuery({ ...vmsQuery(), enabled: active === "startup" });
 
   const cluster = clusters.data?.find((c) => c.id === clusterId);
@@ -39,7 +45,7 @@ export function ClusterDetail({ clusterId }: { clusterId: string }) {
           0,
         )} VM(s)`}
       />
-      <Tabs tabs={TABS} value={active} onChange={setTab} className="flex-1">
+      <Tabs tabs={tabs} value={active} onChange={setTab} className="flex-1">
         {active === "hosts" ? (
           <Table>
             <thead>
@@ -80,6 +86,7 @@ export function ClusterDetail({ clusterId }: { clusterId: string }) {
           )
         ) : null}
         {active === "vnets" ? <VirtualNetworksPanel clusterId={clusterId} /> : null}
+        {active === "events" ? <EventsPanel clusterId={clusterId} /> : null}
       </Tabs>
     </div>
   );

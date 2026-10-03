@@ -13,7 +13,7 @@ import { isDemoMode } from "~/demo/mode";
 
 /**
  * Standard RDP (port 3389) to the Hyper-V host itself, through the same
- * ovc-webrdp Guacamole tunnel the VM console uses - no preconnection blob.
+ * Guacamole tunnel the VM console uses - no preconnection blob.
  * Rendered by the `/console?host=<id>` route (opened from the host action bar).
  */
 export function HostConsolePanel({ host }: { host: Host }) {

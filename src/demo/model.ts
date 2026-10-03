@@ -1,5 +1,6 @@
 import type {
   AgentBinary,
+  AuditEvent,
   Folder,
   HostHardwareInventory,
   Hypervisor,
@@ -21,7 +22,7 @@ import type {
  * Bump `DEMO_STATE_VERSION` whenever this shape changes - an older saved state
  * is then discarded and a fresh inventory generated.
  */
-export const DEMO_STATE_VERSION = 4;
+export const DEMO_STATE_VERSION = 5;
 
 export interface DemoVolume {
   path: string;
@@ -131,4 +132,6 @@ export interface DemoState {
   isos: Iso[];
   tasks: DemoTask[];
   agentBinaries: AgentBinary[];
+  /** The audit log, newest first (`demo/audit.ts`). */
+  auditEvents: AuditEvent[];
 }

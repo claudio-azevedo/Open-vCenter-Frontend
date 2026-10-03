@@ -128,30 +128,30 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
 
   const items: MenuItemDef[] = [
     {
-      label: "Edit VM…",
+      label: "Edit VM",
       icon: Pencil,
       onSelect: () => vmActionDialog.open({ kind: "edit", vmId: vm.id }),
     },
     {
-      label: "Rename VM…",
+      label: "Rename VM",
       icon: TextCursorInput,
       disabled: !off,
       onSelect: () => vmActionDialog.open({ kind: "rename", vmId: vm.id }),
     },
     {
-      label: "Edit Notes…",
+      label: "Edit Notes",
       icon: Pencil,
       onSelect: () => vmActionDialog.open({ kind: "notes", vmId: vm.id }),
     },
     {
-      label: "Move to Folder…",
+      label: "Move to Folder",
       icon: FolderInput,
       // no folder exists in the VM's cluster/host scope
       disabled: folderTargets.ready && folderTargets.targets.length === 0,
       onSelect: () => organizeDialog.open({ kind: "move-vm", vmId: vm.id }),
     },
     {
-      label: "Move Storage…",
+      label: "Move Storage",
       icon: HardDrive,
       // nowhere to move if the host reports only the volume the VM is on
       disabled: host.isSuccess && moveTargets.length === 0,
@@ -159,7 +159,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
         vmActionDialog.open({ kind: "move-storage", vmId: vm.id }),
     },
     {
-      label: "Edit AutoStart…",
+      label: "Edit AutoStart",
       icon: AlarmClock,
       onSelect: () => vmActionDialog.open({ kind: "autostart", vmId: vm.id }),
     },
@@ -172,7 +172,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
             confirmAction("eject_dvd", `Eject the DVD from "${vm.name}"?`),
         }
       : {
-          label: "Mount DVD…",
+          label: "Mount DVD",
           icon: Disc,
           onSelect: () =>
             vmActionDialog.open({ kind: "mount-dvd", vmId: vm.id }),
@@ -185,8 +185,8 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
             // only cluster roles (HA VMs) can move between nodes - Move-VM
             // outside the cluster needs a live-migration setup we don't manage
             label: vm.highlyAvailable
-              ? "Migrate VM…"
-              : "Migrate VM… (requires HA)",
+              ? "Migrate VM"
+              : "Migrate VM (requires HA)",
             icon: Move,
             disabled: !vm.highlyAvailable,
             onSelect: () =>
@@ -218,7 +218,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
     ...(off
       ? ([
           {
-            label: "Clone VM…",
+            label: "Clone VM",
             icon: Copy,
             onSelect: () =>
               organizeDialog.open({
@@ -231,7 +231,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
         ] as MenuItemDef[])
       : []),
     {
-      label: "Export as Template…",
+      label: "Export as Template",
       icon: FileUp,
       disabled: !off,
       onSelect: () =>
@@ -265,7 +265,7 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
       ...menuItems,
       { type: "separator" },
       {
-        label: "Remove from Inventory…",
+        label: "Remove from Inventory",
         icon: Trash2,
         onSelect: removeFromInventory,
       },

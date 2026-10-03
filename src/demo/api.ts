@@ -13,6 +13,19 @@ import type {
   VmState,
 } from "~/api/types";
 import { TAG_COLORS, TERMINAL_TASK_STATUSES } from "~/api/types";
+import {
+  audit,
+  binaryTarget,
+  categoryTarget,
+  changes,
+  clusterTarget,
+  folderTarget,
+  hostTarget,
+  listAuditEvents,
+  tagTarget,
+  vlanTarget,
+  vmTarget,
+} from "./audit";
 import { DEMO_USER_EMAIL } from "./mode";
 import type { DemoHost, DemoState, DemoTag, DemoVm } from "./model";
 import { hostMetrics, vmMetrics } from "./metrics";
@@ -186,22 +199,28 @@ route("POST", "/clusters", (ctx) => {
     })),
   };
   ctx.state.clusters.push(cluster);
+  audit(ctx.state, ctx.now, "cluster.create", clusterTarget(cluster), {
+    details: { hypervisor: cluster.hypervisor },
+  });
   return clusterOut(ctx.state, cluster);
 });
 
 route("PATCH", "/clusters/:id", (ctx) => {
   const c = getOr404(ctx.state.clusters, ctx.params.id, "Cluster");
   const name = String(body<{ name: string }>(ctx).name ?? "").trim();
+  const diff = changes({ name: c.name }, { name: name || c.name });
   if (name) c.name = name;
+  if (diff) audit(ctx.state, ctx.now, "cluster.rename", clusterTarget(c), { details: diff });
   return clusterOut(ctx.state, c);
 });
 
-route("DELETE", "/clusters/:id", ({ state, params }) => {
+route("DELETE", "/clusters/:id", ({ state, params, now }) => {
   const c = getOr404(state.clusters, params.id, "Cluster");
   const members = state.hosts.filter((h) => h.clusterId === c.id).length;
   if (members) {
     throw invalid(`Cluster '${c.name}' still has ${members} host(s) - move or remove them first`);
   }
+  audit(state, now, "cluster.delete", clusterTarget(c));
   const folderIds = new Set(state.folders.filter((f) => f.clusterId === c.id).map((f) => f.id));
   for (const v of state.vms) if (v.folderId && folderIds.has(v.folderId)) v.folderId = null;
   state.folders = state.folders.filter((f) => f.clusterId !== c.id);
@@ -296,12 +315,18 @@ route("POST", "/hosts", (ctx) => {
   if (clusterId) getOr404(ctx.state.clusters, clusterId, "Cluster");
   const host = newHostRecord({ name, clusterId, now: ctx.now });
   ctx.state.hosts.push(host);
+  audit(ctx.state, ctx.now, "host.create", hostTarget(host), {
+    details: { hypervisor: host.hypervisor },
+  });
   return hostDetailOut(ctx.state, host, ctx.now);
 });
 
 route("PATCH", "/hosts/:id", (ctx) => {
   const host = hostById(ctx.state, ctx.params.id);
   const b = body<{ name: string; fqdn: string; clusterId: string | null }>(ctx);
+  const clusterRef = (id: string | null) =>
+    id ? { id, name: ctx.state.clusters.find((c) => c.id === id)?.name ?? null } : null;
+  const before = { name: host.name, fqdn: host.fqdn, cluster: clusterRef(host.clusterId) };
   if (typeof b.name === "string" && b.name.trim()) host.name = b.name.trim();
   if (typeof b.fqdn === "string") host.fqdn = b.fqdn.trim() || host.fqdn;
   if ("clusterId" in b && (b.clusterId ?? null) !== host.clusterId) {
@@ -321,11 +346,29 @@ route("PATCH", "/hosts/:id", (ctx) => {
       });
     }
   }
+  const moved = changes({ cluster: before.cluster }, { cluster: clusterRef(host.clusterId) });
+  if (moved) audit(ctx.state, ctx.now, "host.move", hostTarget(host), { details: moved });
+  const edited = changes(
+    { name: before.name, fqdn: before.fqdn },
+    { name: host.name, fqdn: host.fqdn },
+  );
+  if (edited) audit(ctx.state, ctx.now, "host.update", hostTarget(host), { details: edited });
   return hostDetailOut(ctx.state, host, ctx.now);
 });
 
-route("DELETE", "/hosts/:id", ({ state, params }) => {
+route("DELETE", "/hosts/:id", ({ state, params, now }) => {
   const host = hostById(state, params.id);
+  audit(state, now, "host.delete", hostTarget(host), {
+    details: { vmCount: state.vms.filter((v) => v.hostId === host.id).length },
+  });
+  // the host's tasks would go with it: close their events
+  for (const e of state.auditEvents) {
+    const t = e.outcome === "pending" && state.tasks.find((x) => x.id === e.taskId);
+    if (t && t.hostId === host.id) {
+      e.outcome = "failed";
+      e.error = "Host removed before the task finished";
+    }
+  }
   state.vms = state.vms.filter((v) => v.hostId !== host.id);
   state.folders = state.folders.filter((f) => f.hostId !== host.id);
   state.vlans = state.vlans.filter((v) => v.hostId !== host.id);
@@ -351,7 +394,12 @@ route("POST", "/hosts/:id/actions/update-agent", (ctx) => {
   if (host.agentVersion === binary.version) {
     throw conflict("AGENT_ALREADY_CURRENT", `'${host.name}' already runs agent ${binary.version}`);
   }
-  return { task: taskOut(queueAgentUpgrade(state, now, host, binary), now) };
+  const task = queueAgentUpgrade(state, now, host, binary);
+  audit(state, now, "host.update_agent", hostTarget(host), {
+    task,
+    details: { version: binary.version },
+  });
+  return { task: taskOut(task, now) };
 });
 
 function queueAgentUpgrade(state: DemoState, now: number, host: DemoHost, binary: AgentBinary) {
@@ -369,7 +417,8 @@ function queueAgentUpgrade(state: DemoState, now: number, host: DemoHost, binary
 
 const CLUSTER_NODE_ACTIONS = new Set(["suspend", "suspend_drain", "resume", "resume_fallback"]);
 const DISRUPTIVE_HOST_ACTIONS = new Set([...CLUSTER_NODE_ACTIONS, "restart"]);
-const HOST_ACTIONS = new Set([...DISRUPTIVE_HOST_ACTIONS, "refresh_hardware", "refresh_inventory"]);
+const READ_ONLY_HOST_ACTIONS = new Set(["refresh_hardware", "refresh_inventory"]);
+const HOST_ACTIONS = new Set([...DISRUPTIVE_HOST_ACTIONS, ...READ_ONLY_HOST_ACTIONS]);
 
 route("POST", "/hosts/:id/actions/:action", ({ state, params, now }) => {
   const { action } = params;
@@ -409,6 +458,9 @@ route("POST", "/hosts/:id/actions/:action", ({ state, params, now }) => {
     outcome: error ? "failed" : undefined,
     error: error ?? undefined,
   });
+  if (!READ_ONLY_HOST_ACTIONS.has(action)) {
+    audit(state, now, `host.${action}`, hostTarget(host), { task });
+  }
   if (action === "restart" && !error) {
     // the host drops off for most of the reboot
     const start = task.createdAt + task.queueMs;
@@ -443,18 +495,24 @@ route("POST", "/folders", (ctx) => {
     hostId: b.hostId ?? null,
   };
   ctx.state.folders.push(folder);
+  audit(ctx.state, ctx.now, "folder.create", folderTarget(folder));
   return folder;
 });
 
 route("PATCH", "/folders/:id", (ctx) => {
   const f = getOr404(ctx.state.folders, ctx.params.id, "Folder");
   const name = String(body<{ name: string }>(ctx).name ?? "").trim();
+  const diff = changes({ name: f.name }, { name: name || f.name });
   if (name) f.name = name;
+  if (diff) audit(ctx.state, ctx.now, "folder.rename", folderTarget(f), { details: diff });
   return f;
 });
 
-route("DELETE", "/folders/:id", ({ state, params }) => {
+route("DELETE", "/folders/:id", ({ state, params, now }) => {
   const f = getOr404(state.folders, params.id, "Folder");
+  audit(state, now, "folder.delete", folderTarget(f), {
+    details: { vmsDetached: state.vms.filter((v) => v.folderId === f.id).length },
+  });
   for (const v of state.vms) if (v.folderId === f.id) v.folderId = null;
   state.folders = state.folders.filter((x) => x.id !== f.id);
 });
@@ -472,6 +530,13 @@ route("GET", "/vlans", ({ state, query }) => {
     list = list.filter((v) => v.clusterId === query.clusterId);
   }
   return [...list].sort((a, b) => a.vlanId - b.vlanId);
+});
+
+const vlanFields = (v: Vlan) => ({
+  name: v.name,
+  vlanId: v.vlanId,
+  description: v.description,
+  isDefault: v.isDefault,
 });
 
 function setDefaultVlan(state: DemoState, vlan: Vlan) {
@@ -506,11 +571,13 @@ route("POST", "/vlans", (ctx) => {
   };
   ctx.state.vlans.push(vlan);
   if (vlan.isDefault) setDefaultVlan(ctx.state, vlan);
+  audit(ctx.state, ctx.now, "vlan.create", vlanTarget(vlan), { details: vlanFields(vlan) });
   return vlan;
 });
 
 route("PATCH", "/vlans/:id", (ctx) => {
   const vlan = getOr404(ctx.state.vlans, ctx.params.id, "VLAN");
+  const before = vlanFields(vlan);
   const b = body<Vlan>(ctx);
   if (typeof b.name === "string" && b.name.trim()) vlan.name = b.name.trim();
   if (b.description !== undefined) vlan.description = b.description?.trim() || null;
@@ -518,11 +585,14 @@ route("PATCH", "/vlans/:id", (ctx) => {
     vlan.isDefault = b.isDefault;
     if (vlan.isDefault) setDefaultVlan(ctx.state, vlan);
   }
+  const diff = changes(before, vlanFields(vlan));
+  if (diff) audit(ctx.state, ctx.now, "vlan.update", vlanTarget(vlan), { details: diff });
   return vlan;
 });
 
-route("DELETE", "/vlans/:id", ({ state, params }) => {
-  getOr404(state.vlans, params.id, "VLAN");
+route("DELETE", "/vlans/:id", ({ state, params, now }) => {
+  const vlan = getOr404(state.vlans, params.id, "VLAN");
+  audit(state, now, "vlan.delete", vlanTarget(vlan), { details: { vlanId: vlan.vlanId } });
   state.vlans = state.vlans.filter((v) => v.id !== params.id);
 });
 
@@ -551,6 +621,12 @@ const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 const byNameCI = <T extends { name: string }>(a: T, b: T) =>
   a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 
+const tagFields = (state: DemoState, t: DemoTag) => ({
+  name: t.name,
+  category: state.tagCategories.find((c) => c.id === t.categoryId)?.name ?? null,
+  color: t.color,
+});
+
 function tagOut(state: DemoState, t: DemoTag): Tag {
   return { ...t, vmCount: state.vms.filter((v) => v.tagIds.includes(t.id)).length };
 }
@@ -576,6 +652,7 @@ route("POST", "/tag-categories", (ctx) => {
   }
   const category: TagCategory = { id: uuid(), name };
   ctx.state.tagCategories.push(category);
+  audit(ctx.state, ctx.now, "tag_category.create", categoryTarget(category));
   return category;
 });
 
@@ -585,12 +662,17 @@ route("PATCH", "/tag-categories/:id", (ctx) => {
   if (ctx.state.tagCategories.some((c) => c.id !== category.id && sameName(c.name, name))) {
     throw conflict("DUPLICATE", `A category named '${name}' already exists`);
   }
+  const diff = changes({ name: category.name }, { name });
   category.name = name;
+  if (diff) {
+    audit(ctx.state, ctx.now, "tag_category.rename", categoryTarget(category), { details: diff });
+  }
   return category;
 });
 
-route("DELETE", "/tag-categories/:id", ({ state, params }) => {
+route("DELETE", "/tag-categories/:id", ({ state, params, now }) => {
   const category = getOr404(state.tagCategories, params.id, "Tag category");
+  audit(state, now, "tag_category.delete", categoryTarget(category));
   const gone = new Set(state.tags.filter((t) => t.categoryId === category.id).map((t) => t.id));
   state.tags = state.tags.filter((t) => !gone.has(t.id));
   for (const vm of state.vms) vm.tagIds = vm.tagIds.filter((id) => !gone.has(id));
@@ -619,6 +701,7 @@ route("POST", "/tags", (ctx) => {
   requireUniqueTag(ctx.state, name, categoryId);
   const tag: DemoTag = { id: uuid(), name, categoryId, color };
   ctx.state.tags.push(tag);
+  audit(ctx.state, ctx.now, "tag.create", tagTarget(tag), { details: tagFields(ctx.state, tag) });
   return tagOut(ctx.state, tag);
 });
 
@@ -646,14 +729,18 @@ route("PATCH", "/tags/:id", (ctx) => {
       );
     }
   }
+  const before = tagFields(ctx.state, tag);
   tag.name = name;
   tag.color = color;
   tag.categoryId = categoryId;
+  const diff = changes(before, tagFields(ctx.state, tag));
+  if (diff) audit(ctx.state, ctx.now, "tag.update", tagTarget(tag), { details: diff });
   return tagOut(ctx.state, tag);
 });
 
-route("DELETE", "/tags/:id", ({ state, params }) => {
+route("DELETE", "/tags/:id", ({ state, params, now }) => {
   const tag = getOr404(state.tags, params.id, "Tag");
+  audit(state, now, "tag.delete", tagTarget(tag));
   state.tags = state.tags.filter((t) => t.id !== tag.id);
   for (const vm of state.vms) vm.tagIds = vm.tagIds.filter((id) => id !== tag.id);
 });
@@ -671,7 +758,14 @@ route("PUT", "/vms/:id/tags", (ctx) => {
       );
     }
   }
+  const tagNames = (tagIds: string[]) =>
+    tagIds
+      .map((id) => ctx.state.tags.find((t) => t.id === id)?.name)
+      .filter((n): n is string => !!n)
+      .sort();
+  const diff = changes({ tags: tagNames(vm.tagIds) }, { tags: tagNames(ids) });
   vm.tagIds = ids;
+  if (diff) audit(ctx.state, ctx.now, "vm.tags", vmTarget(ctx.state, vm), { details: diff });
   return vmOut(ctx.state, vm, ctx.now);
 });
 
@@ -703,7 +797,11 @@ route("PATCH", "/vms/:id", (ctx) => {
       : folder.hostId === host.id;
     if (!reachable) throw invalid("That folder is not reachable from the VM's host");
   }
+  const folderRef = (id: string | null) =>
+    id ? { id, name: ctx.state.folders.find((f) => f.id === id)?.name ?? null } : null;
+  const diff = changes({ folder: folderRef(vm.folderId) }, { folder: folderRef(folderId) });
   vm.folderId = folderId;
+  if (diff) audit(ctx.state, ctx.now, "vm.move_folder", vmTarget(ctx.state, vm), { details: diff });
   return vmOut(ctx.state, vm, ctx.now);
 });
 
@@ -713,6 +811,7 @@ route("DELETE", "/vms/:id/from-inventory", ({ state, params, now }) => {
   if (host && hostOnline(host, now) && vm.vmUuid) {
     throw conflict("HOST_ONLINE", `Host '${host.name}' is online and still reports '${vm.name}'`);
   }
+  audit(state, now, "vm.forget", vmTarget(state, vm));
   state.vms = state.vms.filter((v) => v.id !== vm.id);
   return { removed: true };
 });
@@ -805,7 +904,17 @@ function vmOperation(ctx: Ctx, action: string, params: Record<string, unknown>) 
     error: refusal ?? undefined,
     meta: { from: vm.state },
   });
-  if (!readOnly) lockVm(vm, task);
+  if (!readOnly) {
+    lockVm(vm, task);
+    const userParams = Object.keys(params).length ? params : null;
+    audit(state, now, `vm.${action}`, vmTarget(state, vm), {
+      task,
+      details:
+        action === "delete"
+          ? { removeFiles: params.remove_files === true }
+          : userParams && { params: userParams },
+    });
+  }
   if (!refusal && def.transitional) vm.state = def.transitional;
   return { task: taskOut(task, now) };
 }
@@ -887,6 +996,7 @@ route("POST", "/vms", (ctx) => {
     meta: { body: b },
   });
   lockVm(vm, task);
+  audit(state, now, "vm.create", vmTarget(state, vm), { task, details: { ...b } });
   return { vm: vmOut(state, vm, now), task: taskOut(task, now) };
 });
 
@@ -971,6 +1081,12 @@ route("POST", "/vms/clone", (ctx) => {
   });
   lockVm(vm, task);
   if (source) lockVm(source, task);
+  const sourceName =
+    source?.name ?? state.templates.find((t) => t.id === b.templateId)?.name ?? null;
+  audit(state, now, "vm.clone", vmTarget(state, vm), {
+    task,
+    details: { ...b, ...(sourceName ? { sourceName } : {}) },
+  });
   return { vm: vmOut(state, vm, now), task: taskOut(task, now) };
 });
 
@@ -992,7 +1108,7 @@ route("GET", "/vm-locks", ({ state, now }): VmLockEntry[] =>
     }),
 );
 
-route("DELETE", "/vm-locks", ({ state }) => {
+route("DELETE", "/vm-locks", ({ state, now }) => {
   let released = 0;
   for (const v of state.vms) {
     if (v.lock) {
@@ -1000,12 +1116,22 @@ route("DELETE", "/vm-locks", ({ state }) => {
       released++;
     }
   }
+  audit(
+    state,
+    now,
+    "vm.lock_release_all",
+    { type: "vm", id: null, name: null, hostId: null, clusterId: null },
+    { details: { released } },
+  );
   return { released };
 });
 
-route("DELETE", "/vm-locks/:vmId", ({ state, params }) => {
+route("DELETE", "/vm-locks/:vmId", ({ state, params, now }) => {
   const vm = state.vms.find((v) => v.id === params.vmId);
   const released = !!vm?.lock;
+  if (vm && released) {
+    audit(state, now, "vm.lock_release", vmTarget(state, vm), { details: { lock: vm.lock } });
+  }
   if (vm) vm.lock = null;
   return { released };
 });
@@ -1026,6 +1152,10 @@ route("GET", "/tasks", ({ state, query, now }) => {
 route("GET", "/tasks/:id", ({ state, params, now }) =>
   taskDetailOut(getOr404(state.tasks, params.id, "Task"), now),
 );
+
+// ---- audit log (admin) -----------------------------------------------------------------
+
+route("GET", "/audit-events", ({ state, query }) => listAuditEvents(state, query));
 
 // ---- images -------------------------------------------------------------------------------
 
@@ -1080,24 +1210,39 @@ route("POST", "/agent-binaries", ({ state, body: raw, now }) => {
     createdAt: new Date(now).toISOString(),
   };
   state.agentBinaries.push(binary);
-  if (raw.get("makeActive") === "true") activate(state, binary);
+  const makeActive = raw.get("makeActive") === "true";
+  if (makeActive) activate(state, binary);
+  audit(state, now, "agent_binary.upload", binaryTarget(binary), {
+    details: {
+      hypervisor: binary.hypervisor,
+      sizeBytes: binary.sizeBytes,
+      sha256: binary.checksumSha256,
+      makeActive,
+    },
+  });
   return binary;
 });
 
 route("PATCH", "/agent-binaries/:id", (ctx) => {
   const binary = getOr404(ctx.state.agentBinaries, ctx.params.id, "Agent binary");
   const b = body<{ notes: string; isActive: boolean }>(ctx);
+  const before = { notes: binary.notes, isActive: binary.isActive };
   if (typeof b.notes === "string") binary.notes = b.notes.trim() || null;
   if (b.isActive === true) activate(ctx.state, binary);
   if (b.isActive === false) binary.isActive = false;
+  const diff = changes(before, { notes: binary.notes, isActive: binary.isActive });
+  if (diff) audit(ctx.state, ctx.now, "agent_binary.update", binaryTarget(binary), { details: diff });
   return binary;
 });
 
-route("DELETE", "/agent-binaries/:id", ({ state, params }) => {
+route("DELETE", "/agent-binaries/:id", ({ state, params, now }) => {
   const binary = getOr404(state.agentBinaries, params.id, "Agent binary");
   if (binary.isActive) {
     throw conflict("ACTIVE_BINARY", `${binary.version} is the active build - activate another one first`);
   }
+  audit(state, now, "agent_binary.delete", binaryTarget(binary), {
+    details: { hypervisor: binary.hypervisor },
+  });
   state.agentBinaries = state.agentBinaries.filter((b) => b.id !== binary.id);
 });
 
@@ -1124,7 +1269,12 @@ route("POST", "/agent-binaries/:id/rollout", (ctx) => {
       }
       continue;
     }
-    tasks.push(taskOut(queueAgentUpgrade(state, now, h, binary), now));
+    const task = queueAgentUpgrade(state, now, h, binary);
+    audit(state, now, "host.update_agent", hostTarget(h), {
+      task,
+      details: { version: binary.version, rollout: true },
+    });
+    tasks.push(taskOut(task, now));
   }
   return { tasks, skipped };
 });

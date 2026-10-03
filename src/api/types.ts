@@ -549,6 +549,52 @@ export interface TaskDetail extends Task {
   responsePayload: Record<string, unknown> | null;
 }
 
+// ---- Audit log (admin only) ---------------------------------------------------
+
+export type AuditActorType = "user" | "system";
+/** `pending` = the agent task it queued has not finished yet. */
+export type AuditOutcome = "pending" | "succeeded" | "failed" | "timeout";
+export type AuditTargetType =
+  | "vm"
+  | "host"
+  | "cluster"
+  | "folder"
+  | "vlan"
+  | "tag"
+  | "tag_category"
+  | "agent_binary";
+
+/** One "who changed what" record - `GET /audit-events`. Outlives its target:
+ *  `targetName` is the name at event time and the ids are not foreign keys. */
+export interface AuditEvent {
+  id: string;
+  occurredAt: Iso8601;
+  actorType: AuditActorType;
+  /** null for system events */
+  actorEmail: string | null;
+  actorName: string | null;
+  /** `<targetType>.<verb>`, e.g. "vm.delete", "vm.move_folder" */
+  action: string;
+  targetType: AuditTargetType;
+  /** null only for a bulk action (`vm.lock_release_all`) */
+  targetId: string | null;
+  targetName: string | null;
+  hostId: string | null;
+  clusterId: string | null;
+  /** the agent task this event queued, if any */
+  taskId: string | null;
+  outcome: AuditOutcome;
+  error: string | null;
+  /** action-specific, camelCase: `{ before, after }` for an update, `params`, … */
+  details: Record<string, unknown> | null;
+}
+
+export interface AuditEventPage {
+  items: AuditEvent[];
+  /** pass back as `cursor` for the next (older) page; null = last page */
+  nextCursor: string | null;
+}
+
 /** Coarse progress from status when the backend doesn't report a number. */
 export function taskProgress(task: Task): number {
   if (task.progress != null) return task.progress;

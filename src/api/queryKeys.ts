@@ -1,3 +1,4 @@
+import type { AuditEventParams } from './endpoints/audit'
 import type { VmListParams } from './endpoints/vms'
 
 /** Central query-key factory so invalidation stays consistent. */
@@ -34,6 +35,9 @@ export const qk = {
     ['tasks', params] as const,
   taskHistory: () => ['tasks', 'history'] as const,
   task: (id: string) => ['tasks', id] as const,
+
+  auditEvents: (params: AuditEventParams = {}) => ['audit-events', params] as const,
+  auditEventsAll: () => ['audit-events'] as const,
 
   templates: () => ['templates'] as const,
   isos: () => ['isos'] as const,

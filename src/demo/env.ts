@@ -10,7 +10,7 @@ import { DEMO_USER_EMAIL } from "./mode";
  *
  * In demo mode the frontend runs standalone: the login screen shows, but
  * "Sign in" only opens a demo session (like OVC_AUTH_MODE=stub, no IdP is
- * contacted) as a fixed administrator; no ovc-backend, no ovc-webrdp. The browser
+ * contacted) as a fixed administrator; no ovc-backend, no guacd. The browser
  * serves every API call from the simulator in `src/demo/` and keeps the
  * state in localStorage.
  */

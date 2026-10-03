@@ -4,8 +4,9 @@ Web console for **Open vCenter** (Hyper-V manager). A single Win95-style "Explor
 window: inventory tree on the left, a detail pane with tabs on the right, a Recent
 Tasks dock and a status bar. It talks **only** to `ovc-backend` over REST, through
 its own server proxy. Sibling services: `ovc-backend` (Python), `ovc-agent` (Go, on
-each Hyper-V host, reached via RabbitMQ by the backend) and `ovc-webrdp` (Guacamole
-consoles).
+each Hyper-V host, reached via RabbitMQ by the backend) and `guacd` (consoles: this
+app's server serves the Guacamole HTTP tunnel itself, `src/routes/webrdp/tunnel.ts`
++ `src/guacd/`).
 
 **Demo mode** (this `demo` branch only; CI publishes it as the `:demo` image;
 `OVC_DEMO_MODE=true`, runtime env) runs it standalone for product
@@ -22,6 +23,10 @@ the code on 2026-09-27; it holds the full error-code table.
 
 - Node 24 required. Commands: `npm run dev`, `npm run build`, and `npx tsc --noEmit`
   to typecheck. There are no automated tests.
+- Releases: SemVer, tag without `v` (`0.1.2`). Follow README "Releasing":
+  `CHANGELOG.md` section, `npm version <patch|minor|major>` (bumps
+  `package.json` + lock, commits, tags), `git push github main --follow-tags`,
+  then a GitHub Release from the tag.
 - Local backend: `docker compose up` in `../ovc-backend` with `OVC_AUTH_MODE=stub` on
   both sides. Set `VITE_API_URL=http://localhost:3000/frontend-api/api` in
   `.env.local`.
@@ -46,7 +51,8 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 - `src/features/inventory/`: the Explorer. `tree/` (model, icons, VM search
   dialog), `detail/` (per-entity views, `VmActionsBar`, `HostActionsMenu`,
   `vmActions/`, `panels/`), `organize/` (dialogs, mutations, folder scope),
-  `create/` (VM wizard), `actions/` (power, tasks, status bar), `tasks/`, `locks/`.
+  `create/` (VM wizard), `actions/` (power, tasks, status bar), `tasks/`, `locks/`,
+  `events/` (audit log, admin).
 - `src/components/win95/`: UI primitives. `src/auth/`: all auth logic.
   `src/preferences/`: theme + tree behaviour cookies. `src/styles/`: tokens + themes.
 - `src/demo/`: demo mode. `api.ts` (simulated endpoints), `sim.ts` (tasks + agent
@@ -55,6 +61,8 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 ## Hard rules
 
 - **English everywhere**: code, comments, UI copy, commits, docs.
+- **Menu items have no trailing ellipsis** (`Hosts Management`, not
+  `Hosts Management`) - menu bar, VM More ▾ and host Actions ▾ alike.
 - **No `window.confirm` / `alert` / `prompt`.** Use `await confirm({...})` or
   `confirmWithCheckbox` from `features/inventory/confirm.tsx`. Report errors and
   outcomes with `statusMessage.set(...)`.
@@ -144,11 +152,16 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   - HA is offered only on a clustered host.
 - **Host actions**: Pause/Resume Node and Restart Host are admin-only. Restart is
   blocked while VMs run or while a cluster node isn't Paused. A host whose agent has
-  never checked in shows only the "Setup Agent" tab.
+  never checked in shows only the "Setup Agent" tab (plus "Events" for an admin).
+- **Audit log** (admin only): View ▸ Events History and an **Events** tab on
+  clusters, hosts and VMs (`GET /audit-events`, cursor-paged). Every successful
+  mutation invalidates `['audit-events']` (router `MutationCache`).
 - **Consoles**: the VM console needs the host online, a host FQDN/IP and the VM's
   `vmUuid` (Guacamole port 2179, `security=vmconnect`), and is unavailable while the
   VM is Off or Paused (Console tab greyed out, Summary console buttons disabled);
-  the host console uses RDP on 3389.
+  the host console uses RDP on 3389. The tunnel always disables audio, drive /
+  file transfer and printing, accepts only ports 2179 / 3389, and keeps tunnels in
+  process memory (one replica or sticky sessions).
 
 ## Keep docs in sync (always, no need to ask)
 

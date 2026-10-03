@@ -14,6 +14,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           className="ui-logo h-auto w-full"
         />
         <p className="font-bold">Open vCenter (OVC)</p>
+        <p>Version {__APP_VERSION__}</p>
         <p>A modern web application for managing VMs.</p>
         <p>Apache 2.0 licensed Open Source Software.</p>
         <p>

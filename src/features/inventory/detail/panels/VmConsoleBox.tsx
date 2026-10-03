@@ -12,8 +12,9 @@ import { vmConsoleStateBlock, vmConsoleTabUrl } from "./webrdp";
 /**
  * Summary tab "Console" box: the last console thumbnail the agent captured,
  * "Open Web Console" (the HTML5 console, `/console?vm=`, in a new browser tab)
- * and "Download RDP" (a `.rdp` file for the native Windows client). The agent only captures Running VMs, so an Off VM shows its last
- * image (the caption says how old it is).
+ * and "Download RDP" (a `.rdp` file for the native Windows client). The agent only captures Running
+ * VMs; an Off VM has no screen, so it shows the "No preview" placeholder instead
+ * of its last (stale) image and the thumbnail is not fetched.
  */
 export function VmConsoleBox({
   vm,
@@ -24,8 +25,9 @@ export function VmConsoleBox({
   host: HostDetail | undefined;
   className?: string;
 }) {
-  const thumb = useQuery(vmThumbnailQuery(vm.id, vm.lastSeen));
-  const blob = thumb.data?.blob;
+  const off = vm.state === "Off";
+  const thumb = useQuery({ ...vmThumbnailQuery(vm.id, vm.lastSeen), enabled: !off });
+  const blob = off ? undefined : thumb.data?.blob;
   const [src, setSrc] = React.useState<string | null>(null);
   React.useEffect(() => {
     if (!blob) {
@@ -70,7 +72,8 @@ export function VmConsoleBox({
           ) : (
             <div className="flex flex-col items-center gap-1 text-console-fg">
               <Icon icon={Monitor} size={28} className="text-console-muted" />
-              <span>{thumb.isPending ? "Loading…" : "No preview"}</span>
+              <span>{!off && thumb.isPending ? "Loading…" : "No preview"}</span>
+              {off ? <span className="text-console-muted">VM is off</span> : null}
             </div>
           )}
         </div>

@@ -13,6 +13,7 @@ import type {
   VmNic,
   VmState,
 } from "~/api/types";
+import { settleTaskEvents } from "./audit";
 import type {
   DemoCluster,
   DemoHost,
@@ -313,6 +314,7 @@ export function advance(state: DemoState, now: number): boolean {
       revertTransition(state, t);
     }
     t.applied = true;
+    settleTaskEvents(state, t);
     for (const vm of state.vms) {
       if (vm.lock?.taskId === t.id) vm.lock = null;
     }

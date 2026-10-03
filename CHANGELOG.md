@@ -8,12 +8,22 @@ All notable changes to ovc-frontend. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-03
+
 ### Added
 
 - The About dialog shows the app version.
 - Audit log (admin only): View ▸ Events History and an Events tab on clusters,
   hosts and VMs show who changed what and when, with the outcome of agent tasks
-  and the before/after of each change. Needs ovc-backend with `GET /audit-events`.
+  and the before/after of each change. Needs ovc-backend 0.2.0
+  (`GET /audit-events`).
+
+### Changed
+
+- Menu items no longer end with an ellipsis (menu bar, VM More ▾, host
+  Actions ▾).
+- An Off VM's console preview shows "No preview - VM is off" instead of its
+  last, stale thumbnail.
 
 ## [0.1.2] - 2026-10-03
 
@@ -53,7 +63,8 @@ All notable changes to ovc-frontend. The format follows
 
 First public release.
 
-[Unreleased]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/compare/0.1.2...HEAD
+[Unreleased]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/compare/0.1.2...0.2.0
 [0.1.2]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/claudio-azevedo/Open-vCenter-Frontend/releases/tag/0.1.0

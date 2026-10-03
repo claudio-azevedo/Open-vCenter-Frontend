@@ -111,12 +111,8 @@ export function GuacamoleConsole({
       if (username) query.set("username", username);
       if (password) query.set("password", password);
 
-      // Cross-origin when VITE_WEBRDP_URL points at another origin (split-origin
-      // dev). ovc-webrdp's ResponseHeaderFilter serves the CORS headers.
-      const crossDomain =
-        /^https?:\/\//i.test(tunnelUrl) &&
-        !tunnelUrl.startsWith(window.location.origin);
-      const tunnel = new G.HTTPTunnel(tunnelUrl, crossDomain);
+      // Always same-origin: the tunnel is this app's own server route
+      const tunnel = new G.HTTPTunnel(tunnelUrl);
       tunnel.onerror = (status: Guacamole.Status) => {
         setStatusText(
           `Tunnel error: ${status.message || `code ${status.code}`}`,

@@ -14,10 +14,10 @@ interface ImportMetaEnv {
    */
   readonly VITE_OIDC_PROVIDER_NAME?: string
   /**
-   * Base URL of the ovc-webrdp service. The VM Console tab embeds a
-   * guacamole-common-js client that talks to its Guacamole HTTP tunnel at
-   * `${VITE_WEBRDP_URL}/tunnel`. Default "/webrdp" (same-domain proxy). Use an
-   * absolute URL like "http://localhost:8090/webrdp" for split-origin local dev.
+   * Path prefix of the Guacamole HTTP tunnel. The consoles'
+   * guacamole-common-js client talks to `${VITE_WEBRDP_URL}/tunnel`, always
+   * same-origin. Default "/webrdp": this server's own tunnel
+   * (src/routes/webrdp/tunnel.ts), which connects to guacd directly.
    */
   readonly VITE_WEBRDP_URL?: string
 }
@@ -32,13 +32,11 @@ declare namespace NodeJS {
     /** Base URL of ovc-backend's REST API, e.g. http://localhost:8000/api */
     API_URL: string
     /**
-     * Base URL of ovc-webrdp, INCLUDING its context path, e.g.
-     * http://localhost:8090/webrdp (WEBAPP_CONTEXT=webrdp) or
-     * http://ovc-webrdp:8080 (WEBAPP_CONTEXT=ROOT). Used by
-     * src/routes/webrdp/tunnel.ts to proxy the Guacamole HTTP tunnel -
-     * read per-request like API_URL, not baked in at build time.
+     * guacd address for the console tunnel (src/routes/webrdp/tunnel.ts),
+     * read per connection: `host:port` or `scheme://host:port` (the scheme is
+     * ignored - guacd is raw TCP). No port ⇒ 4822. Default "localhost:4822".
      */
-    WEBRDP_ORIGIN: string
+    GUACD_URL?: string
     /** OIDC issuer / discovery base, e.g. http://localhost:8080/realms/ovc */
     OIDC_ISSUER: string
     OIDC_CLIENT_ID: string

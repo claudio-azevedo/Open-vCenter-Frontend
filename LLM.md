@@ -7,8 +7,9 @@ multi-service suite:
   exposes the REST API this frontend consumes.
 - **ovc-agent** (Go, Windows) - runs on each Hyper-V host, executes operations,
   replies over RabbitMQ.
-- **ovc-webrdp** (Java, Guacamole tunnel servlet + guacd) - browser consoles
-  (Hyper-V VM console on port 2179, host RDP on 3389).
+- **guacd** (Apache Guacamole daemon) - renders the browser consoles (Hyper-V VM
+  console on port 2179, host RDP on 3389). This frontend's server speaks the
+  Guacamole protocol to it directly.
 - **ovc-frontend** (this repo) - talks to `ovc-backend` over REST only, through
   its own server proxy. It never touches RabbitMQ.
 
@@ -59,7 +60,7 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 | `/frontend-api/api/*`    | server proxy → ovc-backend. Injects the OIDC bearer                                                 |
 | `/frontend-api/auth/*`   | better-auth OAuth endpoints (sign-in, callback, sign-out)                                                |
 | `/frontend-api/fn/*`     | TanStack Start server functions                                                                          |
-| `/webrdp/tunnel`         | server proxy → ovc-webrdp (`WEBRDP_ORIGIN`, read per request)                                       |
+| `/webrdp/tunnel`         | Guacamole HTTP tunnel, served here and connected to guacd (`GUACD_URL`)                             |
 
 ### The Explorer window
 
@@ -413,8 +414,8 @@ Always invalidate by prefix: `['vms']`, `['hosts']`, `['tasks']` and so on.
 | `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`                                                    | server           | better-auth                                                                                 |
 | `VITE_OIDC_PROVIDER_NAME?`                                                                 | client           | login button label                                                                          |
 | `OVC_AUTH_MODE=stub`                                                                       | server           | auth bypass (set the same value on ovc-backend)                                             |
-| `VITE_WEBRDP_URL`                                                                          | client           | Guacamole base. Default `/webrdp`                                                           |
-| `WEBRDP_ORIGIN`                                                                            | server (runtime) | where `/webrdp/tunnel` proxies to (the ovc-webrdp base, including its path)                 |
+| `VITE_WEBRDP_URL`                                                                          | client           | tunnel path prefix (always same-origin). Default `/webrdp`                                  |
+| `GUACD_URL`                                                                                | server (runtime) | guacd for the console tunnel, read per connection: `host:port` or `scheme://host:port` (scheme ignored, guacd is raw TCP; no port ⇒ 4822). Default `localhost:4822` |
 
 ---
 
@@ -951,9 +952,26 @@ ACTIVE_BINARY`.
     overlays.
 - **Host RDP console**: the host header's Console button (host online, with an
   address) opens `/console?host=`, which connects on port 3389 with `security=any`.
-- **Tunnel routing**: the browser calls `/webrdp/tunnel` on the same origin, and
-  `src/routes/webrdp/tunnel.ts` proxies it to `WEBRDP_ORIGIN`. In split-origin dev,
-  `VITE_WEBRDP_URL` can point straight at ovc-webrdp, which sends permissive CORS.
+- **Tunnel** (`src/routes/webrdp/tunnel.ts` + `src/guacd/`): the browser calls
+  `/webrdp/tunnel` on the same origin. The route implements Guacamole's HTTP
+  tunnel contract (`?connect`, `?read:<uuid>:<n>`, `?write:<uuid>`, same as the
+  Java `GuacamoleHTTPTunnelServlet`) and speaks the Guacamole protocol to guacd
+  at `GUACD_URL` itself:
+  - `connect` (POST, urlencoded body) needs a session (`getAccessToken()`, or
+    `OVC_AUTH_MODE=stub`), accepts only ports 2179 and 3389, runs the guacd
+    handshake (protocol version capped at `VERSION_1_5_0`) and returns the tunnel
+    UUID plus a `Guacamole-Tunnel-Token` header. read/write are authorised by
+    that token, not the session (the client writes a `nop` every 500 ms).
+  - Only `hostname`, `port`, `username`, `password`, `domain`, `security`,
+    `vm-guid`, `width`, `height` are taken from the browser. Port 2179 forces
+    `security=vmconnect` + `preconnection-blob=<vm-guid>`; otherwise `security`
+    defaults to `nla`. **Audio, drive redirection / upload / download and
+    printing are always off** (and the handshake offers no audio mimetypes).
+  - A read response streams whole instructions only and ends with `0.;` as soon
+    as the client's next read arrives. Errors use the `Guacamole-Status-Code` /
+    `Guacamole-Error-Message` headers.
+  - Tunnels live in process memory (one replica, or sticky sessions); one with
+    no request for 15 s is closed. Protocol element lengths count code points.
 
 ---
 
@@ -1025,6 +1043,9 @@ src/
                               ScrollArea, Icon, ClientOnly. bevel.ts = cn() + cva recipes.
   components/                 Login.tsx, DefaultCatchBoundary, NotFound.
   auth/                       The ONLY place auth logic lives (see Auth).
+  guacd/                      Server-only console tunnel core: protocol.server.ts (Guacamole
+                              codec + byte-stream instruction splitter), tunnel.server.ts
+                              (guacd handshake, RDP parameters, tunnel registry + idle sweep).
   api/                        types.ts (entities, mirror of docs/api-contract.md),
                               client.ts (request + ApiError), endpoints/* (clusters, hosts,
                               folders, vlans, tags, vms, tasks, inventory, agentBinaries),
@@ -1074,7 +1095,7 @@ src/
     login.tsx / logout.tsx / access-denied.tsx
     frontend-api/auth/$.ts    better-auth OAuth endpoints
     frontend-api/api/$.ts     server proxy → ovc-backend, injects the OIDC bearer
-    webrdp/tunnel.ts          server proxy → ovc-webrdp (WEBRDP_ORIGIN)
+    webrdp/tunnel.ts          Guacamole HTTP tunnel → guacd (src/guacd/)
   router.tsx                  getRouter(): QueryClient in router context, no SSR query
                               dehydration (see Gotchas).
 ```
@@ -1123,11 +1144,11 @@ The browser only ever calls the frontend origin:
 | `/frontend-api/api/*`  | REST proxy to `API_URL`, with the OIDC bearer injected                                |
 | `/frontend-api/fn/*`   | RPC (`vite.config.ts` → `tanstackStart({ serverFns: { base: '/frontend-api/fn' } })`) |
 | `/frontend-api/auth/*` | OAuth                                                                                 |
-| `/webrdp/tunnel`       | proxy to `WEBRDP_ORIGIN`                                                              |
+| `/webrdp/tunnel`       | Guacamole HTTP tunnel → guacd (`GUACD_URL`)                                           |
 | `/`                    | pages                                                                                 |
 | `/assets/*`            | static assets                                                                         |
 
-So the public proxy needs only the frontend (plus `/webrdp`). See README "Deploying
+So the public proxy needs only the frontend. See README "Deploying
 behind one domain". For local dev, run the backend with `docker compose up` in
 `../ovc-backend` (its `OVC_AUTH_MODE=stub` and seed data give you data without a
 provider), then set `VITE_API_URL=http://localhost:3000/frontend-api/api` in

@@ -1,12 +1,11 @@
 import type { VmState } from "~/api/types";
 
 /**
- * Shared URLs for the ovc-webrdp service.
+ * Shared console URLs.
  *
- * `WEBRDP_BASE` - base URL of ovc-webrdp. The Guacamole HTTP tunnel servlet
- * lives at `${base}/tunnel`. Default "/webrdp" resolves against the app origin
- * (single domain proxy - see README "Deploying behind one domain"); set an
- * absolute URL (e.g. http://localhost:8090/webrdp) for split-origin local dev.
+ * `WEBRDP_BASE` - path prefix of the Guacamole HTTP tunnel, which lives at
+ * `${base}/tunnel` on this app's own server (`src/routes/webrdp/tunnel.ts`,
+ * connected straight to guacd). Default "/webrdp".
  */
 export const WEBRDP_BASE = (
   import.meta.env.VITE_WEBRDP_URL ?? "/webrdp"

@@ -4,8 +4,9 @@ Web console for **Open vCenter** (Hyper-V manager). A single Win95-style "Explor
 window: inventory tree on the left, a detail pane with tabs on the right, a Recent
 Tasks dock and a status bar. It talks **only** to `ovc-backend` over REST, through
 its own server proxy. Sibling services: `ovc-backend` (Python), `ovc-agent` (Go, on
-each Hyper-V host, reached via RabbitMQ by the backend) and `ovc-webrdp` (Guacamole
-consoles).
+each Hyper-V host, reached via RabbitMQ by the backend) and `guacd` (consoles: this
+app's server serves the Guacamole HTTP tunnel itself, `src/routes/webrdp/tunnel.ts`
++ `src/guacd/`).
 
 **`LLM.md` is the full reference**: screens, every REST contract, the icon tables,
 every business rule. Read the relevant section before changing behaviour. The REST
@@ -133,7 +134,9 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 - **Consoles**: the VM console needs the host online, a host FQDN/IP and the VM's
   `vmUuid` (Guacamole port 2179, `security=vmconnect`), and is unavailable while the
   VM is Off or Paused (Console tab greyed out, Summary console buttons disabled);
-  the host console uses RDP on 3389.
+  the host console uses RDP on 3389. The tunnel always disables audio, drive /
+  file transfer and printing, accepts only ports 2179 / 3389, and keeps tunnels in
+  process memory (one replica or sticky sessions).
 
 ## Keep docs in sync (always, no need to ask)
 

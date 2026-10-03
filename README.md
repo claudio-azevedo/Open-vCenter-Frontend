@@ -87,8 +87,9 @@ provider). There is no in-frontend mock.
 | --------------------------------------- | ------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `VITE_API_URL`                          | no           | `/frontend-api/api`                  | Base URL the browser uses. Hits the frontend's own proxy, which attaches the OIDC bearer server-side. Split-origin dev: `http://localhost:3000/frontend-api/api`. Single-domain deploy: leave unset.                                                                                                      |
 | `VITE_OIDC_PROVIDER_NAME`               | no           | -                                    | Name on the login button ("Sign in with …"). Unset ⇒ "Sign in".                                                                                                                                                                                                                                           |
-| `VITE_WEBRDP_URL`                       | no           | `/webrdp`                            | Base URL of the `ovc-webrdp` service. The VM **Console** tab embeds a `guacamole-common-js` client that connects to its Guacamole HTTP tunnel at `${VITE_WEBRDP_URL}/tunnel`. Single-domain deploy: `/webrdp` (the default). Split-origin local dev (`infra-containers`): `http://localhost:8090/webrdp`. |
+| `VITE_WEBRDP_URL`                       | no           | `/webrdp`                            | Path prefix of the Guacamole HTTP tunnel the **Console** tabs use (`${VITE_WEBRDP_URL}/tunnel`, always same-origin - this app serves it). Leave unset.                                                                                                                                                    |
 | `API_URL`                               | yes (server) | -                                    | Base URL of the `ovc-backend` REST API, used by the `/frontend-api/api` proxy. Local dev: `http://localhost:8000/api`.                                                                                                                                                                                    |
+| `GUACD_URL`                             | no (server)  | `localhost:4822`                     | guacd address for the console tunnel (`/webrdp/tunnel`), read per connection: `host:port` or `scheme://host:port` (scheme ignored - guacd is raw TCP; no port ⇒ 4822).                                                                                                                                    |
 | `OIDC_ISSUER`                           | yes (server) | -                                    | OIDC issuer / discovery base, e.g. `http://localhost:8080/realms/ovc`, `https://ORG.okta.com`, `https://ORG.auth0.com`.                                                                                                                                                                                   |
 | `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` | yes (server) | -                                    | A confidential OIDC client for this app.                                                                                                                                                                                                                                                                  |
 | `OIDC_SCOPES`                           | no           | `openid profile email`               | Space-separated scopes to request.                                                                                                                                                                                                                                                                        |
@@ -121,9 +122,7 @@ ovc.domain.net/         →  ovc-frontend   (SSR pages, assets, /frontend-api/*,
 ovc.domain.net/api/     →  ovc-backend    (the REST API)
 ```
 
-This app **never serves anything under `/webrdp`** itself, but it does
-_proxy_ one specific path there server-to-server - see below. Its own server
-surface is:
+Its own server surface is:
 
 | Path                                   | Served by the frontend                                 |
 | -------------------------------------- | ------------------------------------------------------ |
@@ -132,13 +131,13 @@ surface is:
 | `/frontend-api/fn/*`                   | server-function (RPC) calls                            |
 | `/frontend-api/auth/*`                 | better-auth OAuth endpoints (OIDC redirect + callback) |
 | `/frontend-api/api/*`                  | reverse proxy to `ovc-backend` (adds the bearer token) |
-| `/webrdp/tunnel`                       | reverse proxy to `ovc-webrdp` (plain route, see below) |
+| `/webrdp/tunnel`                       | Guacamole HTTP tunnel, connected to guacd (see below)  |
 | `/favicon.ico`, `/site.webmanifest`, … | files in `public/`                                     |
 
 The browser only ever calls the frontend: REST goes through `/frontend-api/api/*`
 (the frontend server then reaches `ovc-backend` at `API_URL`, container-to-container),
-and the Guacamole tunnel goes through `/webrdp/tunnel` the same way (reaches
-`ovc-webrdp` at `WEBRDP_ORIGIN`). So the public proxy needs just **one** rule -
+and the Guacamole tunnel is `/webrdp/tunnel` on the frontend itself (it reaches
+guacd at `GUACD_URL`). So the public proxy needs just **one** rule -
 the frontend - plus an optional `/api/` one for direct/manual access (curl,
 Swagger). Leave `VITE_API_URL` and `VITE_WEBRDP_URL` unset (defaults
 `/frontend-api/api` and `/webrdp`).
@@ -157,7 +156,7 @@ server {
   }
 
   location / {
-    proxy_pass http://ovc-frontend:3000;   # the SSR server; also proxies /webrdp/tunnel itself
+    proxy_pass http://ovc-frontend:3000;   # the SSR server; also serves /webrdp/tunnel
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -165,17 +164,20 @@ server {
 }
 ```
 
-The webrdp container must run with `WEBAPP_CONTEXT=webrdp` (so its tunnel servlet
-is at `/webrdp/tunnel`). It needs a `guacd` sidecar - see `infra-containers`. The
-frontend embeds the Guacamole client itself and only calls `/webrdp/tunnel`, so it
-never iframes webrdp (`WEBRDP_FRAME_ANCESTORS` is not load-bearing here).
+**Consoles** need only a `guacd` container, reachable from the frontend's
+server at `GUACD_URL` (default `localhost:4822`; any internal address, e.g. a
+Compose service name or a ClusterIP Service - the browser never connects to
+guacd. `scheme://host:port` URLs work too, only host and port are used). `src/routes/webrdp/tunnel.ts` is a plain server route, the same kind
+as `frontend-api/api/$.ts`, that implements Guacamole's HTTP tunnel and speaks
+the Guacamole protocol to guacd directly (`src/guacd/`). Its details:
 
-**`WEBRDP_ORIGIN`** (base URL of `ovc-webrdp`, e.g. `http://ovc-webrdp:8080/webrdp`)
-configures that proxy - `src/routes/webrdp/tunnel.ts`, a plain server route,
-the same kind as `frontend-api/api/$.ts`. Like the other server-only vars
-above (and unlike this project's previous build-time-baked `routeRules`
-approach), it's read from `process.env` on every request - change it and
-restart the container, no rebuild needed.
+- `connect` needs a signed-in session (or `OVC_AUTH_MODE=stub`); read/write are
+  authorised by the per-tunnel token it hands out.
+- Only ports 2179 (Hyper-V console) and 3389 (RDP) are accepted.
+- Audio, drive redirection / file transfer and printing are always disabled in
+  the guacd parameters, whatever the browser sends.
+- Tunnels live in this process's memory: **run one replica, or use sticky
+  sessions**. A tunnel with no traffic for 15 s is closed.
 
 The `/frontend-api/fn` prefix for RPC is configured in `vite.config.ts`
 (`tanstackStart({ serverFns: { base: '/frontend-api/fn' } })`); `/frontend-api/auth`

@@ -8,6 +8,12 @@ All notable changes to ovc-frontend. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- View ▸ Task History and the Tasks tab on hosts and VMs: the Events screens
+  (admin) are the history now, and Event Details ▸ View Task opens the task.
+  Everyone keeps the Recent Tasks dock.
+
 ## [0.2.0] - 2026-10-03
 
 ### Added

@@ -10,7 +10,6 @@ import { VmSummaryPanel } from './panels/VmSummaryPanel'
 import { VmSnapshotsPanel } from './panels/VmSnapshotsPanel'
 import { VmConsolePanel } from './panels/VmConsolePanel'
 import { VmMetricsPanel } from './panels/VmMetricsPanel'
-import { TasksPanel } from './panels/VmTasksPanel'
 import { EventsPanel } from './panels/EventsPanel'
 import { vmConsoleStateBlock } from './panels/webrdp'
 import { VmActionsBar } from './VmActionsBar'
@@ -19,7 +18,6 @@ const BASE_TABS: TabItem[] = [
   { id: 'summary', label: 'Summary' },
   { id: 'snapshots', label: 'Snapshots' },
   { id: 'console', label: 'Console' },
-  { id: 'tasks', label: 'Tasks' },
 ]
 // only shown when the VM has Hyper-V resource metering on
 const METRICS_TAB: TabItem = { id: 'metrics', label: 'VM Metrics' }
@@ -68,7 +66,6 @@ export function VmDetail({ vmId }: { vmId: string }) {
         {active === 'metrics' ? <VmMetricsPanel vm={v} /> : null}
         {active === 'snapshots' ? <VmSnapshotsPanel vm={v} /> : null}
         {active === 'console' ? <VmConsolePanel vm={v} /> : null}
-        {active === 'tasks' ? <TasksPanel vmId={v.id} /> : null}
         {active === 'events' ? <EventsPanel vmId={v.id} /> : null}
       </Tabs>
     </div>

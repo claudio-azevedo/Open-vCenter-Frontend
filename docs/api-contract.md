@@ -558,8 +558,6 @@ reverts.
 | `/vms`, `/vms/:id`, `/hosts/:id/vms`     | 10 s                                              | catch state changes between agent inventory posts |
 | `/tasks/:id`                             | 1.5 s while running, stops when terminal          | responsive actions |
 | `/tasks` (Recent Tasks dock)             | 1.5 s while any task is active, else 4 s          | live progress |
-| `/tasks?vmId=` · `/tasks?hostId=`        | 6 s                                               | per-entity Tasks tab |
-| `/tasks?limit=200` (Task History)        | 10 s, only while the dialog is open               | history view |
 | `/hosts/:id/metrics` · `/vms/:id/metrics` | 15 s · 10 s, only while the metrics tab is open  | the agent samples ~every 5 min |
 | `/vms/:id/thumbnail`                     | none - refetched when the VM's `lastSeen` changes | a new image only comes with an agent `vm_inventory` |
 | `/templates`                             | 15 s                                              | a new export shows up in the tree |

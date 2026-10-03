@@ -22,7 +22,6 @@ import { HostHardwarePanel } from "./panels/HostHardwarePanel";
 import { HostMetricsPanel } from "./panels/HostMetricsPanel";
 import { HostSetupAgentPanel } from "./panels/HostSetupAgentPanel";
 import { VmGrid } from "./VmGrid";
-import { TasksPanel } from "./panels/VmTasksPanel";
 import { EventsPanel } from "./panels/EventsPanel";
 
 // Tabs once the agent has checked in at least once.
@@ -31,7 +30,6 @@ const CONNECTED_TABS: TabItem[] = [
   { id: "vms", label: "Virtual Machines" },
   { id: "metrics", label: "Host Metrics" },
   { id: "configuration", label: "Configuration" },
-  { id: "tasks", label: "Tasks" },
 ];
 
 // The only tab before that - everything else would be empty anyway.
@@ -150,7 +148,6 @@ export function HostDetail({ hostId }: { hostId: string }) {
         {active === "configuration" && h ? (
           <HostConfigurationPanel host={h} vms={vms.data ?? []} />
         ) : null}
-        {active === "tasks" ? <TasksPanel hostId={hostId} /> : null}
         {active === "events" ? <EventsPanel hostId={hostId} /> : null}
       </Tabs>
     </div>

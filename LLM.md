@@ -75,7 +75,7 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
      Tag Management (admin), Refresh (labelled F5; invalidates every query), Sign Out.
    - **Action**: Move VM to Folder (needs a VM selected with ≥ 1 reachable folder),
      Move Host (needs a host selected), Delete Folder (needs a folder selected).
-   - **View**: Refresh, Task History, Events History (admin), VM Locks (admin).
+   - **View**: Refresh, Events History (admin), VM Locks (admin).
    - **Preferences**: Theme ▸ (5 themes), Tree Behavior ▸ (Collapsed / Expanded).
    - **Help**: About Open vCenter (shows the `package.json` version, inlined as
      `__APP_VERSION__` by `vite.config.ts`), plus Auth Debug in dev builds only.
@@ -143,11 +143,11 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 | none                                                       | -                                                                                              | `EmptyDetail`: "Select a cluster, host, or virtual machine."                                                                                                                                                                      |
 | cluster                                                    | Layers · name · "N host(s) · M VM(s)"                                                          | **Hosts** (click a row to select the host) · **VM Startup Ordering** · **Virtual Networks** (cluster VLANs) · **Events** (admin)                                                                                                  |
 | host whose agent was never seen (`agent.lastSeen == null`) | host icon · name · fqdn · Console                                                              | **Setup Agent** only (+ **Events** for an admin)                                                                                                                                                                                  |
-| host whose agent checked in at least once                  | host icon · name · fqdn · [Update Agent → vX] [Actions ▾] [Console]                            | **Summary** (Host Information + hardware) · **Virtual Machines** (ag-grid) · **Host Metrics** · **Configuration** (VM Startup Ordering, Network Adapters, Virtual Switches, Virtual Networks, Fibre Channel Adapters) · **Tasks** · **Events** (admin) |
+| host whose agent checked in at least once                  | host icon · name · fqdn · [Update Agent → vX] [Actions ▾] [Console]                            | **Summary** (Host Information + hardware) · **Virtual Machines** (ag-grid) · **Host Metrics** · **Configuration** (VM Startup Ordering, Network Adapters, Virtual Switches, Virtual Networks, Fibre Channel Adapters) · **Events** (admin) |
 | folder                                                     | Folder · name · "Cluster: X" or "Host: Y" · Delete                                             | VM count + VM table (click a row to select the VM)                                                                                                                                                                                |
 | templatefolder                                             | Folder · "Templates" · scope                                                                   | template table (click a row to select the template)                                                                                                                                                                               |
 | template                                                   | Package · name · "cluster › host" · Deploy new VM…                                             | property list + notes                                                                                                                                                                                                             |
-| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, More ▾, lock badge            | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** (greyed out while Off / Paused) · **Tasks** · **Events** (admin)                                                                          |
+| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, More ▾, lock badge            | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** (greyed out while Off / Paused) · **Events** (admin)                                                                          |
 
 The VM **Summary** tab (`panels/VmSummaryPanel.tsx`) stacks: the offline-host notice,
 then a first row of **Virtual Machine Information** (40%) · **Configuration** (35%) ·
@@ -222,9 +222,10 @@ for clusters, hosts and VMs to give SSR a first paint, and swallows any error.
   - `TaskDetailsDialog` shows the full `TaskDetail`, including the raw agent
     request/response payloads, with a Copy button.
   - The collapsed state is stored in `localStorage` under `ovc-tasks-dock-collapsed`.
-- **Task History** (View menu): `GET /tasks?limit=200`, polled every 10 s. Free-text
-  search over the task label, kind, target, user and status.
-- **Tasks tab** on a VM or host: `GET /tasks?vmId=` or `?hostId=`, polled every 6 s.
+- There is **no** Task History dialog and **no** per-VM / per-host Tasks tab: the
+  Events screens (below) are the history, and an event that queued a task opens
+  its `TaskDetailsDialog` (View Task). Events are admin-only, so a non-admin's
+  only task view is this dock (the last hour).
 - **Progress bar**: uses `task.progress` when the agent reports it; otherwise
   queued = 0, running = 50, terminal = 100 (`taskProgress`). It is indeterminate
   while the task is queued.
@@ -345,7 +346,7 @@ To add a call:
 |              | `POST /tags` · `PATCH /tags/:id` (admin)                                | `{ name, categoryId, color }` · any of `{ name, categoryId, color }` (`null` = standalone)                           | `Tag`                                                  |
 |              | `DELETE /tags/:id` (admin)                                              | -                                                                                                                    | `204`                                                  |
 | vm locks     | `GET /vm-locks` · `DELETE /vm-locks/:vmId` · `DELETE /vm-locks` (admin) | -                                                                                                                    | `VmLockEntry[]` · `{ released }`                       |
-| tasks        | `GET /tasks`                                                            | `?vmId&hostId&status&limit` (limit: default 50, max 200)                                                             | `Task[]` (newest first)                                |
+| tasks        | `GET /tasks`                                                            | no params (the dock; the backend also takes `?vmId&hostId&status&limit`)                                             | `Task[]` (newest first)                                |
 |              | `GET /tasks/:id`                                                        | -                                                                                                                    | `TaskDetail`                                           |
 | audit        | `GET /audit-events` (admin)                                             | `?q&targetType&targetId&hostId&clusterId&outcome&limit&cursor` (the frontend sends `limit=50`)                      | `AuditEventPage` `{ items, nextCursor }` (newest first; **not** a bare array) |
 | images       | `GET /templates` · `GET /isos`                                          | -                                                                                                                    | flat cross-host lists                                  |
@@ -403,9 +404,7 @@ task whose agent never answers still ends as `timeout` through the backend sweep
 | vms / vm / vm metrics / locks          | `['vms', params]` / `['vms', id]` / `['vms', id, 'metrics']` / `['vms','locks']` | 10 s                                   |
 | vm console thumbnail                   | `['vms', id, 'thumbnail', lastSeen]`                                             | none - refetched when `lastSeen` moves |
 | task                                   | `['tasks', id]`                                                                  | 1.5 s until terminal                   |
-| VM or host tasks                       | `['tasks', {vmId} \| {hostId}]`                                                  | 6 s                                    |
 | recent tasks (dock)                    | `['tasks', {}]`                                                                  | 1.5 s while any active, else 4 s       |
-| task history                           | `['tasks', 'history']`                                                           | 10 s                                   |
 | audit events (infinite, cursor pages)  | `['audit-events', params]`                                                       | 15 s; invalidated by every mutation and terminal task |
 | templates / isos (flat)                | `['templates']` / `['isos']`                                                     | 15 s / none                            |
 | agent binaries / storage               | `['agent-binaries']` / `['agent-binaries', 'storage']`                           | 30 s / none                            |
@@ -544,7 +543,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 | Agent Management                         | Delete build `Trash2` · "up to date" `Check`                                                                                                                                                                                                                                                                                                                                                  |
 | VM Locks dialog                          | `Lock` · Refresh `RefreshCw` · Release all `Trash2`                                                                                                                                                                                                                                                                                                                                           |
 | Recent Tasks dock                        | title `ListChecks` · collapse / expand `ChevronDown` / `ChevronUp`                                                                                                                                                                                                                                                                                                                            |
-| Task History / Task Details              | Search `Search` · Refresh `RefreshCw` · Copy `Copy`                                                                                                                                                                                                                                                                                                                                           |
+| Events History / Task Details            | Search `Search` · Refresh `RefreshCw` · Copy `Copy`                                                                                                                                                                                                                                                                                                                                           |
 | Window title bar                         | Minimize `Minus` · Maximize `Square` · Close `X`                                                                                                                                                                                                                                                                                                                                              |
 | Misc                                     | Login `KeyRound` · Access denied `ShieldAlert` · Dev-bypass warning `TriangleAlert` · Empty detail `MousePointerClick`                                                                                                                                                                                                                                                                        |
 

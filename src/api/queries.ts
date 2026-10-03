@@ -177,20 +177,6 @@ export const vmLocksQuery = () =>
     refetchInterval: INTERVAL.vms,
   });
 
-export const vmTasksQuery = (vmId: string) =>
-  queryOptions({
-    queryKey: qk.tasks({ vmId }),
-    queryFn: ({ signal }) => getTasks({ vmId }, signal),
-    refetchInterval: INTERVAL.task * 4,
-  });
-
-export const hostTasksQuery = (hostId: string) =>
-  queryOptions({
-    queryKey: qk.tasks({ hostId }),
-    queryFn: ({ signal }) => getTasks({ hostId }, signal),
-    refetchInterval: INTERVAL.task * 4,
-  });
-
 export const taskQuery = (id: string) =>
   queryOptions({
     queryKey: qk.task(id),
@@ -201,18 +187,11 @@ export const taskQuery = (id: string) =>
         : INTERVAL.task,
   });
 
-/** A deep-ish slice of task history for the "Task History" dialog (View menu). */
-export const taskHistoryQuery = () =>
-  queryOptions({
-    queryKey: qk.taskHistory(),
-    queryFn: ({ signal }) => getTasks({ limit: 200 }, signal),
-    refetchInterval: 10_000,
-  });
-
 /** The audit log (admin only), newest first, one cursor page at a time. Used by
- *  View ▸ Events History… and the Events tab of a cluster / host / VM. Every
- *  mutation also invalidates `['audit-events']` (router.tsx), so a change shows
- *  up at once; the poll catches system events and task outcomes. */
+ *  View ▸ Events History and the Events tab of a cluster / host / VM - the only
+ *  history screens (task details are reached from an event). Every mutation
+ *  also invalidates `['audit-events']` (router.tsx), so a change shows up at
+ *  once; the poll catches system events and task outcomes. */
 export const auditEventsQuery = (params: AuditEventParams = {}) =>
   infiniteQueryOptions({
     queryKey: qk.auditEvents(params),

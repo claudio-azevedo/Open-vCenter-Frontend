@@ -9,7 +9,6 @@ import { useInventorySelection } from './selection'
 import { organizeDialog } from './organize/dialogStore'
 import { useVmFolderTargets } from './organize/scope'
 import { VmLocksDialog } from './locks/VmLocksDialog'
-import { TaskHistoryDialog } from './tasks/TaskHistoryDialog'
 import { EventsHistoryDialog } from './events/EventsHistoryDialog'
 import { AboutDialog } from './AboutDialog'
 import { AuthDebugDialog } from './AuthDebugDialog'
@@ -21,7 +20,6 @@ export function InventoryMenuBar() {
   const { isAdmin } = auth
   const [aboutOpen, setAboutOpen] = React.useState(false)
   const [locksOpen, setLocksOpen] = React.useState(false)
-  const [historyOpen, setHistoryOpen] = React.useState(false)
   const [eventsOpen, setEventsOpen] = React.useState(false)
   const [authDebugOpen, setAuthDebugOpen] = React.useState(false)
   const { selection } = useInventorySelection()
@@ -90,12 +88,10 @@ export function InventoryMenuBar() {
       label: 'View',
       items: [
         { label: 'Refresh', onSelect: () => queryClient.invalidateQueries() },
-        { type: 'separator' },
-        { label: 'Task History', onSelect: () => setHistoryOpen(true) },
         ...(isAdmin
           ? ([
-              { label: 'Events History', onSelect: () => setEventsOpen(true) },
               { type: 'separator' },
+              { label: 'Events History', onSelect: () => setEventsOpen(true) },
               { label: 'VM Locks', onSelect: () => setLocksOpen(true) },
             ] as MenuEntry[])
           : []),
@@ -139,9 +135,6 @@ export function InventoryMenuBar() {
   return (
     <>
       <MenuBar menus={menus} />
-      {historyOpen ? (
-        <TaskHistoryDialog onClose={() => setHistoryOpen(false)} />
-      ) : null}
       {isAdmin && eventsOpen ? (
         <EventsHistoryDialog onClose={() => setEventsOpen(false)} />
       ) : null}

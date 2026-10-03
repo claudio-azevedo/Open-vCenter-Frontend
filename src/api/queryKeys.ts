@@ -33,7 +33,6 @@ export const qk = {
 
   tasks: (params: { vmId?: string; hostId?: string } = {}) =>
     ['tasks', params] as const,
-  taskHistory: () => ['tasks', 'history'] as const,
   task: (id: string) => ['tasks', id] as const,
 
   auditEvents: (params: AuditEventParams = {}) => ['audit-events', params] as const,

@@ -11,6 +11,9 @@ All notable changes to ovc-frontend. The format follows
 ### Added
 
 - The About dialog shows the app version.
+- Audit log (admin only): View ▸ Events History and an Events tab on clusters,
+  hosts and VMs show who changed what and when, with the outcome of agent tasks
+  and the before/after of each change. Needs ovc-backend with `GET /audit-events`.
 
 ## [0.1.2] - 2026-10-03
 

@@ -24,6 +24,9 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 - Keep this file current. A change to a contract, icon, business rule or screen
   updates the matching section here, and `CLAUDE.md` when it touches a headline rule.
 - A change to the REST surface also updates `docs/api-contract.md`.
+- Menu item labels carry **no trailing ellipsis**, even when the item opens a
+  dialog (`Hosts Management`, `Edit VM`, `Restart Host`) - in the menu bar, the VM
+  More ▾ menu and the host Actions ▾ menu.
 
 ## Stack
 
@@ -68,14 +71,14 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
 "Open vCenter". Closing it signs you out. From top to bottom it contains:
 
 1. **Menu bar** (`InventoryMenuBar.tsx`):
-   - **File**: Cluster Management…, Hosts Management…, Agent Management… (admin),
-     Tag Management… (admin), Refresh (labelled F5; invalidates every query), Sign Out.
-   - **Action**: Move VM to Folder… (needs a VM selected with ≥ 1 reachable folder),
-     Move Host… (needs a host selected), Delete Folder… (needs a folder selected).
-   - **View**: Refresh, Task History…, VM Locks… (admin).
+   - **File**: Cluster Management, Hosts Management, Agent Management (admin),
+     Tag Management (admin), Refresh (labelled F5; invalidates every query), Sign Out.
+   - **Action**: Move VM to Folder (needs a VM selected with ≥ 1 reachable folder),
+     Move Host (needs a host selected), Delete Folder (needs a folder selected).
+   - **View**: Refresh, Task History, Events History (admin), VM Locks (admin).
    - **Preferences**: Theme ▸ (5 themes), Tree Behavior ▸ (Collapsed / Expanded).
-   - **Help**: About Open vCenter… (shows the `package.json` version, inlined as
-     `__APP_VERSION__` by `vite.config.ts`), plus Auth Debug… in dev builds only.
+   - **Help**: About Open vCenter (shows the `package.json` version, inlined as
+     `__APP_VERSION__` by `vite.config.ts`), plus Auth Debug in dev builds only.
 2. **Split pane**: tree toolbar + inventory tree on the left, detail pane on the right.
 3. **Recent Tasks dock** (`tasks/TasksDock.tsx`).
 4. **Status bar** (`InventoryStatusBar.tsx`), with these panels in order:
@@ -138,13 +141,13 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 | Selection                                                  | Header (icon · title · subtitle · actions)                                                     | Tabs / body                                                                                                                                                                                                                       |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | none                                                       | -                                                                                              | `EmptyDetail`: "Select a cluster, host, or virtual machine."                                                                                                                                                                      |
-| cluster                                                    | Layers · name · "N host(s) · M VM(s)"                                                          | **Hosts** (click a row to select the host) · **VM Startup Ordering** · **Virtual Networks** (cluster VLANs)                                                                                                                       |
-| host whose agent was never seen (`agent.lastSeen == null`) | host icon · name · fqdn · Console                                                              | **Setup Agent** only                                                                                                                                                                                                              |
-| host whose agent checked in at least once                  | host icon · name · fqdn · [Update Agent → vX] [Actions ▾] [Console]                            | **Summary** (Host Information + hardware) · **Virtual Machines** (ag-grid) · **Host Metrics** · **Configuration** (VM Startup Ordering, Network Adapters, Virtual Switches, Virtual Networks, Fibre Channel Adapters) · **Tasks** |
+| cluster                                                    | Layers · name · "N host(s) · M VM(s)"                                                          | **Hosts** (click a row to select the host) · **VM Startup Ordering** · **Virtual Networks** (cluster VLANs) · **Events** (admin)                                                                                                  |
+| host whose agent was never seen (`agent.lastSeen == null`) | host icon · name · fqdn · Console                                                              | **Setup Agent** only (+ **Events** for an admin)                                                                                                                                                                                  |
+| host whose agent checked in at least once                  | host icon · name · fqdn · [Update Agent → vX] [Actions ▾] [Console]                            | **Summary** (Host Information + hardware) · **Virtual Machines** (ag-grid) · **Host Metrics** · **Configuration** (VM Startup Ordering, Network Adapters, Virtual Switches, Virtual Networks, Fibre Channel Adapters) · **Tasks** · **Events** (admin) |
 | folder                                                     | Folder · name · "Cluster: X" or "Host: Y" · Delete                                             | VM count + VM table (click a row to select the VM)                                                                                                                                                                                |
 | templatefolder                                             | Folder · "Templates" · scope                                                                   | template table (click a row to select the template)                                                                                                                                                                               |
 | template                                                   | Package · name · "cluster › host" · Deploy new VM…                                             | property list + notes                                                                                                                                                                                                             |
-| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, More ▾, lock badge            | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** (greyed out while Off / Paused) · **Tasks**                                                                                               |
+| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, More ▾, lock badge            | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** (greyed out while Off / Paused) · **Tasks** · **Events** (admin)                                                                          |
 
 The VM **Summary** tab (`panels/VmSummaryPanel.tsx`) stacks: the offline-host notice,
 then a first row of **Virtual Machine Information** (40%) · **Configuration** (35%) ·
@@ -158,7 +161,9 @@ adapters and Disks.
   tables below cover them.
 - Console shows the last console thumbnail (`vmThumbnailQuery`, 4:3 on
   `bg-console-bg`; "No preview" placeholder when none exists yet). It is not
-  polled: the agent only sends an image with a `vm_inventory`, which bumps
+  polled, and not fetched at all while the VM is **Off** - an Off VM shows the
+  "No preview" placeholder with "VM is off" instead of its last (stale) image.
+  Otherwise the agent only sends an image with a `vm_inventory`, which bumps
   `vm.lastSeen`, and `lastSeen` is part of the query key, so the image refetches
   at most ~10 s (the VM poll) after a new one lands. A post-action partial status
   also bumps `lastSeen` and costs one redundant fetch. Hovering the image shows
@@ -168,8 +173,8 @@ adapters and Disks.
   "More" menu). Both need the host online, a host FQDN/IP, the VM's `vmUuid` and a
   VM that is not Off or Paused (`vmConsoleStateBlock`); when disabled their
   tooltip says why. This box is the only console entry point outside the Console
-  tab - the header has no Console menu. The agent only captures Running VMs, so an
-  Off VM shows its last image.
+  tab - the header has no Console menu. The agent only captures Running VMs, so a
+  Paused or Saved VM keeps showing its last image.
 
 The active tab lives in `?tab=`. An unknown tab falls back to the first one.
 Selecting a node of the same kind keeps the current tab; selecting a node of a
@@ -224,6 +229,37 @@ for clusters, hosts and VMs to give SSR a first paint, and swallows any error.
   queued = 0, running = 50, terminal = 100 (`taskProgress`). It is indeterminate
   while the task is queued.
 
+### Events UI (audit log, admin only - `features/inventory/events/`)
+
+Who changed what, and when, from `GET /audit-events` (backend `audit_events`). It
+covers DB-only changes too (folders, moves, tags, clusters…), not just agent tasks,
+and outlives deleted objects. Hidden from non-admins - the backend would `403`.
+
+- **Events History** (View menu, `EventsHistoryDialog`): search box (debounced
+  300 ms → `q`: object name or actor), an object-type dropdown (`targetType`) and an
+  outcome dropdown (`outcome`). Filtering is **server-side** because the log is
+  cursor-paged.
+- **Events tab** (`detail/panels/EventsPanel.tsx`, last tab): a VM → `targetType=vm
+  &targetId=` (Type column hidden); a host → `hostId=` (the host plus everything
+  that was on it); a cluster → `clusterId=`.
+- Both render `EventsTable`: Time · Event · Type · Target · Initiated by · Outcome ·
+  Change · **Details**. "Initiated by" is the actor's **email** (`actorEmail`, like a
+  task's `requestedBy`); a system event has none and shows "Open vCenter". 50 rows per page, **Load older events** fetches the next
+  cursor page. A failed event shows its `error` on a red row underneath, like Task
+  History. System events (`actorType: "system"`, e.g. `vm.inventory_remove`: a VM
+  deleted outside OVC) show the actor greyed.
+- **Event** label: `events/eventLabels.ts` (`ACTION_LABELS`, keyed by `action`);
+  an unknown action shows raw, so add a label whenever the backend audits a new
+  action. **Change** (`eventSummary`): `field: before → after` for updates, else the
+  notable `details` keys (remove files, VM count, version, params…).
+- **Outcome**: `pending` (the queued agent task hasn't finished; `text-running`),
+  then `succeeded` / `failed` / `timeout` with the task status colours.
+- **Event Details** dialog: every field, the raw `details` JSON (Copy), and
+  **View Task…** (opens `TaskDetailsDialog`) when the event queued a task.
+- Freshness: polled every 15 s while on screen; the `MutationCache.onSuccess` in
+  `router.tsx` invalidates `['audit-events']` after **every** successful mutation, and
+  `TaskWatcher` does on every terminal task (its event leaves `pending`).
+
 ---
 
 ## Contracts
@@ -247,7 +283,8 @@ To add a call:
    `api/queryKeys.ts`;
 4. update `docs/api-contract.md`.
 
-- JSON is camelCase, timestamps are ISO-8601 UTC, and lists are bare arrays.
+- JSON is camelCase, timestamps are ISO-8601 UTC, and lists are bare arrays (the one
+  exception: the cursor-paged `GET /audit-events` → `{ items, nextCursor }`).
 - IDs are opaque strings:
   - `vm.id` (backend UUID) routes every VM operation;
   - `vm.vmUuid` is the Hyper-V GUID. It is null until the agent reports the VM, and
@@ -310,6 +347,7 @@ To add a call:
 | vm locks     | `GET /vm-locks` · `DELETE /vm-locks/:vmId` · `DELETE /vm-locks` (admin) | -                                                                                                                    | `VmLockEntry[]` · `{ released }`                       |
 | tasks        | `GET /tasks`                                                            | `?vmId&hostId&status&limit` (limit: default 50, max 200)                                                             | `Task[]` (newest first)                                |
 |              | `GET /tasks/:id`                                                        | -                                                                                                                    | `TaskDetail`                                           |
+| audit        | `GET /audit-events` (admin)                                             | `?q&targetType&targetId&hostId&clusterId&outcome&limit&cursor` (the frontend sends `limit=50`)                      | `AuditEventPage` `{ items, nextCursor }` (newest first; **not** a bare array) |
 | images       | `GET /templates` · `GET /isos`                                          | -                                                                                                                    | flat cross-host lists                                  |
 | agent builds | `GET /agent-binaries` · `GET /agent-binaries/storage` (admin)           | -                                                                                                                    | `AgentBinary[]` · `AgentStorageInfo`                   |
 |              | `POST /agent-binaries` (admin)                                          | multipart: `file`, `version`, `hypervisor?`, `notes?`, `makeActive?`                                                 | `AgentBinary`                                          |
@@ -368,6 +406,7 @@ task whose agent never answers still ends as `timeout` through the backend sweep
 | VM or host tasks                       | `['tasks', {vmId} \| {hostId}]`                                                  | 6 s                                    |
 | recent tasks (dock)                    | `['tasks', {}]`                                                                  | 1.5 s while any active, else 4 s       |
 | task history                           | `['tasks', 'history']`                                                           | 10 s                                   |
+| audit events (infinite, cursor pages)  | `['audit-events', params]`                                                       | 15 s; invalidated by every mutation and terminal task |
 | templates / isos (flat)                | `['templates']` / `['isos']`                                                     | 15 s / none                            |
 | agent binaries / storage               | `['agent-binaries']` / `['agent-binaries', 'storage']`                           | 30 s / none                            |
 
@@ -537,6 +576,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   - File ▸ Tag Management (creating, renaming and deleting tags and categories;
     assigning tags to a VM is open to anyone who can see the VM);
   - View ▸ VM Locks;
+  - View ▸ Events History and the **Events** tab on clusters, hosts and VMs;
   - "Force unlock (admin)";
   - the host "Update Agent → vX" button;
   - Pause / Resume Node and Restart Host;
@@ -605,7 +645,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 
 ### Tags
 
-- **Catalog** (`organize/TagManagementDialog.tsx`, File ▸ Tag Management…, admin):
+- **Catalog** (`organize/TagManagementDialog.tsx`, File ▸ Tag Management, admin):
   global, not scoped to a cluster or host. A tag is standalone or belongs to one
   **category**; a VM carries **at most one tag per category** (e.g. OS: Windows /
   Linux / Others / Appliances; Datacenter: Datacenter-1…3).
@@ -679,7 +719,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
   - Edit VM shows a notice and cannot save.
 - **Admin tools**:
   - "Force unlock (admin)" in the More menu (danger confirmation);
-  - View ▸ VM Locks… lists every lock with its TTL and task status, a per-row force
+  - View ▸ VM Locks lists every lock with its TTL and task status, a per-row force
     unlock, and "Release all". A failed release shows inline in the dialog (the
     status bar sits behind the modal) and is mirrored to the status bar.
 - Locks release at the task's terminal status, or on their own after a TTL.
@@ -691,7 +731,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 - **UI**:
   - every More item is disabled, and so are the Summary Console box buttons;
   - Refresh only invalidates the cache (no task is queued);
-  - **Remove from Inventory…** appears.
+  - **Remove from Inventory** appears.
 - **Remove from Inventory** is `DELETE /vms/:id/from-inventory`: a DB-only delete
   behind a danger confirmation, after which the host becomes selected.
   - The backend refuses it with `409 HOST_ONLINE` if the host is online and has
@@ -704,19 +744,19 @@ When the VM is locked or its host is offline, every item below is disabled.
 
 | Item                     | Available when                                                                                                                                            | Result                                     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Edit VM…                 | always                                                                                                                                                    | Edit VM dialog → `vm_edit`                 |
-| Rename VM…               | VM **Off**. OK stays disabled while the name is empty or unchanged                                                                                        | `vm_rename`                                |
-| Edit Notes…              | always                                                                                                                                                    | `notes_edit`                               |
-| Move to Folder…          | ≥ 1 reachable folder                                                                                                                                      | `PATCH /vms/:id`                           |
-| Move Storage…            | ≥ 1 allowed volume other than the current one                                                                                                             | `vm_move`                                  |
-| Edit AutoStart…          | always                                                                                                                                                    | `vm_startup_change`                        |
-| Mount DVD… / Eject DVD   | Mount when `dvdPath` is empty (pick one of the host's ISOs); Eject when a DVD is mounted (confirmation)                                                   | `mount_dvd` / `eject_dvd`                  |
-| Migrate VM…              | shown only on a clustered host; enabled only when `highlyAvailable` (otherwise "(requires HA)"). The target is another node from `hardware.cluster.nodes` | `vm_migrate`                               |
+| Edit VM                 | always                                                                                                                                                    | Edit VM dialog → `vm_edit`                 |
+| Rename VM               | VM **Off**. OK stays disabled while the name is empty or unchanged                                                                                        | `vm_rename`                                |
+| Edit Notes              | always                                                                                                                                                    | `notes_edit`                               |
+| Move to Folder          | ≥ 1 reachable folder                                                                                                                                      | `PATCH /vms/:id`                           |
+| Move Storage            | ≥ 1 allowed volume other than the current one                                                                                                             | `vm_move`                                  |
+| Edit AutoStart          | always                                                                                                                                                    | `vm_startup_change`                        |
+| Mount DVD / Eject DVD   | Mount when `dvdPath` is empty (pick one of the host's ISOs); Eject when a DVD is mounted (confirmation)                                                   | `mount_dvd` / `eject_dvd`                  |
+| Migrate VM              | shown only on a clustered host; enabled only when `highlyAvailable` (otherwise "(requires HA)"). The target is another node from `hardware.cluster.nodes` | `vm_migrate`                               |
 | Enable HA / Disable HA   | clustered host only (confirmation)                                                                                                                        | `enable_ha` / `disable_ha`                 |
-| Clone VM…                | shown only when the VM is **Off**                                                                                                                         | wizard in clone mode                       |
-| Export as Template…      | VM **Off**. Name `[A-Za-z0-9_-]+`, optional notes                                                                                                         | `vm_export_template`                       |
+| Clone VM                | shown only when the VM is **Off**                                                                                                                         | wizard in clone mode                       |
+| Export as Template      | VM **Off**. Name `[A-Za-z0-9_-]+`, optional notes                                                                                                         | `vm_export_template`                       |
 | Enable / Disable Metrics | toggles on `metricsEnabled`                                                                                                                               | `vm_enable_metrics` / `vm_disable_metrics` |
-| Remove from Inventory…   | host offline only                                                                                                                                         | DB-only delete                             |
+| Remove from Inventory   | host offline only                                                                                                                                         | DB-only delete                             |
 | Force unlock (admin)     | VM locked **and** the user is an admin                                                                                                                    | `DELETE /vm-locks/:vmId`                   |
 
 - **Header Refresh**: runs the `refresh` action (the agent re-inventories this VM,
@@ -737,7 +777,7 @@ When the VM is locked or its host is offline, every item below is disabled.
 - Three steps: **Identification → Configuration → Review**. You can jump back only to
   steps already reached, and Next needs the current step to be valid.
 - Three modes: **New VM**, **Deploy from template**, **Clone from VM**. Opening the
-  wizard from a template ("Deploy new VM…") or from a VM ("Clone VM…") locks the
+  wizard from a template ("Deploy new VM…") or from a VM ("Clone VM") locks the
   mode and the source.
 - **Pre-targeting** (`useNewVmTarget`):
   - host selected → that host, fixed;
@@ -888,11 +928,11 @@ The Actions menu appears only after the agent has responded at least once.
 - **Refresh Hardware** / **Refresh VMs**: open to any user; disabled while the agent
   is disconnected.
 - **Admin, clustered hosts only**:
-  - **Pause Node…**: only when the node state is `Up`. The "Drain roles" checkbox
+  - **Pause Node**: only when the node state is `Up`. The "Drain roles" checkbox
     picks `suspend_drain`, otherwise `suspend`.
-  - **Resume Node…**: shown when the node state is `Paused`. The "Failback" checkbox
+  - **Resume Node**: shown when the node state is `Paused`. The "Failback" checkbox
     picks `resume_fallback`, otherwise `resume`.
-- **Admin: Restart Host…** (danger confirmation) is disabled while any VM is Running
+- **Admin: Restart Host** (danger confirmation) is disabled while any VM is Running
   (the label shows the count), and on a cluster node unless the node is Paused. The
   agent re-checks both conditions.
 - Every host action returns a task that goes to `activeTasks`.
@@ -1085,6 +1125,7 @@ src/
     actions/                  powerActions, useVmPowerAction, useVmBatchPowerAction,
                               useVmManagementAction, TaskWatcher, activeTasks, statusMessage
     tasks/                    TasksDock, TaskHistoryDialog, TaskDetailsDialog, taskLabels
+    events/                   EventsHistoryDialog, EventsTable, EventDetailsDialog, eventLabels (admin)
     locks/                    VmLocksDialog (admin)
   routes/
     __root.tsx                providers (QueryClientProvider, AuthProvider, Preferences),

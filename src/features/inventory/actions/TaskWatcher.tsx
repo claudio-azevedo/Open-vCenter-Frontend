@@ -37,6 +37,8 @@ export function TaskWatcher() {
       queryClient.invalidateQueries({ queryKey: ["vms"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["hosts"] });
+      // the task's audit event just settled from "pending"
+      queryClient.invalidateQueries({ queryKey: ["audit-events"] });
       if (task.kind === "vm_export_template") {
         // the backend registers the exported template on the task response -
         // the ['hosts'] invalidation above already covers /hosts/:id/templates

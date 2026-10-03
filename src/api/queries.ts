@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { getCluster, getClusters } from "./endpoints/clusters";
 import {
   getHost,
@@ -11,6 +11,8 @@ import {
   getHosts,
 } from "./endpoints/hosts";
 import { getAgentBinaries, getAgentStorage } from "./endpoints/agentBinaries";
+import { getAuditEvents } from "./endpoints/audit";
+import type { AuditEventParams } from "./endpoints/audit";
 import { getFolders } from "./endpoints/folders";
 import { getVlans } from "./endpoints/vlans";
 import { getTagCategories, getTags } from "./endpoints/tags";
@@ -205,6 +207,20 @@ export const taskHistoryQuery = () =>
     queryKey: qk.taskHistory(),
     queryFn: ({ signal }) => getTasks({ limit: 200 }, signal),
     refetchInterval: 10_000,
+  });
+
+/** The audit log (admin only), newest first, one cursor page at a time. Used by
+ *  View ▸ Events History… and the Events tab of a cluster / host / VM. Every
+ *  mutation also invalidates `['audit-events']` (router.tsx), so a change shows
+ *  up at once; the poll catches system events and task outcomes. */
+export const auditEventsQuery = (params: AuditEventParams = {}) =>
+  infiniteQueryOptions({
+    queryKey: qk.auditEvents(params),
+    queryFn: ({ signal, pageParam }) =>
+      getAuditEvents({ limit: 50, ...params, cursor: pageParam }, signal),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    refetchInterval: 15_000,
   });
 
 /** All recent tasks, for the bottom dock. Polls fast while any task is active. */

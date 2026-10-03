@@ -65,12 +65,15 @@ export function TaskDetailsDialog({
   );
 }
 
-function JsonBlock({
+/** A titled, copyable pretty-printed JSON payload. */
+export function JsonBlock({
   title,
   data,
+  emptyText = "Not available (task not yet sent, or predates this feature).",
 }: {
   title: string;
   data: Record<string, unknown> | null;
+  emptyText?: string;
 }) {
   const [copied, setCopied] = React.useState(false);
   const text = data ? JSON.stringify(data, null, 2) : "";
@@ -102,7 +105,7 @@ function JsonBlock({
           !data && "text-disabled-text",
         )}
       >
-        {data ? text : "Not available (task not yet sent, or predates this feature)."}
+        {data ? text : emptyText}
       </pre>
     </div>
   );

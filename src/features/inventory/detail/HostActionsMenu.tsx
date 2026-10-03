@@ -128,9 +128,9 @@ export function HostActionsMenu({ host, vms }: { host: HostDetail; vms: Vm[] }) 
     if (clustered) {
       items.push(
         nodeState === "Paused"
-          ? { label: "Resume Node…", icon: Play, disabled, onSelect: resume }
+          ? { label: "Resume Node", icon: Play, disabled, onSelect: resume }
           : {
-              label: "Pause Node…",
+              label: "Pause Node",
               icon: Pause,
               // only an Up node can be paused
               disabled: disabled || nodeState !== "Up",
@@ -140,8 +140,8 @@ export function HostActionsMenu({ host, vms }: { host: HostDetail; vms: Vm[] }) 
     }
     items.push({
       label: running
-        ? `Restart Host… (${running} VM${running > 1 ? "s" : ""} running)`
-        : "Restart Host…",
+        ? `Restart Host (${running} VM${running > 1 ? "s" : ""} running)`
+        : "Restart Host",
       icon: Power,
       danger: true,
       disabled:

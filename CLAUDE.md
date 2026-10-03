@@ -39,13 +39,16 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
 - `src/features/inventory/`: the Explorer. `tree/` (model, icons, VM search
   dialog), `detail/` (per-entity views, `VmActionsBar`, `HostActionsMenu`,
   `vmActions/`, `panels/`), `organize/` (dialogs, mutations, folder scope),
-  `create/` (VM wizard), `actions/` (power, tasks, status bar), `tasks/`, `locks/`.
+  `create/` (VM wizard), `actions/` (power, tasks, status bar), `tasks/`, `locks/`,
+  `events/` (audit log, admin).
 - `src/components/win95/`: UI primitives. `src/auth/`: all auth logic.
   `src/preferences/`: theme + tree behaviour cookies. `src/styles/`: tokens + themes.
 
 ## Hard rules
 
 - **English everywhere**: code, comments, UI copy, commits, docs.
+- **Menu items have no trailing ellipsis** (`Hosts Management`, not
+  `Hosts Management…`) - menu bar, VM More ▾ and host Actions ▾ alike.
 - **No `window.confirm` / `alert` / `prompt`.** Use `await confirm({...})` or
   `confirmWithCheckbox` from `features/inventory/confirm.tsx`. Report errors and
   outcomes with `statusMessage.set(...)`.
@@ -134,7 +137,10 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   - HA is offered only on a clustered host.
 - **Host actions**: Pause/Resume Node and Restart Host are admin-only. Restart is
   blocked while VMs run or while a cluster node isn't Paused. A host whose agent has
-  never checked in shows only the "Setup Agent" tab.
+  never checked in shows only the "Setup Agent" tab (plus "Events" for an admin).
+- **Audit log** (admin only): View ▸ Events History and an **Events** tab on
+  clusters, hosts and VMs (`GET /audit-events`, cursor-paged). Every successful
+  mutation invalidates `['audit-events']` (router `MutationCache`).
 - **Consoles**: the VM console needs the host online, a host FQDN/IP and the VM's
   `vmUuid` (Guacamole port 2179, `security=vmconnect`), and is unavailable while the
   VM is Off or Paused (Console tab greyed out, Summary console buttons disabled);

@@ -113,6 +113,8 @@ See [`src/api/types.ts`](../src/api/types.ts) for the exact TypeScript shapes. S
 | `Task`                  | async operation tracking: `id, kind, status, targetType (vm \| host), targetId, targetName?, requestedBy, progress, progressMessage?, createdAt, startedAt, finishedAt, result, error, correlationId` |
 | `TaskDetail`            | `Task & { requestPayload, responsePayload }`: the raw `AgentRequest` and the latest `AgentResponse`. Only `GET /tasks/:id` returns it |
 | `TaskStatus`            | `queued \| running \| succeeded \| failed \| timeout` |
+| `AuditEvent`            | `id, occurredAt, actorType (user \| system), actorEmail, actorName, action, targetType, targetId, targetName, hostId, clusterId, taskId, outcome (pending \| succeeded \| failed \| timeout), error, details`. See [Audit log](#audit-log-admin-only) |
+| `AuditEventPage`        | `items: AuditEvent[], nextCursor: string \| null` |
 
 Notes on the task fields:
 
@@ -421,8 +423,46 @@ VM for the task's lifetime, so a second operation can't race it. The read-only
     even if the VM row is gone). Returns `{ released: boolean }`.
   - `DELETE /vm-locks`: force-releases every lock. Returns `{ released: n }`.
 
-  The frontend surfaces these as the admin-only **View ▸ VM Locks…** dialog and the
+  The frontend surfaces these as the admin-only **View ▸ VM Locks** dialog and the
   "Force unlock (admin)" VM menu item.
+
+### Audit log (admin only)
+
+Who changed what, and when. The backend writes one event per change, in the same
+transaction as the change, so a rejected or rolled-back request leaves no event.
+Events outlive what they name: `targetName` is the name at event time, and the
+ids (`targetId`, `hostId`, `clusterId`, `taskId`) are not foreign keys.
+
+| Method | Path            | Query | Response |
+| ------ | --------------- | ----- | -------- |
+| GET    | `/audit-events` | `actor?` (partial email / name), `action?` (exact), `targetType?`, `targetId?`, `hostId?`, `clusterId?`, `outcome?`, `since?` / `until?` (ISO 8601; no offset = UTC; `until` exclusive), `q?` (partial target name / actor), `limit?` (default 50, max 200), `cursor?` | `AuditEventPage`, newest first. **Admin only** (`403` otherwise). Pass `nextCursor` back as `cursor` for the next, older page; `null` = last page. A malformed id → `422`, a malformed cursor → `400 INVALID` |
+
+- `hostId` / `clusterId` match the event's context: a host's filter returns the
+  host's own events **and** those of the VMs, folders and VLANs that were on it.
+- `outcome`: a DB-only change is `succeeded` immediately. An action that queues an
+  agent task carries `taskId` and starts `pending`; the worker settles it to the
+  task's terminal status (`error` holds the task's error or advisory).
+- `actorType: "system"` events have `actorEmail: null` and `actorName: "Open vCenter"`.
+- `details` is action-specific, camelCase: an update is
+  `{ before: {...}, after: {...} }` with only the changed fields; an agent action
+  carries its `params`; `vm.create` / `vm.clone` carry the request body (clone adds
+  `sourceName`).
+- Read-only actions (VM `refresh`, host `refresh_hardware` / `refresh_inventory`)
+  and reads are not audited.
+- Events are kept `OVC_AUDIT_RETENTION_DAYS` (default 365; `0` = forever).
+
+`action` is `<targetType>.<verb>`:
+
+| `targetType`   | Actions |
+| -------------- | ------- |
+| `vm`           | `create`, `clone`, `delete` (`details.removeFiles`), `forget` (removed from inventory only), `move_folder` (`before/after.folder {id,name} \| null`), `tags` (`before/after.tags`: tag names), `lock_release`, `lock_release_all` (no target; `details.released`), and `vm.<action>` for every `POST /vms/:id/actions/:action` except `refresh` (`start`, `stop`, `shutdown`, `restart`, `pause`, `rename`, `edit`, `migrate`, `move_storage`, `snapshot_create`, …). **System:** `inventory_remove` - the host agent stopped reporting the VM, i.e. it was removed outside OVC |
+| `host`         | `create`, `update` (name / fqdn), `move` (`before/after.cluster {id,name} \| null`), `delete` (`details.vmCount`), `update_agent` (`details.version`; `rollout: true` from a rollout), `suspend`, `suspend_drain`, `resume`, `resume_fallback`, `restart` |
+| `cluster`      | `create`, `rename`, `delete` |
+| `folder`       | `create`, `rename`, `delete` (`details.vmsDetached`) |
+| `vlan`         | `create`, `update`, `delete` |
+| `tag_category` | `create`, `rename`, `delete` |
+| `tag`          | `create`, `update` (name / category / color), `delete` |
+| `agent_binary` | `upload`, `update` (notes / isActive), `delete` |
 
 ### Quick metrics
 
@@ -522,6 +562,7 @@ reverts.
 | `/vms/:id/thumbnail`                     | none - refetched when the VM's `lastSeen` changes | a new image only comes with an agent `vm_inventory` |
 | `/templates`                             | 15 s                                              | a new export shows up in the tree |
 | `/vm-locks`                              | 10 s, only while the dialog is open               | admin view |
+| `/audit-events` (Events History, Events tab) | 15 s, only while on screen; also refetched after every successful mutation and every terminal task | admin view; the poll catches system events and task outcomes |
 | `/agent-binaries`                        | 30 s, only while it is on screen                  | admin view |
 | `/vlans`, `/isos`, `/hosts/:id/isos`, `/hosts/:id/templates` | none (fetched on demand)      | rarely change |
 

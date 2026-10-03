@@ -4,6 +4,7 @@ import { routeTree } from './routeTree.gen'
 import { DefaultCatchBoundary } from './components/DefaultCatchBoundary'
 import { NotFound } from './components/NotFound'
 import { ApiError } from '~/api/client'
+import { qk } from '~/api/queryKeys'
 import { DEFAULT_PREFERENCES } from '~/preferences'
 
 // The backend rejects an expired/dead OIDC session with 401 on any API call.
@@ -37,7 +38,11 @@ export function getRouter() {
       },
     },
     queryCache: new QueryCache({ onError: handleApiError }),
-    mutationCache: new MutationCache({ onError: handleApiError }),
+    mutationCache: new MutationCache({
+      onError: handleApiError,
+      // every successful write lands in the audit log - refresh any open view of it
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.auditEventsAll() }),
+    }),
   })
 
   return createRouter({

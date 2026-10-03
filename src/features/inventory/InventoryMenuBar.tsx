@@ -10,6 +10,7 @@ import { organizeDialog } from './organize/dialogStore'
 import { useVmFolderTargets } from './organize/scope'
 import { VmLocksDialog } from './locks/VmLocksDialog'
 import { TaskHistoryDialog } from './tasks/TaskHistoryDialog'
+import { EventsHistoryDialog } from './events/EventsHistoryDialog'
 import { AboutDialog } from './AboutDialog'
 import { AuthDebugDialog } from './AuthDebugDialog'
 
@@ -21,6 +22,7 @@ export function InventoryMenuBar() {
   const [aboutOpen, setAboutOpen] = React.useState(false)
   const [locksOpen, setLocksOpen] = React.useState(false)
   const [historyOpen, setHistoryOpen] = React.useState(false)
+  const [eventsOpen, setEventsOpen] = React.useState(false)
   const [authDebugOpen, setAuthDebugOpen] = React.useState(false)
   const { selection } = useInventorySelection()
   const vmFolders = useVmFolderTargets(selection?.kind === 'vm' ? selection.id : undefined)
@@ -32,21 +34,21 @@ export function InventoryMenuBar() {
       label: 'File',
       items: [
         {
-          label: 'Cluster Management…',
+          label: 'Cluster Management',
           onSelect: () => organizeDialog.open({ kind: 'cluster-management' }),
         },
         {
-          label: 'Hosts Management…',
+          label: 'Hosts Management',
           onSelect: () => organizeDialog.open({ kind: 'host-management' }),
         },
         ...(isAdmin
           ? ([
               {
-                label: 'Agent Management…',
+                label: 'Agent Management',
                 onSelect: () => organizeDialog.open({ kind: 'agent-management' }),
               },
               {
-                label: 'Tag Management…',
+                label: 'Tag Management',
                 onSelect: () => organizeDialog.open({ kind: 'tag-management' }),
               },
             ] as MenuEntry[])
@@ -61,7 +63,7 @@ export function InventoryMenuBar() {
       label: 'Action',
       items: [
         {
-          label: 'Move VM to Folder…',
+          label: 'Move VM to Folder',
           disabled:
             selection?.kind !== 'vm' || (vmFolders.ready && vmFolders.targets.length === 0),
           onSelect: () =>
@@ -69,14 +71,14 @@ export function InventoryMenuBar() {
             organizeDialog.open({ kind: 'move-vm', vmId: selection.id }),
         },
         {
-          label: 'Move Host…',
+          label: 'Move Host',
           disabled: selection?.kind !== 'host',
           onSelect: () =>
             selection?.kind === 'host' &&
             organizeDialog.open({ kind: 'move-host', hostId: selection.id }),
         },
         {
-          label: 'Delete Folder…',
+          label: 'Delete Folder',
           disabled: selection?.kind !== 'folder',
           onSelect: () =>
             selection?.kind === 'folder' &&
@@ -89,11 +91,12 @@ export function InventoryMenuBar() {
       items: [
         { label: 'Refresh', onSelect: () => queryClient.invalidateQueries() },
         { type: 'separator' },
-        { label: 'Task History…', onSelect: () => setHistoryOpen(true) },
+        { label: 'Task History', onSelect: () => setHistoryOpen(true) },
         ...(isAdmin
           ? ([
+              { label: 'Events History', onSelect: () => setEventsOpen(true) },
               { type: 'separator' },
-              { label: 'VM Locks…', onSelect: () => setLocksOpen(true) },
+              { label: 'VM Locks', onSelect: () => setLocksOpen(true) },
             ] as MenuEntry[])
           : []),
       ],
@@ -122,11 +125,11 @@ export function InventoryMenuBar() {
     {
       label: 'Help',
       items: [
-        { label: 'About Open vCenter…', onSelect: () => setAboutOpen(true) },
+        { label: 'About Open vCenter', onSelect: () => setAboutOpen(true) },
         ...(import.meta.env.DEV
           ? ([
               { type: 'separator' },
-              { label: 'Auth Debug…', onSelect: () => setAuthDebugOpen(true) },
+              { label: 'Auth Debug', onSelect: () => setAuthDebugOpen(true) },
             ] as MenuEntry[])
           : []),
       ],
@@ -138,6 +141,9 @@ export function InventoryMenuBar() {
       <MenuBar menus={menus} />
       {historyOpen ? (
         <TaskHistoryDialog onClose={() => setHistoryOpen(false)} />
+      ) : null}
+      {isAdmin && eventsOpen ? (
+        <EventsHistoryDialog onClose={() => setEventsOpen(false)} />
       ) : null}
       {locksOpen ? <VmLocksDialog onClose={() => setLocksOpen(false)} /> : null}
       {aboutOpen ? <AboutDialog onClose={() => setAboutOpen(false)} /> : null}

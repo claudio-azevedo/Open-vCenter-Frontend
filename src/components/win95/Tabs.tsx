@@ -5,6 +5,10 @@ import { ScrollArea } from './ScrollArea'
 export interface TabItem {
   id: string
   label: React.ReactNode
+  /** Greyed out and not clickable; the parent should not leave it active. */
+  disabled?: boolean
+  /** Tooltip, e.g. why the tab is disabled. */
+  title?: string
 }
 
 /**
@@ -35,6 +39,8 @@ export function Tabs({
               role="tab"
               type="button"
               aria-selected={active}
+              disabled={tab.disabled}
+              title={tab.title}
               onClick={() => onChange(tab.id)}
               className={cn(
                 'ui-tab px-3 pt-[3px] text-base select-none',

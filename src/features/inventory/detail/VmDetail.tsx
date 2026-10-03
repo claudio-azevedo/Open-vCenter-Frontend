@@ -10,6 +10,7 @@ import { VmSnapshotsPanel } from './panels/VmSnapshotsPanel'
 import { VmConsolePanel } from './panels/VmConsolePanel'
 import { VmMetricsPanel } from './panels/VmMetricsPanel'
 import { TasksPanel } from './panels/VmTasksPanel'
+import { vmConsoleStateBlock } from './panels/webrdp'
 import { VmActionsBar } from './VmActionsBar'
 
 const BASE_TABS: TabItem[] = [
@@ -33,10 +34,20 @@ export function VmDetail({ vmId }: { vmId: string }) {
     return <div className="p-3 text-disabled-text">Loading virtual machine…</div>
   }
 
-  const tabs = v.metricsEnabled
-    ? [BASE_TABS[0], METRICS_TAB, ...BASE_TABS.slice(1)]
-    : BASE_TABS
-  const active = tab && tabs.some((t) => t.id === tab) ? tab : 'summary'
+  // An Off / Paused VM has no screen: the Console tab stays visible but disabled,
+  // and a selected Console tab falls back to Summary.
+  const consoleBlock = vmConsoleStateBlock(v.state)
+  const tabs = (
+    v.metricsEnabled
+      ? [BASE_TABS[0], METRICS_TAB, ...BASE_TABS.slice(1)]
+      : BASE_TABS
+  ).map((t) =>
+    t.id === 'console' && consoleBlock
+      ? { ...t, disabled: true, title: `Console unavailable - ${consoleBlock}` }
+      : t,
+  )
+  const active =
+    tab && tabs.some((t) => t.id === tab && !t.disabled) ? tab : 'summary'
 
   return (
     <div className="flex h-full flex-col gap-2 p-3">

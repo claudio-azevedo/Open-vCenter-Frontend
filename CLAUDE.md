@@ -68,7 +68,8 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   the transport set**: `Play` green, `Square` red, `Pause` amber (Saved = blue
   `Square`, Unknown = gray `Square`, transitional = same icon + `animate-pulse`).
   Reuse `tree/nodeIcons.tsx` `STATE_ICON` / `VmIcon` and `actions/powerActions.ts`.
-- **HTTP only via `api/client.ts` `request()`**. A new call means an endpoint
+- **HTTP only via `api/client.ts` `request()`** (`requestBlob()` for binary GETs
+  such as the VM console thumbnail). A new call means an endpoint
   function, a type, a `queryOptions` factory with a `qk` key, an update to
   `docs/api-contract.md`, **and the matching handler in `src/demo/api.ts`** (plus
   `sim.ts` / `taskProfiles.ts` for a new agent function), so demo mode keeps working.
@@ -145,8 +146,9 @@ guacamole-common-js · react-resizable-panels **v3** (pinned).
   blocked while VMs run or while a cluster node isn't Paused. A host whose agent has
   never checked in shows only the "Setup Agent" tab.
 - **Consoles**: the VM console needs the host online, a host FQDN/IP and the VM's
-  `vmUuid` (Guacamole port 2179, `security=vmconnect`); the host console uses RDP on
-  3389.
+  `vmUuid` (Guacamole port 2179, `security=vmconnect`), and is unavailable while the
+  VM is Off or Paused (Console tab greyed out, Summary console buttons disabled);
+  the host console uses RDP on 3389.
 
 ## Keep docs in sync (always, no need to ask)
 

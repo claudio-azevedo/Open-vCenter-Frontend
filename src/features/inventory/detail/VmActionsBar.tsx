@@ -3,14 +3,11 @@ import {
   AlarmClock,
   Copy,
   Disc,
-  Download,
-  ExternalLink,
   FileUp,
   FolderInput,
   Gauge,
   HardDrive,
   Lock,
-  Monitor,
   MoreHorizontal,
   Move,
   Pencil,
@@ -29,8 +26,6 @@ import { ApiError } from "~/api/client";
 import { useAuth } from "~/auth";
 import type { VmManagementAction, Vm } from "~/api/types";
 import { VmPowerButtons } from "./VmPowerButtons";
-import { vmConsoleTabUrl } from "./panels/webrdp";
-import { downloadVmConsoleRdpFile } from "./panels/rdpFile";
 import { moveStorageTargets } from "./vmActions/storage";
 import { organizeDialog } from "../organize/dialogStore";
 import { useVmFolderTargets } from "../organize/scope";
@@ -41,7 +36,6 @@ import { taskLabel } from "../tasks/taskLabels";
 import { relTime } from "../format";
 import { confirm } from "../confirm";
 import { useInventorySelection } from "../selection";
-import { isDemoMode } from "~/demo/mode";
 
 export function VmActionsBar({ vm }: { vm: Vm }) {
   const queryClient = useQueryClient();
@@ -60,35 +54,6 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
   const dvdMounted = !!vm.dvdPath;
   const moveTargets = moveStorageTargets(host.data, vm);
   const folderTargets = useVmFolderTargets(vm.id);
-
-  // Console access needs a reachable host address and the VM's Hyper-V GUID.
-  // Two ways in: the in-app HTML5 console (the /console route, own browser tab,
-  // so it stays open while working on other VMs) or a downloaded .rdp file that
-  // opens the console in the native Windows client.
-  const consoleAddr = host.data?.fqdn ?? host.data?.ipAddress ?? null;
-  const canOpenConsole = !hostOffline && !!consoleAddr && !!vm.vmUuid;
-  const openConsoleTab = () => {
-    if (canOpenConsole)
-      window.open(vmConsoleTabUrl(vm.id), "_blank", "noopener");
-  };
-  const consoleMenuItems: MenuItemDef[] = [
-    {
-      label: "Open HTML5 console in new tab",
-      icon: ExternalLink,
-      onSelect: openConsoleTab,
-    },
-    // a demo host is fictional - an .rdp file for it would lead nowhere
-    ...(isDemoMode()
-      ? []
-      : [
-          {
-            label: "Download .rdp file",
-            icon: Download,
-            onSelect: () =>
-              consoleAddr && downloadVmConsoleRdpFile(vm, consoleAddr),
-          },
-        ]),
-  ];
 
   const forceUnlock = async () => {
     if (
@@ -325,17 +290,6 @@ export function VmActionsBar({ vm }: { vm: Vm }) {
         <Icon icon={RefreshCw} size={14} />
         Refresh
       </Button>
-      {canOpenConsole ? (
-        <Menu
-          label={
-            <span className="flex items-center gap-1">
-              <Icon icon={Monitor} size={14} />
-              Console
-            </span>
-          }
-          items={consoleMenuItems}
-        />
-      ) : null}
       <Menu
         label={
           <span className="flex items-center gap-1">

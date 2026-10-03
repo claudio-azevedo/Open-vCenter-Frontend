@@ -15,7 +15,13 @@ import { getFolders } from "./endpoints/folders";
 import { getVlans } from "./endpoints/vlans";
 import { getTagCategories, getTags } from "./endpoints/tags";
 import type { VlanListParams } from "./endpoints/vlans";
-import { getVm, getVmLocks, getVmMetrics, getVms } from "./endpoints/vms";
+import {
+  getVm,
+  getVmLocks,
+  getVmMetrics,
+  getVmThumbnail,
+  getVms,
+} from "./endpoints/vms";
 import type { VmListParams } from "./endpoints/vms";
 import { getTask, getTasks } from "./endpoints/tasks";
 import { getIsos, getTemplates } from "./endpoints/inventory";
@@ -145,6 +151,20 @@ export const vmMetricsQuery = (id: string) =>
     queryKey: qk.vmMetrics(id),
     queryFn: ({ signal }) => getVmMetrics(id, signal),
     refetchInterval: INTERVAL.vms,
+  });
+
+/** Last console thumbnail (`null` = none captured yet). No polling: the agent
+ * only sends a new image with a vm_inventory, which bumps `vm.lastSeen` (already
+ * polled by the VM query), so the key changes - and the image refetches - then. */
+export const vmThumbnailQuery = (id: string, lastSeen: string | null) =>
+  queryOptions({
+    queryKey: qk.vmThumbnail(id, lastSeen),
+    queryFn: () => getVmThumbnail(id),
+    staleTime: Infinity,
+    // keep showing this VM's previous image while the next one loads (never
+    // another VM's - the panel stays mounted when the selection changes)
+    placeholderData: (prev, prevQuery) =>
+      prevQuery?.queryKey[1] === id ? prev : undefined,
   });
 
 /** Active VM locks - admin only. Polls while the dialog is open. */

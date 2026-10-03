@@ -63,7 +63,12 @@ async function proxy(request: Request): Promise<Response> {
   }
 
   const out = new Headers();
-  for (const h of ["content-type", "content-disposition", "content-length"]) {
+  for (const h of [
+    "content-type",
+    "content-disposition",
+    "content-length",
+    "x-captured-at", // GET /vms/:id/thumbnail
+  ]) {
     const v = upstream.headers.get(h);
     if (v) out.set(h, v);
   }

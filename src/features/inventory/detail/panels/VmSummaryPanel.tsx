@@ -13,6 +13,7 @@ import type { Vm } from "~/api/types";
 import { foldersQuery, hostQuery } from "~/api/queries";
 import { bytes, dateTime, duration, percent, relTime } from "../../format";
 import { vmActionDialog } from "../vmActions/dialogStore";
+import { VmConsoleBox } from "./VmConsoleBox";
 import { VmTagsBox } from "./VmTagsBox";
 
 export function VmSummaryPanel({ vm }: { vm: Vm }) {
@@ -27,6 +28,12 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
   const memory = vm.memory.dynamic
     ? `${bytes(vm.memory.assignedBytes)} (dynamic ${bytes(vm.memory.minBytes)}–${bytes(vm.memory.maxBytes)})`
     : `${bytes(vm.memory.assignedBytes)} (static)`;
+
+  // total virtual size of the attached disks (pass-through disks report 0)
+  const provisionedBytes = vm.disks.reduce(
+    (sum, d) => sum + (d.sizeBytes || 0),
+    0,
+  );
 
   const autoStart =
     vm.autoStartAction && vm.autoStartAction !== "Nothing"
@@ -47,7 +54,7 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
           the host reconnects.
         </div>
       ) : null}
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-[40fr_35fr_25fr]">
         <GroupBox label="Virtual Machine Information">
           <PropertyList
             items={[
@@ -64,6 +71,7 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
         <GroupBox label="Configuration">
           <PropertyList
             items={[
+              { label: "Guest OS", value: vm.guestOs ?? "-" },
               { label: "CPU", value: `${vm.vcpu} vCPUs` },
               { label: "CPU usage", value: percent(vm.cpuUsagePercent) },
               { label: "Memory", value: memory },
@@ -71,11 +79,14 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
                 label: "Memory demand",
                 value: bytes(vm.memory.demandBytes),
               },
-              { label: "Disks", value: vm.disks.length },
-              { label: "Network adapters", value: vm.nics.length },
+              {
+                label: "Provisioned space",
+                value: vm.disks.length ? bytes(provisionedBytes) : "-",
+              },
             ]}
           />
         </GroupBox>
+        <VmConsoleBox vm={vm} host={host.data} />
       </div>
 
       <GroupBox label="Advanced">

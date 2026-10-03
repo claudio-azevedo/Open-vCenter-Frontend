@@ -26,6 +26,8 @@ export const qk = {
   vms: (params: VmListParams = {}) => ['vms', params] as const,
   vm: (id: string) => ['vms', id] as const,
   vmMetrics: (id: string) => ['vms', id, 'metrics'] as const,
+  vmThumbnail: (id: string, lastSeen: string | null) =>
+    ['vms', id, 'thumbnail', lastSeen] as const,
   vmLocks: () => ['vms', 'locks'] as const,
 
   tasks: (params: { vmId?: string; hostId?: string } = {}) =>

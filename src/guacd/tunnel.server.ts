@@ -255,11 +255,16 @@ const registry = globalThis as typeof globalThis & {
   __ovcGuacdSweeper?: NodeJS.Timeout;
 };
 const tunnels = (registry.__ovcGuacdTunnels ??= new Map());
-registry.__ovcGuacdSweeper ??= setInterval(() => {
-  const now = Date.now();
-  for (const t of tunnels.values())
-    if (t.idleFor(now) > TUNNEL_IDLE_TIMEOUT_MS) t.close();
-}, SWEEP_INTERVAL_MS).unref();
+
+/** Starts the idle sweeper with the first tunnel - never at module load:
+ *  Cloudflare Workers (the demo build) reject timers in the global scope. */
+function ensureSweeper() {
+  registry.__ovcGuacdSweeper ??= setInterval(() => {
+    const now = Date.now();
+    for (const t of tunnels.values())
+      if (t.idleFor(now) > TUNNEL_IDLE_TIMEOUT_MS) t.close();
+  }, SWEEP_INTERVAL_MS).unref();
+}
 
 /** The open tunnel for a token (marking it used), or null. */
 export function getTunnel(token: string): GuacdTunnel | null {
@@ -407,6 +412,7 @@ export async function openTunnel(target: RdpTarget): Promise<GuacdTunnel> {
   );
   const tunnel = new GuacdTunnel(socket, label);
   tunnel.start(splitter, leftover);
+  ensureSweeper();
   tunnels.set(tunnel.token, tunnel);
   console.info(`[guacd] tunnel ${tunnel.uuid} opened (${label})`);
   return tunnel;

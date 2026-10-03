@@ -59,6 +59,27 @@ export async function request<T>(
   }
 }
 
+/**
+ * Binary GET (images): same proxy, credentials and error normalization as
+ * `request()`, but returns the body as a Blob plus the response headers. An
+ * error body arrives as a Blob too, so failures carry only the HTTP status
+ * (`code` = `HTTP_ERROR`).
+ */
+export async function requestBlob(
+  path: string,
+): Promise<{ blob: Blob; headers: Headers }> {
+  try {
+    const res = await axios(`${BASE_URL}${path}`, {
+      method: 'GET',
+      responseType: 'blob',
+      withCredentials: true,
+    })
+    return { blob: res.data as Blob, headers: res.headers }
+  } catch (err: unknown) {
+    throw normalizeError(err)
+  }
+}
+
 function normalizeError(err: unknown): ApiError {
   const e = err as {
     status?: number

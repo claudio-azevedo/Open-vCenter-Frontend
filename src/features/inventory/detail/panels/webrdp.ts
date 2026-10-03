@@ -1,3 +1,5 @@
+import type { VmState } from "~/api/types";
+
 /**
  * Shared URLs for the ovc-webrdp service.
  *
@@ -21,6 +23,17 @@ export const TUNNEL_URL = `${WEBRDP_BASE}/tunnel`;
  */
 export function vmConsoleTabUrl(vmId: string): string {
   return `/console?vm=${encodeURIComponent(vmId)}`;
+}
+
+/**
+ * Why the VM has no console to open in its current state, or `null`. An Off or
+ * Paused VM has no live screen, so the Console tab and the Summary console
+ * buttons are disabled for it.
+ */
+export function vmConsoleStateBlock(state: VmState): string | null {
+  return state === "Off" || state === "Paused"
+    ? `VM is ${state.toLowerCase()}`
+    : null;
 }
 
 /** Standalone host RDP console (port 3389) in its own browser tab. */

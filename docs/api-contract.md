@@ -98,7 +98,7 @@ See [`src/api/types.ts`](../src/api/types.ts) for the exact TypeScript shapes. S
 | `Vlan`                  | `id, name, vlanId (1-4094 tag), description, isDefault, clusterId, hostId`: an 802.1Q VLAN, **application-managed**. Scoped like `Folder`; a clustered host uses its cluster's VLANs |
 | `TagCategory`           | `id, name`: a group of mutually exclusive tags - a VM carries **at most one** tag per category. Global (not scoped to a cluster or host), **application-managed** |
 | `Tag`                   | `id, name, categoryId, color, vmCount`: a global VM label, standalone (`categoryId: null`) or in one category. `color` is a palette name: `gray \| red \| orange \| yellow \| green \| teal \| blue \| navy \| purple \| pink` (the frontend maps it to a theme token). `vmCount` counts the VMs carrying it **within the caller's scope**. Names are `[A-Za-z0-9_-]{1,64}` (no spaces), unique case-insensitively within a category (standalone tags among themselves); category names likewise |
-| `Vm`                    | `id, vmUuid, hostId, folderId, name, state, firmware ("BIOS" \| "UEFI"), uptimeSec, vcpu, cpuUsagePercent, memory {assignedBytes,minBytes,maxBytes,dynamic,demandBytes}, disks[] {id,path,controller,sizeBytes,usedBytes,type (Fixed/Dynamic/Differencing),format (VHDX/VHD/passthrough)}, nics[] {id,name,switchName,vlanId,macAddress,ipAddresses[],connected}, snapshots[] {id,name,createdAt,parentId,type}, secureBoot, secureBootTemplate, nestedVirtualization, autoStartAction, autoStartDelaySec, autoStopAction, configPath, dvdPath, highlyAvailable, notes, tagIds[], metricsEnabled, createdAt, lastSeen, lock`. `tagIds` are the ids of its tags (`GET /tags` resolves them) |
+| `Vm`                    | `id, vmUuid, hostId, folderId, name, state, firmware ("BIOS" \| "UEFI"), guestOs (string \| null: guest OS from the hypervisor's guest integration, last known value kept while Off), uptimeSec, vcpu, cpuUsagePercent, memory {assignedBytes,minBytes,maxBytes,dynamic,demandBytes}, disks[] {id,path,controller,sizeBytes,usedBytes,type (Fixed/Dynamic/Differencing),format (VHDX/VHD/passthrough)}, nics[] {id,name,switchName,vlanId,macAddress,ipAddresses[],connected}, snapshots[] {id,name,createdAt,parentId,type}, secureBoot, secureBootTemplate, nestedVirtualization, autoStartAction, autoStartDelaySec, autoStopAction, configPath, dvdPath, highlyAvailable, notes, tagIds[], metricsEnabled, createdAt, lastSeen, lock`. `tagIds` are the ids of its tags (`GET /tags` resolves them) |
 | `VmState`               | `Running \| Off \| Paused \| Saved \| Starting \| Stopping \| Saving \| Pausing \| Resuming \| Restarting \| Deleting \| Unknown` |
 | `VmLock`                | `taskId, kind, requestedBy, acquiredAt`: set on `Vm.lock` while a mutating task runs, else `null` |
 | `VmLockEntry`           | `VmLock & { vmId, vmName, ttl, taskStatus }`: one row of `GET /vm-locks` |
@@ -156,6 +156,7 @@ Notes on the task fields:
 | GET    | `/vms`                    | `hostId?`, `folderId?`, `state?`          | `Vm[]` |
 | GET    | `/vms/:id`                | -                                         | `Vm` |
 | GET    | `/vms/:id/metrics`        | -                                         | `VmMetricSample[]`: the last hour, oldest first. Empty until metering is enabled on the VM |
+| GET    | `/vms/:id/thumbnail`      | -                                         | `image/jpeg` (320x240): last console frame the agent captured. Only Running VMs are captured, so an Off VM serves its last image. `X-Captured-At` = capture time (ISO 8601; the frontend proxy passes it through); `Cache-Control: private, max-age=60`. 404 `NOT_FOUND` until a first capture (the UI shows "No preview") |
 | GET    | `/vm-locks`               | -                                         | `VmLockEntry[]`. **Admin only** |
 | GET    | `/tasks`                  | `vmId?`, `hostId?`, `status?`, `limit?` (default 50, max 200) | `Task[]`, newest first |
 | GET    | `/tasks/:id`              | -                                         | `TaskDetail` |
@@ -518,6 +519,7 @@ reverts.
 | `/tasks?vmId=` · `/tasks?hostId=`        | 6 s                                               | per-entity Tasks tab |
 | `/tasks?limit=200` (Task History)        | 10 s, only while the dialog is open               | history view |
 | `/hosts/:id/metrics` · `/vms/:id/metrics` | 15 s · 10 s, only while the metrics tab is open  | the agent samples ~every 5 min |
+| `/vms/:id/thumbnail`                     | none - refetched when the VM's `lastSeen` changes | a new image only comes with an agent `vm_inventory` |
 | `/templates`                             | 15 s                                              | a new export shows up in the tree |
 | `/vm-locks`                              | 10 s, only while the dialog is open               | admin view |
 | `/agent-binaries`                        | 30 s, only while it is on screen                  | admin view |

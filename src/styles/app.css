@@ -639,8 +639,11 @@
   .ui-tab[aria-selected='false'] {
     opacity: var(--tab-inactive-opacity);
   }
-  .ui-tab[aria-selected='false']:hover {
+  .ui-tab[aria-selected='false']:hover:not(:disabled) {
     background: var(--tab-hover-bg);
+  }
+  .ui-tab:disabled {
+    color: var(--color-disabled-text);
   }
   .ui-tab[aria-selected='true'] {
     background: var(--tab-active-bg);

@@ -1,5 +1,6 @@
-import { request } from "../client";
+import { ApiError, request, requestBlob } from "../client";
 import type {
+  Iso8601,
   Task,
   Vm,
   VmCloneBody,
@@ -26,6 +27,27 @@ export const getVm = (id: string, signal?: AbortSignal) =>
 /** Quick VM metrics for the last hour, oldest first. `[]` until metering is on. */
 export const getVmMetrics = (id: string, signal?: AbortSignal) =>
   request<VmMetricSample[]>(`/vms/${id}/metrics`, { signal });
+
+export interface VmThumbnail {
+  /** JPEG, 320x240 */
+  blob: Blob;
+  /** capture time (`X-Captured-At`), when the proxy passed it through */
+  capturedAt: Iso8601 | null;
+}
+
+/** Last console frame the agent captured (Running VMs only, so an Off VM keeps
+ * its last image). `null` when none was captured yet (404). */
+export const getVmThumbnail = async (
+  id: string,
+): Promise<VmThumbnail | null> => {
+  try {
+    const { blob, headers } = await requestBlob(`/vms/${id}/thumbnail`);
+    return { blob, capturedAt: headers.get("x-captured-at") };
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+};
 
 /** Provision a new VM. Returns the placeholder VM row + the `vm_create` task. */
 export const createVm = (body: VmCreateBody) =>

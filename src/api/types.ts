@@ -296,6 +296,9 @@ export interface Vm {
   name: string;
   state: VmState;
   firmware: VmFirmware;
+  /** guest OS from the hypervisor's guest integration (Hyper-V KVP). Only known
+   * while the VM runs; the backend keeps the last value while it is off. */
+  guestOs: string | null;
   uptimeSec: number | null;
   vcpu: number;
   /** simple hypervisor CPU-usage average (percent), refreshed each inventory. */

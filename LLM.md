@@ -142,11 +142,32 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 | folder                                                     | Folder · name · "Cluster: X" or "Host: Y" · Delete                                             | VM count + VM table (click a row to select the VM)                                                                                                                                                                                |
 | templatefolder                                             | Folder · "Templates" · scope                                                                   | template table (click a row to select the template)                                                                                                                                                                               |
 | template                                                   | Package · name · "cluster › host" · Deploy new VM…                                             | property list + notes                                                                                                                                                                                                             |
-| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, Console ▾, More ▾, lock badge | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** · **Tasks**                                                                                                                               |
+| vm                                                         | state icon · name · "state · firmware" · power buttons, Refresh, More ▾, lock badge            | **Summary** · **VM Metrics** (only when `metricsEnabled`) · **Snapshots** · **Console** (greyed out while Off / Paused) · **Tasks**                                                                                               |
 
 The VM **Summary** tab (`panels/VmSummaryPanel.tsx`) stacks: the offline-host notice,
-Virtual Machine Information + Configuration, Advanced, then **Notes** and **Tags**
-side by side (half width each, `VmTagsBox`), then Network adapters and Disks.
+then a first row of **Virtual Machine Information** (40%) · **Configuration** (35%) ·
+**Console** (25%, `VmConsoleBox`) - one column below `md` - then Advanced, then
+**Notes** and **Tags** side by side (half width each, `VmTagsBox`), then Network
+adapters and Disks.
+
+- Configuration lists Guest OS (`vm.guestOs`, "-" until the agent reports it), CPU,
+  CPU usage, Memory, Memory demand and **Provisioned space** (sum of the disks'
+  `sizeBytes`; "-" with no disks). NIC and disk counts are not shown there - the
+  tables below cover them.
+- Console shows the last console thumbnail (`vmThumbnailQuery`, 4:3 on
+  `bg-console-bg`; "No preview" placeholder when none exists yet). It is not
+  polled: the agent only sends an image with a `vm_inventory`, which bumps
+  `vm.lastSeen`, and `lastSeen` is part of the query key, so the image refetches
+  at most ~10 s (the VM poll) after a new one lands. A post-action partial status
+  also bumps `lastSeen` and costs one redundant fetch. Hovering the image shows
+  "Captured <dateTime> (<relTime>)" from `X-Captured-At` (a `title` tooltip, no
+  caption). Below it, side by side: **Open Web Console** (`/console?vm=` in a new
+  browser tab) and **Download RDP** (`<vm name>.rdp`, see Business rules › VM
+  "More" menu). Both need the host online, a host FQDN/IP, the VM's `vmUuid` and a
+  VM that is not Off or Paused (`vmConsoleStateBlock`); when disabled their
+  tooltip says why. This box is the only console entry point outside the Console
+  tab - the header has no Console menu. The agent only captures Running VMs, so an
+  Off VM shows its last image.
 
 The active tab lives in `?tab=`. An unknown tab falls back to the first one.
 Selecting a node of the same kind keeps the current tab; selecting a node of a
@@ -210,10 +231,13 @@ for clusters, hosts and VMs to give SSR a first paint, and swallows any error.
 **Transport**: browser → `/frontend-api/api/*` (same origin, session cookie) → server
 proxy (`routes/frontend-api/api/$.ts`) → `${API_URL}`. The proxy adds
 `Authorization: Bearer <access token>`. Only the `content-type`,
-`content-disposition` and `content-length` headers are passed back.
+`content-disposition`, `content-length` and `x-captured-at` (VM thumbnail)
+headers are passed back.
 
 `api/client.ts` `request<T>()` (redaxios, `withCredentials`) is the only HTTP entry
-point. To add a call:
+point; its binary twin `requestBlob()` returns `{ blob, headers }` for image GETs
+(an error body arrives as a Blob, so only the status survives - `HTTP_ERROR`).
+To add a call:
 
 1. add a thin function in `api/endpoints/<resource>.ts`;
 2. add or extend the types in `api/types.ts`;
@@ -268,6 +292,7 @@ point. To add a call:
 |              | `PATCH /vlans/:id` · `DELETE /vlans/:id`                                | any of `{ name, description, isDefault }` · -                                                                        | `Vlan` · `204`                                         |
 | vms          | `GET /vms`                                                              | `?hostId&folderId&state`                                                                                             | `Vm[]`                                                 |
 |              | `GET /vms/:id` · `GET /vms/:id/metrics`                                 | -                                                                                                                    | `Vm` · `VmMetricSample[]`                              |
+|              | `GET /vms/:id/thumbnail` (`requestBlob`)                                | -                                                                                                                    | JPEG + `X-Captured-At`; 404 → `null` (no capture yet)  |
 |              | `POST /vms`                                                             | `VmCreateBody`                                                                                                       | `201 { vm, task }`                                     |
 |              | `POST /vms/clone`                                                       | `VmCloneBody` (`source: 'vm' \| 'template'`)                                                                         | `202 { vm, task }`                                     |
 |              | `PATCH /vms/:id`                                                        | `{ folderId: string \| null }`                                                                                       | `Vm`                                                   |
@@ -336,6 +361,7 @@ task whose agent never answers still ends as `timeout` through the backend sweep
 | vlans                                  | `['vlans', params]`                                                              | no polling                             |
 | tags / tag categories                  | `['tags']` / `['tag-categories']`                                                | 30 s                                   |
 | vms / vm / vm metrics / locks          | `['vms', params]` / `['vms', id]` / `['vms', id, 'metrics']` / `['vms','locks']` | 10 s                                   |
+| vm console thumbnail                   | `['vms', id, 'thumbnail', lastSeen]`                                             | none - refetched when `lastSeen` moves |
 | task                                   | `['tasks', id]`                                                                  | 1.5 s until terminal                   |
 | VM or host tasks                       | `['tasks', {vmId} \| {hostId}]`                                                  | 6 s                                    |
 | recent tasks (dock)                    | `['tasks', {}]`                                                                  | 1.5 s while any active, else 4 s       |
@@ -461,9 +487,9 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Tree toolbar                             | Refresh `RefreshCw` · New VM `MonitorUp` · New Cluster `Network` · New Host `Server` · New Folder `FolderPlus` · Search VMs `Search`                                                                                                                                                                                                                                                          |
 | VM search dialog                         | field `Search` · state column `VmIcon` · Previous / Next page `ChevronLeft` / `ChevronRight`                                                                                                                                                                                                                                                                                                  |
-| VM header                                | Refresh `RefreshCw` · Console ▾ `Monitor` (Open HTML5 console in new tab `ExternalLink`, Download .rdp file `Download`) · More ▾ `MoreHorizontal` · lock badge `Lock`                                                                                                                                                                                                                         |
+| VM header                                | Refresh `RefreshCw` · More ▾ `MoreHorizontal` · lock badge `Lock`                                                                                                                                                                                                                                                                                                                             |
 | VM "More" menu                           | Edit VM `Pencil` · Rename `TextCursorInput` · Edit Notes `Pencil` · Move to Folder `FolderInput` · Move Storage `HardDrive` · Edit AutoStart `AlarmClock` · Mount / Eject DVD `Disc` · Migrate `Move` · Enable HA `ShieldCheck` · Disable HA `ShieldX` · Clone `Copy` · Export as Template `FileUp` · Enable / Disable Metrics `Gauge` · Remove from Inventory `Trash2` · Force unlock `Lock` |
-| VM Summary                               | Edit Network… `Network` · Edit Disks… `HardDrive` · Assign Tag… `Tag` · tag chip `Tag` · remove a tag `X`                                                                                                                                                                                                                                                                                    |
+| VM Summary                               | Open Web Console `ExternalLink` · Download RDP `Download` · no-thumbnail placeholder `Monitor` (`text-console-muted` on `bg-console-bg`) · Edit Network… `Network` · Edit Disks… `HardDrive` · Assign Tag… `Tag` · tag chip `Tag` · remove a tag `X`                                                                                                                                                                   |
 | Host header                              | Console `Monitor` · Actions ▾ `MoreHorizontal`                                                                                                                                                                                                                                                                                                                                                |
 | Host Actions menu                        | Refresh Hardware `Cpu` · Refresh VMs `RefreshCw` · Resume Node `Play` · Pause Node `Pause` · Restart Host `Power` (danger item)                                                                                                                                                                                                                                                               |
 | Console toolbar (`GuacamoleConsole`)     | Disconnect `Unplug` · Reconnect `RefreshCw` · Clipboard `Clipboard` · Ctrl+Alt+Del `Keyboard` · Fullscreen `Maximize2`                                                                                                                                                                                                                                                                        |
@@ -661,7 +687,7 @@ VM grid batch actions: **Power On** `Play` (green) · **Power Off** `Power` (red
 - When a host is offline, all its VMs read `Unknown`, and every agent-backed call
   returns `409 HOST_OFFLINE`.
 - **UI**:
-  - every More item is disabled and the Console menu is hidden;
+  - every More item is disabled, and so are the Summary Console box buttons;
   - Refresh only invalidates the cache (no task is queued);
   - **Remove from Inventory…** appears.
 - **Remove from Inventory** is `DELETE /vms/:id/from-inventory`: a DB-only delete
@@ -693,10 +719,11 @@ When the VM is locked or its host is offline, every item below is disabled.
 
 - **Header Refresh**: runs the `refresh` action (the agent re-inventories this VM,
   with no lock). When the host is offline it only invalidates the cache.
-- **Console ▾**: shown only when the host is online, the host has an FQDN or IP, and
-  the VM has a `vmUuid`. It offers:
-  - "Open HTML5 console in new tab" → `/console?vm=`;
-  - "Download .rdp file" → `<vm name>.rdp`, which targets the host on port 2179 with
+- **Console** (Summary tab ▸ Console box, `panels/VmConsoleBox.tsx`; the header has
+  no Console menu): enabled only when the host is online, the host has an FQDN or
+  IP, the VM has a `vmUuid`, and the VM is not Off or Paused. It offers:
+  - "Open Web Console" → `/console?vm=` in a new browser tab;
+  - "Download RDP" → `<vm name>.rdp`, which targets the host on port 2179 with
     `pcb:s:<vmUuid>` and `negotiate security layer:i:0`.
 - **Snapshots tab**: Create snapshot… (optional name), Restore (confirmation) and
   Remove (danger confirmation), sending `snapshot_*` with `snapshot_id`.
@@ -906,7 +933,14 @@ ACTIVE_BINARY`.
 
 - **Hyper-V VM console**: requires the host to be online, a host FQDN or IP, and the
   VM `vmUuid`.
-  - Available as the embedded Console tab or in its own browser tab (`/console?vm=`).
+  - An **Off or Paused** VM has no screen to show (`panels/webrdp.ts`
+    `vmConsoleStateBlock`): the VM **Console tab** is greyed out (`TabItem.disabled`,
+    tooltip says why) and a selected `?tab=console` falls back to Summary, and the
+    Summary Console box buttons are disabled. Saved and transitional states are not
+    blocked. The standalone `/console?vm=` route is not gated by state.
+  - Available as the embedded Console tab or in its own browser tab (`/console?vm=`),
+    opened from the Summary tab's Console box ("Open Web Console", under the
+    thumbnail, next to "Download RDP").
   - A Win95 credentials form asks for host Windows credentials. On submit,
     `<ClientOnly>` mounts `GuacamoleConsole`, which lazy-imports
     `guacamole-common-js`.

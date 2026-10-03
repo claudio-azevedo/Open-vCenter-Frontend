@@ -4,6 +4,7 @@ import { Download, ExternalLink, Monitor } from "lucide-react";
 import { Button, GroupBox, Icon } from "~/components/win95";
 import type { HostDetail, Vm } from "~/api/types";
 import { vmThumbnailQuery } from "~/api/queries";
+import { isDemoMode } from "~/demo/mode";
 import { dateTime, relTime } from "../../format";
 import { downloadVmConsoleRdpFile } from "./rdpFile";
 import { vmConsoleStateBlock, vmConsoleTabUrl } from "./webrdp";
@@ -84,16 +85,21 @@ export function VmConsoleBox({
           >
             Open Web Console
           </Button>
-          <Button
-            icon={Download}
-            disabled={!!unavailable}
-            title={unavailable ?? "Download a .rdp file for the Windows client"}
-            onClick={() =>
-              consoleAddr && downloadVmConsoleRdpFile(vm, consoleAddr)
-            }
-          >
-            Download RDP
-          </Button>
+          {/* a demo host is fictional - an .rdp file for it would lead nowhere */}
+          {isDemoMode() ? null : (
+            <Button
+              icon={Download}
+              disabled={!!unavailable}
+              title={
+                unavailable ?? "Download a .rdp file for the Windows client"
+              }
+              onClick={() =>
+                consoleAddr && downloadVmConsoleRdpFile(vm, consoleAddr)
+              }
+            >
+              Download RDP
+            </Button>
+          )}
         </div>
       </div>
     </GroupBox>

@@ -623,7 +623,7 @@ function exportTemplate(vm: DemoVm, p: Record<string, unknown>, at: number): Tem
     notes: str(p.notes),
     cpuCount: vm.vcpu,
     memoryMb: Math.round(vm.memory.assignedBytes / MB),
-    guestOs: linux ? "Linux" : "Windows Server",
+    guestOs: vm.guestOs ?? (linux ? "Linux" : "Windows Server"),
     createdAt: iso(at),
   };
 }
@@ -641,6 +641,8 @@ export function placeholderVm(input: {
   minMb?: number;
   maxMb?: number;
   linux: boolean;
+  /** known only once the guest has run - a clone inherits its source's */
+  guestOs?: string | null;
   nested: boolean;
   ha: boolean;
   notes: string | null;
@@ -655,6 +657,7 @@ export function placeholderVm(input: {
     name: input.name,
     state: "Unknown",
     firmware: input.firmware,
+    guestOs: input.guestOs ?? null,
     vcpu: input.vcpu,
     memory: {
       assignedBytes: input.memoryMb * MB,

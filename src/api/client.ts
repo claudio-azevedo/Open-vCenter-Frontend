@@ -76,6 +76,11 @@ export async function request<T>(
 export async function requestBlob(
   path: string,
 ): Promise<{ blob: Blob; headers: Headers }> {
+  // Demo mode: the simulator draws the image (see request() above).
+  if (isDemoMode()) {
+    const { demoThumbnail } = await import('~/demo/thumbnail')
+    return demoThumbnail(path)
+  }
   try {
     const res = await axios(`${BASE_URL}${path}`, {
       method: 'GET',

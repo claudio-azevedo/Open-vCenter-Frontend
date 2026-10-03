@@ -21,7 +21,7 @@ import type {
  * Bump `DEMO_STATE_VERSION` whenever this shape changes - an older saved state
  * is then discarded and a fresh inventory generated.
  */
-export const DEMO_STATE_VERSION = 3;
+export const DEMO_STATE_VERSION = 4;
 
 export interface DemoVolume {
   path: string;

@@ -901,6 +901,7 @@ route("POST", "/vms/clone", (ctx) => {
   let cpu = b.cpuCount;
   let memMb = b.memoryMb;
   let linux = false;
+  let guestOs: string | null = null;
   if (b.source === "vm") {
     source = vmById(state, b.sourceVmId ?? "");
     if (source.hostId !== host.id) {
@@ -912,6 +913,7 @@ route("POST", "/vms/clone", (ctx) => {
     if (!source.vmUuid) throw conflict("VM_NOT_READY", `'${source.name}' has not been reported yet`);
     if (source.lock) throw vmLocked(source);
     cpu ??= source.vcpu;
+    guestOs = source.guestOs ?? null;
     memMb ??= Math.round(source.memory.assignedBytes / 1024 ** 2);
     linux = source.secureBootTemplate === "Linux";
   } else {
@@ -924,6 +926,7 @@ route("POST", "/vms/clone", (ctx) => {
     cpu ??= tpl.cpuCount;
     memMb ??= tpl.memoryMb;
     linux = /linux|ubuntu|red hat/i.test(tpl.guestOs ?? "");
+    guestOs = tpl.guestOs ?? null;
   }
   const placement = placementError(!!host.clusterId, hostDefaultVmPath(state, host), b.destinationStorage);
   if (placement) throw new ApiError(400, "STORAGE_NOT_ALLOWED", placement);
@@ -936,6 +939,7 @@ route("POST", "/vms/clone", (ctx) => {
     memoryMb: memMb ?? 4096,
     dynamic: false,
     linux,
+    guestOs,
     nested: b.nestedVirtualization,
     ha: !!host.clusterId && b.haEnabled,
     notes: b.notes?.trim() || null,

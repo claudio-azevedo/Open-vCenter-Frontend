@@ -968,8 +968,8 @@ ACTIVE_BINARY`.
   `src/routes/webrdp/tunnel.ts` proxies it to `WEBRDP_ORIGIN`. In split-origin dev,
   `VITE_WEBRDP_URL` can point straight at ovc-webrdp, which sends permissive CORS.
 - **Demo mode**: both consoles show the `ConsoleUnavailable` notice ("Console
-  unavailable in demo mode…") instead of the credentials form, and the VM's
-  Console menu drops "Download .rdp file" (the host is fictional).
+  unavailable in demo mode…") instead of the credentials form, and the Summary
+  Console box hides "Download RDP" (the host is fictional).
 
 ---
 
@@ -1014,7 +1014,10 @@ needed. `docker-compose.demo.yml` runs it.
   - `__root` calls `setDemoMode(demo)` in `beforeLoad` and again while rendering,
     before any child query runs.
 - **The seam**: `api/client.ts` `request()` lazy-imports `demo/api.ts` and hands it
-  every call. Endpoints, queries, mutations, TaskWatcher and polling don't change.
+  every call; `requestBlob()` (the VM console thumbnail) lazy-imports
+  `demo/thumbnail.ts`, which draws a 320x240 JPEG on a canvas - a Windows lock
+  screen or a Linux text console, by `guestOs` - and 404s for an Off VM, like the
+  agent. Endpoints, queries, mutations, TaskWatcher and polling don't change.
   The simulator is its own chunk (~56 KB), never loaded outside demo mode.
 - **SSR**: the `_authed` layout sets `ssr: false` (demo branch only), so the app
   screens (`/inventory`, `/console`) render in the browser only.

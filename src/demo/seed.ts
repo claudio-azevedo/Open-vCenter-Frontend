@@ -119,6 +119,29 @@ const STANDALONE_PROFILES: SiteProfile[] = [
   { name: "HV-BACKUP-01", tag: "BKP", net: 141, roles: ["BKP", "REPO", "PROXY"], folders: [] },
 ];
 
+// Guest OS names as the Hyper-V KVP integration service reports them. Picked by
+// a hash of the VM name (not the seeded rng) so the rest of the inventory a seed
+// produces stays the same.
+const WINDOWS_GUEST_OS = [
+  "Windows Server 2022 Datacenter",
+  "Windows Server 2019 Standard",
+  "Windows Server 2025 Datacenter",
+];
+const LINUX_GUEST_OS = [
+  "Ubuntu 24.04 LTS",
+  "Ubuntu 22.04.4 LTS",
+  "Red Hat Enterprise Linux 9.4 (Plow)",
+  "Debian GNU/Linux 12 (bookworm)",
+];
+
+function guestOsFor(name: string, role: string, linux: boolean): string {
+  if (role === "WIN11") return "Windows 11 Enterprise";
+  const list = linux ? LINUX_GUEST_OS : WINDOWS_GUEST_OS;
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return list[h % list.length];
+}
+
 const LINUX_ROLES = new Set([
   "REDIS", "MQ", "LB", "GITLAB", "JENKINS", "SONAR", "NEXUS", "PROXY", "DNS",
   "NTP", "FW", "VPN", "K8S", "NVR", "REPO", "ETL",
@@ -636,6 +659,7 @@ export function generateDemoState(now = Date.now(), seed = randomSeed()): DemoSt
         name,
         state: power,
         firmware,
+        guestOs: guestOsFor(name, role, linux),
         vcpu: role === "WIN11" ? rng.pick([2, 4]) : rng.pick([1, 2, 2, 4, 4, 8, 16]),
         memory: {
           assignedBytes: memGb * GB,

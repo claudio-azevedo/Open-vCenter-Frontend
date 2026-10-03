@@ -74,7 +74,8 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
      Move Host… (needs a host selected), Delete Folder… (needs a folder selected).
    - **View**: Refresh, Task History…, VM Locks… (admin).
    - **Preferences**: Theme ▸ (5 themes), Tree Behavior ▸ (Collapsed / Expanded).
-   - **Help**: About Open vCenter…, plus Auth Debug… in dev builds only.
+   - **Help**: About Open vCenter… (shows the `package.json` version, inlined as
+     `__APP_VERSION__` by `vite.config.ts`), plus Auth Debug… in dev builds only.
 2. **Split pane**: tree toolbar + inventory tree on the left, detail pane on the right.
 3. **Recent Tasks dock** (`tasks/TasksDock.tsx`).
 4. **Status bar** (`InventoryStatusBar.tsx`), with these panels in order:

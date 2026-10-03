@@ -1,10 +1,20 @@
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { nitro } from "nitro/vite";
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+// package.json's version (bumped by `npm version`, see README "Releasing"),
+// shown in the About dialog.
+const { version } = JSON.parse(readFileSync("package.json", "utf8")) as {
+  version: string;
+};
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+  },
   server: {
     port: 3000,
   },

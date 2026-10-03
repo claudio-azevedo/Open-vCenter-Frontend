@@ -26,6 +26,9 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
+/** package.json `version`, inlined at build time (vite.config.ts `define`). */
+declare const __APP_VERSION__: string
+
 /** Server-only environment variables (never exposed to the browser). */
 declare namespace NodeJS {
   interface ProcessEnv {

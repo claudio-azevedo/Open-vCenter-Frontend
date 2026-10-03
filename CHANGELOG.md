@@ -8,6 +8,10 @@ All notable changes to ovc-frontend. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The About dialog shows the app version.
+
 ## [0.1.2] - 2026-10-03
 
 ### Added

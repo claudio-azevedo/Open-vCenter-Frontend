@@ -8,6 +8,11 @@ All notable changes to ovc-frontend. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- "VMware Nostalgia" theme: the vSphere HTML5 Client look, after VMware's
+  Clarity Design System. Pick it on the login screen or in Preferences ▸ Theme.
+
 ### Removed
 
 - View ▸ Task History and the Tasks tab on hosts and VMs: the Events screens

@@ -1017,9 +1017,12 @@ ACTIVE_BINARY`.
 
 ## Themes
 
-Five visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
+Six visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
 (`xp`), **Windows 7** (`win7`, Aero glass via `backdrop-filter`), **Modern (Light)**
-(`modern-light`) and **Modern (Dark)** (`modern-dark`).
+(`modern-light`), **Modern (Dark)** (`modern-dark`) and **VMware Nostalgia**
+(`vmware`, the vSphere HTML5 Client look after VMware's Clarity Design System:
+slate header, action blue `#0079b8`, uppercase outline buttons, underlined tabs,
+caret tree expanders; its own palette lives in theme-local `--vmw-*` properties).
 
 - **Persistence**: the `ovc-theme` cookie. The root route's `beforeLoad` reads it
   (`getPreferences()`, isomorphic), so SSR renders `<html data-theme="…">` without a
@@ -1046,7 +1049,7 @@ Five visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
     differs.
 - Components never branch on the theme id. The one exception is `ScrollArea`, which
   renders a native scroller for themes with `nativeScrollbars` (the two Modern
-  themes).
+  themes and VMware Nostalgia).
 
 ## Tree behaviour
 

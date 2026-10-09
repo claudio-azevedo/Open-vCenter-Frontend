@@ -21,6 +21,7 @@
 @import "./themes/xp.css";
 @import "./themes/win7.css";
 @import "./themes/modern.css";
+@import "./themes/vmware.css";
 
 /* `classic:` variant - for the few Classic-only layout tweaks (pressed-button
    text shift) that can't be expressed as a token. */

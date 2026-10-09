@@ -315,6 +315,8 @@ The Windows XP and Windows 7 themes port colours and gradients from
 [**7.css**](https://github.com/khang-nd/7.css) (both MIT
 licensed)
 The Modern theme uses [shadcn/ui](https://ui.shadcn.com)'s zinc palette.
+The VMware Nostalgia theme follows the colours and component styles of VMware's
+[**Clarity Design System**](https://github.com/vmware-clarity/ng-clarity) (MIT licensed).
 
 ## Disclaimer
 

@@ -10,6 +10,7 @@ export const THEMES = [
   { id: 'win7', label: 'Windows 7', nativeScrollbars: false },
   { id: 'modern-light', label: 'Modern (Light)', nativeScrollbars: true },
   { id: 'modern-dark', label: 'Modern (Dark)', nativeScrollbars: true },
+  { id: 'vmware', label: 'VMware Nostalgia', nativeScrollbars: true },
 ] as const
 
 export type ThemeId = (typeof THEMES)[number]['id']

@@ -1,0 +1,289 @@
+/*
+ * VMware Nostalgia - the vSphere HTML5 Client look, after VMware's Clarity
+ * Design System (github.com/vmware-clarity/ng-clarity, MIT) in its 1.x/2.x
+ * light palette: dark slate header, action blue #0079b8, flat white panels with
+ * 1px #ccc borders and 3px radii, underlined tabs, uppercase outline buttons
+ * and caret tree expanders. Same density as the other themes: only the look
+ * changes. Native (thin) scrollbars - see `nativeScrollbars` in
+ * src/preferences/theme.ts.
+ */
+
+:root[data-theme='vmware'] {
+  --font-sans: Metropolis, "Clarity City", "Avenir Next", "Helvetica Neue",
+    "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+
+  --color-surface: #fafafa;
+  --color-surface-2: #eeeeee;
+  --color-window: #ffffff;
+  --color-fg: #313131;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #cccccc;
+  --color-bevel-darker: #9a9a9a;
+  --color-line: #cccccc;
+
+  --color-title-active: #25333d;
+  --color-title-active-2: #314351;
+  --color-title-inactive: #5b6670;
+  --color-title-text: #ffffff;
+
+  --color-selection: #d9e4ea;
+  --color-selection-text: #000000;
+  --color-disabled-text: #737373;
+  --color-disabled-highlight: transparent;
+  --color-link: #0079b8;
+
+  --color-accent: #0079b8;
+  --color-success: #318700;
+  --color-danger: #c92100;
+  --color-warning: #c25400;
+  --color-info: #0079b8;
+  --color-running: #004a70;
+  --color-notice-bg: #fef3b5;
+  --color-notice-text: #6c5900;
+  --color-danger-bg: #f5dbd9;
+  --color-info-bg: #e1f1f6;
+
+  --color-chart-1: #60b515;
+  --color-chart-2: #0079b8;
+  --color-chart-3: #00bfa9;
+  --color-chart-4: #9460b8;
+  --color-chart-5: #e12200;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-3xl: 12px;
+  --radius-full: 9999px;
+
+  --bevel-raised: 0 0 0 1px var(--color-line);
+  --bevel-sunken: inset 0 0 0 1px var(--color-line);
+  --bevel-pressed: inset 0 0 0 1px var(--color-line);
+  --bevel-thin-raised: inset 0 0 0 1px var(--color-line);
+  --bevel-thin-sunken: inset 0 0 0 1px var(--color-line);
+  --bevel-window: var(--bevel-raised);
+  --panel-radius: 3px;
+
+  --desktop-bg: #e8e8e8;
+
+  --focus-outline: 1px solid var(--vmw-focus);
+  --focus-offset: 1px;
+
+  --window-bg: var(--color-surface);
+  --window-shadow: 0 0 0 1px var(--color-bevel-darker),
+    0 2px 12px rgba(0, 0, 0, 0.25);
+  --window-radius: 3px;
+  --window-padding: 0;
+  --window-body-margin: 0;
+  --window-body-radius: 0 0 3px 3px;
+
+  /* The vSphere Client header bar */
+  --titlebar-height: 32px;
+  --titlebar-padding: 0 4px 0 12px;
+  --titlebar-bg: var(--color-title-active);
+  --titlebar-text: var(--color-title-text);
+  --titlebar-font-size: 13px;
+  --titlebar-font-weight: 400;
+  --titlebar-radius: 3px 3px 0 0;
+  --titlebar-border: none;
+  --titlebar-inactive-bg: var(--color-title-inactive);
+  --titlebar-inactive-text: #dddddd;
+  --titlebar-btn-gap: 2px;
+  --titlebar-btn-width: 28px;
+  --titlebar-btn-height: 24px;
+  --titlebar-btn-bg: transparent;
+  --titlebar-btn-color: #fafafa;
+  --titlebar-btn-shadow: none;
+  --titlebar-btn-radius: 3px;
+  --titlebar-btn-hover-bg: var(--color-title-active-2);
+  --titlebar-btn-hover-color: #ffffff;
+  --titlebar-btn-active-shadow: none;
+  --titlebar-close-hover-bg: #c92100;
+  --titlebar-close-hover-color: #ffffff;
+
+  /* Clarity outline buttons (uppercase, see below) */
+  --btn-bg: var(--color-window);
+  --btn-color: var(--vmw-action);
+  --btn-border: 1px solid var(--vmw-action);
+  --btn-radius: 3px;
+  --btn-shadow: none;
+  --btn-hover-bg: #e3f5fc;
+  --btn-hover-border-color: var(--vmw-action-dark);
+  --btn-hover-shadow: none;
+  --btn-active-bg: #c5e8f6;
+  --btn-active-border-color: var(--vmw-action-dark);
+  --btn-active-shadow: none;
+  --btn-focus-shadow: 0 0 0 1px var(--vmw-focus);
+  --btn-focus-outline: none;
+  --btn-focus-offset: 0;
+  --btn-disabled-bg: var(--color-window);
+  --btn-disabled-shadow: none;
+  --btn-disabled-text-shadow: none;
+
+  --field-bg: var(--color-window);
+  --field-shadow: inset 0 0 0 1px var(--color-line);
+  --field-thin-shadow: var(--field-shadow);
+  --field-hover-shadow: inset 0 0 0 1px var(--color-bevel-darker);
+  --field-focus-shadow: inset 0 -2px 0 var(--vmw-action),
+    inset 0 0 0 1px var(--color-line);
+  --field-radius: 3px;
+  --field-disabled-bg: var(--color-surface-2);
+
+  --dropdown-btn-bg: transparent;
+  --dropdown-btn-shadow: none;
+  --dropdown-btn-open-shadow: none;
+  --dropdown-arrow-color: var(--color-disabled-text);
+  --listbox-border: 1px solid var(--color-line);
+  --listbox-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --listbox-radius: 3px;
+
+  --menubar-bg: var(--color-window);
+  --menubar-shadow: inset 0 -1px 0 var(--color-line);
+  --menubar-item-radius: 3px;
+  --menubar-item-hover-bg: var(--color-surface-2);
+  --menubar-item-open-bg: var(--color-selection);
+  --menubar-item-open-text: var(--color-selection-text);
+  --menu-bg: var(--color-window);
+  --menu-shadow: 0 0 0 1px var(--color-line), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --menu-radius: 3px;
+  --menu-padding: 4px 0;
+  --menu-item-radius: 0;
+  --menu-item-hover-bg: var(--color-surface-2);
+  --menu-item-hover-text: var(--color-fg);
+  --menu-sep-top: var(--color-line);
+  --menu-sep-bottom: transparent;
+
+  /* Clarity tabs: plain text, 3px action-blue underline on the active one */
+  --tab-bg: transparent;
+  --tab-text: var(--color-fg);
+  --tab-inactive-opacity: 1;
+  --tab-border-width: 0 0 3px 0;
+  --tab-border-color: transparent;
+  --tab-radius: 0;
+  --tab-hover-bg: transparent;
+  --tab-active-bg: transparent;
+  --tab-active-border-color: var(--vmw-action);
+  --tab-panel-bg: var(--color-window);
+  --tab-panel-shadow: inset 0 1px 0 var(--color-line);
+  --tab-panel-radius: 0;
+
+  --toolbar-bg: var(--color-window);
+  --toolbar-shadow: inset 0 -1px 0 var(--color-line);
+  --toolbtn-radius: 3px;
+  --toolbtn-hover-bg: var(--color-surface-2);
+  --toolbtn-hover-shadow: none;
+  --toolbtn-active-bg: var(--color-selection);
+  --toolbtn-active-shadow: none;
+  --toolbtn-on-bg: var(--color-selection);
+  --toolbtn-on-shadow: inset 0 -2px 0 var(--vmw-action);
+  --toolbar-sep-left: var(--color-line);
+  --toolbar-sep-right: transparent;
+
+  --statusbar-bg: var(--color-surface);
+  --statusbar-shadow: inset 0 1px 0 var(--color-line);
+  --statusbar-panel-shadow: inset -1px 0 0 var(--color-line);
+  --statusbar-panel-radius: 0;
+
+  --progress-well-bg: #e6e6e6;
+  --progress-well-shadow: none;
+  --progress-well-radius: 2px;
+  --progress-padding: 0;
+  --progress-fill: var(--vmw-action);
+  --progress-fill-radius: 2px;
+  --progress-muted-fill: var(--color-bevel-darker);
+
+  /* Clarity cards */
+  --groupbox-border: 1px solid var(--color-line);
+  --groupbox-border-image: none;
+  --groupbox-radius: 3px;
+  --groupbox-legend-bg: transparent;
+  --groupbox-legend-color: var(--color-disabled-text);
+
+  /* The vSphere inventory tree: grey hover, slate-blue selection */
+  --tree-inset: 1px;
+  --tree-row-radius: 0;
+  --tree-hover-bg: var(--color-surface-2);
+  --tree-selected-bg: var(--color-selection);
+  --tree-selected-text: var(--color-selection-text);
+  --tree-selected-shadow: inset 3px 0 0 var(--vmw-action);
+  --tree-expander-bg: transparent;
+  --tree-expander-border: none;
+  --tree-expander-color: var(--color-disabled-text);
+
+  /* Clarity datagrid header */
+  --th-bg: var(--color-surface);
+  --th-shadow: inset -1px 0 0 var(--color-line),
+    inset 0 -1px 0 var(--color-line);
+  --th-font-weight: 600;
+
+  --splitter-bg: transparent;
+  --splitter-grip-bg: transparent;
+  --splitter-grip-shadow: none;
+  --splitter-grip-active-shadow: inset 0 0 0 1px var(--vmw-action);
+
+  --sb-color-thumb: var(--color-bevel-dark);
+  --sb-color-track: transparent;
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: var(--color-surface);
+  --grid-header-image: none;
+  --grid-row-hover: var(--color-surface-2);
+  --grid-border: var(--color-line);
+
+  /* Theme-local palette */
+  --vmw-action: #0079b8;
+  --vmw-action-dark: #004a70;
+  --vmw-focus: #6bc1e3;
+}
+
+@layer components {
+  /* Clarity buttons: uppercase, tracked, semi-bold */
+  [data-theme='vmware'] .ui-btn {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Carets instead of +/- boxes in the tree */
+  [data-theme='vmware'] .ui-tree-expander-glyph {
+    display: none;
+  }
+  [data-theme='vmware'] .ui-tree-expander::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 120ms ease;
+  }
+  [data-theme='vmware'] .ui-tree-expander[data-expanded='true']::before {
+    transform: rotate(45deg);
+  }
+
+  [data-theme='vmware'] * {
+    scrollbar-width: thin;
+  }
+}
+
+/* The Classic webkit scrollbar buttons make no sense here */
+[data-theme='vmware'] ::-webkit-scrollbar-button {
+  display: none;
+}
+[data-theme='vmware'] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+[data-theme='vmware'] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-theme='vmware'] ::-webkit-scrollbar-thumb {
+  background: var(--color-bevel-dark);
+  box-shadow: none;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}

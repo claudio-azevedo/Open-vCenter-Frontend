@@ -315,3 +315,23 @@ The Windows XP and Windows 7 themes port colours and gradients from
 [**7.css**](https://github.com/khang-nd/7.css) (both MIT
 licensed)
 The Modern theme uses [shadcn/ui](https://ui.shadcn.com)'s zinc palette.
+
+## Disclaimer
+
+Open vCenter is an independent, community-driven open source project. It is
+not affiliated with, endorsed by, sponsored by or supported by Microsoft,
+VMware, Broadcom or any other vendor whose products it works with or is
+compared to.
+
+Microsoft, Windows, Windows Server and Hyper-V are trademarks of the Microsoft
+group of companies. VMware, ESXi, vSphere, vCenter and vMotion are trademarks
+of Broadcom Inc. and/or its subsidiaries. All other trademarks belong to their
+respective owners.
+
+The "vCenter" in the project's name refers to
+the general idea of a virtualization management center, not to VMware's
+product.
+
+The software is provided "as is", without warranty of any kind - see
+[`LICENSE`](LICENSE). Use it at your own risk, and try it on machines you can
+afford to lose before trusting it with the ones you cannot.

@@ -151,14 +151,19 @@ Built from `/clusters`, `/hosts`, `/folders`, `/vms` and `/templates`:
 
 The VM **Summary** tab (`panels/VmSummaryPanel.tsx`) stacks: the offline-host notice,
 then a first row of **Virtual Machine Information** (40%) · **Configuration** (35%) ·
-**Console** (25%, `VmConsoleBox`) - one column below `md` - then Advanced, then
+**Console** (25%, `VmConsoleBox`) - one column below `md` - then
 **Notes** and **Tags** side by side (half width each, `VmTagsBox`), then Network
 adapters and Disks.
 
+- Virtual Machine Information lists State, Last seen, Firmware, Uptime, Created,
+  Folder, Host (the node running the VM; clustered hosts only), VM GUID, Config
+  path and Mounted ISO ("None" when empty).
 - Configuration lists Guest OS (`vm.guestOs`, "-" until the agent reports it), CPU,
-  CPU usage, Memory, Memory demand and **Provisioned space** (sum of the disks'
-  `sizeBytes`; "-" with no disks). NIC and disk counts are not shown there - the
-  tables below cover them.
+  CPU usage, Memory, Memory demand, **Provisioned space** (sum of the disks'
+  `sizeBytes`; "-" with no disks), Secure Boot ("Not supported" on BIOS, else
+  On/Off with the template), Nested virtualization, High availability (clustered
+  hosts only), Automatic start (action + delay) and Automatic stop. NIC and disk
+  counts are not shown there - the tables below cover them.
 - Console shows the last console thumbnail (`vmThumbnailQuery`, 4:3 on
   `bg-console-bg`; "No preview" placeholder when none exists yet). It is not
   polled, and not fetched at all while the VM is **Off** - an Off VM shows the

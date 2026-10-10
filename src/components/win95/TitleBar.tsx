@@ -51,9 +51,11 @@ export function TitleBar({
       data-active={active}
       className="ui-titlebar flex shrink-0 items-center gap-1 select-none"
     >
-      {icon ? <span className="grid place-items-center">{icon}</span> : null}
-      <span className="flex-1 truncate">{title}</span>
-      <div className="ui-titlebar-controls flex items-center">
+      {icon ? (
+        <span className="ui-titlebar-icon grid place-items-center">{icon}</span>
+      ) : null}
+      <span className="ui-titlebar-title truncate">{title}</span>
+      <div className="ui-titlebar-controls">
         {onMinimize ? (
           <TitleButton
             kind="minimize"

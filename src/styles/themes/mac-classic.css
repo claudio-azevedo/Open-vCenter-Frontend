@@ -1,0 +1,423 @@
+/*
+ * Classic MacOS - the Mac OS 9 "Platinum" appearance. Colours, bevels, title bar
+ * stripes, window boxes, tabs and scrollbars are ported from the shared
+ * stylesheet of wieslawsoltes/MacOS9 (github.com/wieslawsoltes/MacOS9,
+ * packages/ui/styles.css, MIT) - see "Credits" in the README. No Apple artwork
+ * is used: every glyph here is drawn in CSS.
+ *
+ * Chrome (title bar, menus, buttons, tabs, legends) is set in ChicagoFLF, a
+ * public-domain stand-in for Charcoal/Chicago (public/fonts/); body text uses
+ * Geneva where the OS has it.
+ */
+
+@font-face {
+  font-family: ChicagoFLF;
+  src: url('/fonts/ChicagoFLF.ttf') format('truetype');
+  font-display: swap;
+  font-weight: 400;
+}
+
+:root[data-theme='mac-classic'] {
+  --font-sans: Geneva, Tahoma, Verdana, Arial, Helvetica, sans-serif;
+  --font-mono: Monaco, Menlo, Consolas, "Courier New", monospace;
+
+  --color-surface: #dddddd;
+  --color-surface-2: #eeeeee;
+  --color-window: #ffffff;
+  --color-fg: #000000;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #999999;
+  --color-bevel-darker: #555555;
+  --color-line: #888888;
+
+  /* The title bar is platinum with black text (see --titlebar-* below) */
+  --color-title-active: #cccccc;
+  --color-title-active-2: #dddddd;
+  --color-title-inactive: #cccccc;
+  --color-title-text: #000000;
+
+  --color-selection: #333399;
+  --color-selection-text: #ffffff;
+  --color-disabled-text: #666666;
+  --color-disabled-highlight: #ffffff;
+  --color-link: #0000cc;
+
+  --color-accent: #333399;
+  --color-success: #006600;
+  --color-danger: #b30000;
+  --color-warning: #8a5a00;
+  --color-info: #3355bb;
+  --color-running: #333399;
+  --color-notice-bg: #ffffcc;
+  --color-notice-text: #665500;
+  --color-danger-bg: #ffdddd;
+  --color-info-bg: #ddddff;
+
+  --color-chart-1: #339933;
+  --color-chart-2: #333399;
+  --color-chart-3: #009999;
+  --color-chart-4: #993399;
+  --color-chart-5: #cc3333;
+
+  /* Platinum bevels: a 1px ink edge, white top-left, grey bottom-right */
+  --bevel-raised:
+    inset 0 0 0 1px var(--mac-edge),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark);
+  --bevel-sunken:
+    inset 0 0 0 1px var(--mac-ink),
+    inset 2px 2px 0 0 var(--color-bevel-dark);
+  --bevel-pressed:
+    inset 0 0 0 1px var(--mac-ink),
+    inset 2px 2px 0 0 var(--color-bevel-darker),
+    inset -2px -2px 0 0 var(--color-surface-2);
+  --bevel-thin-raised:
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -1px -1px 0 0 var(--color-bevel-dark);
+  --bevel-thin-sunken:
+    inset 1px 1px 0 0 var(--color-bevel-dark),
+    inset -1px -1px 0 0 var(--color-bevel-light);
+  --bevel-window: var(--bevel-raised);
+
+  --desktop-bg: #666699;
+
+  --focus-outline: 2px solid var(--mac-focus);
+  --focus-offset: -2px;
+
+  /* Window frame: black edge, 1px drop shadow, platinum border */
+  --window-bg: var(--mac-platinum);
+  --window-shadow:
+    1px 1px 0 0 var(--mac-ink),
+    inset 0 0 0 1px var(--mac-ink),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-line);
+  --window-padding: 4px;
+  --window-body-bg: var(--color-surface);
+  --window-body-shadow: 0 0 0 1px var(--color-bevel-darker);
+
+  /* Title bar: centred Charcoal title between pinstripes, close box on the
+     left, zoom + collapse boxes on the right (layout rules below) */
+  --titlebar-height: 19px;
+  --titlebar-padding: 0 2px 4px;
+  --titlebar-bg: transparent;
+  --titlebar-text: var(--color-title-text);
+  --titlebar-font: var(--mac-system-font);
+  --titlebar-font-size: 12px;
+  --titlebar-font-weight: 400;
+  --titlebar-inactive-bg: transparent;
+  --titlebar-inactive-text: var(--color-disabled-text);
+  --titlebar-btn-gap: 4px;
+  --titlebar-btn-width: 12px;
+  --titlebar-btn-height: 12px;
+  --titlebar-btn-bg: linear-gradient(135deg, #ffffff, #aaaaaa);
+  --titlebar-btn-color: var(--color-bevel-darker);
+  --titlebar-btn-shadow:
+    inset 0 0 0 1px var(--color-bevel-darker),
+    0 0 0 1px var(--color-surface-2),
+    inset -2px -2px 0 0 var(--color-bevel-dark);
+  --titlebar-btn-active-shadow:
+    inset 0 0 0 1px var(--color-bevel-darker),
+    0 0 0 1px var(--color-surface-2),
+    inset 2px 2px 0 0 var(--color-bevel-darker);
+
+  --btn-bg: var(--color-surface);
+  --btn-color: var(--color-fg);
+  --btn-radius: 3px;
+  --btn-shadow:
+    inset 0 0 0 1px var(--mac-ink),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-line);
+  --btn-active-bg: var(--color-bevel-dark);
+  --btn-active-shadow: var(--bevel-pressed);
+  --btn-focus-outline: 2px solid var(--mac-focus);
+  --btn-focus-offset: 1px;
+  --btn-disabled-shadow:
+    inset 0 0 0 1px var(--color-line),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 #bbbbbb;
+  --btn-disabled-text-shadow: 1px 1px 0 var(--color-disabled-highlight);
+
+  --field-bg: var(--color-window);
+  --field-shadow: var(--bevel-sunken);
+  --field-thin-shadow: inset 0 0 0 1px var(--mac-edge);
+  --field-disabled-bg: var(--color-surface);
+
+  --dropdown-btn-bg: var(--color-surface);
+  --dropdown-btn-shadow:
+    inset 0 0 0 1px var(--mac-ink),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark);
+  --dropdown-btn-open-shadow: var(--bevel-pressed);
+  --dropdown-arrow-color: var(--color-fg);
+  --listbox-bg: var(--color-surface);
+  --listbox-border: 1px solid var(--mac-ink);
+  --listbox-shadow:
+    1px 1px 0 0 var(--mac-ink),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -1px -1px 0 0 #aaaaaa;
+
+  --menubar-bg: var(--color-surface);
+  --menubar-shadow:
+    inset 0 1px 0 0 var(--color-bevel-light),
+    inset 0 -1px 0 0 var(--mac-ink),
+    inset 0 -2px 0 0 var(--color-bevel-dark);
+  --menubar-item-hover-bg: var(--color-selection);
+  --menubar-item-hover-text: var(--color-selection-text);
+  --menubar-item-open-bg: var(--color-selection);
+  --menubar-item-open-text: var(--color-selection-text);
+  --menu-bg: var(--color-surface);
+  --menu-shadow:
+    0 0 0 1px var(--mac-ink),
+    1px 1px 0 1px var(--mac-ink),
+    inset 1px 1px 0 0 var(--color-bevel-light),
+    inset -1px -1px 0 0 #aaaaaa;
+  --menu-padding: 3px 0;
+  --menu-item-hover-bg: var(--color-selection);
+  --menu-item-hover-text: var(--color-selection-text);
+  --menu-sep-top: var(--color-bevel-dark);
+  --menu-sep-bottom: var(--color-bevel-light);
+
+  /* Folder tabs: rounded top corners, the selected one joins the pane */
+  --tab-bg: var(--mac-platinum);
+  --tab-text: var(--color-fg);
+  --tab-inactive-opacity: 1;
+  --tab-border-width: 1px 1px 0 1px;
+  --tab-border-color: #666666;
+  --tab-radius: 4px 4px 0 0;
+  --tab-shadow: inset 1px 1px 0 0 var(--color-bevel-light);
+  --tab-hover-bg: var(--tab-bg);
+  --tab-active-bg: var(--color-surface);
+  --tab-active-border-color: var(--mac-edge);
+  --tab-active-shadow: inset 1px 1px 0 0 var(--color-bevel-light);
+  --tab-panel-bg: var(--color-surface);
+  --tab-panel-shadow: inset 0 0 0 1px var(--mac-edge);
+
+  --toolbar-bg: var(--color-surface);
+  --toolbar-shadow:
+    inset 0 1px 0 0 var(--color-bevel-light),
+    inset 0 -1px 0 0 var(--color-line);
+  --toolbtn-radius: 2px;
+  --toolbtn-hover-bg: transparent;
+  --toolbtn-hover-shadow:
+    inset 0 0 0 1px var(--color-line),
+    inset 2px 2px 0 0 var(--color-bevel-light);
+  --toolbtn-active-bg: var(--color-bevel-dark);
+  --toolbtn-active-shadow:
+    inset 0 0 0 1px var(--mac-edge),
+    inset 2px 2px 0 0 var(--color-bevel-darker);
+  --toolbtn-on-bg: #bbbbbb;
+  --toolbtn-on-shadow:
+    inset 0 0 0 1px var(--mac-edge),
+    inset 2px 2px 0 0 var(--color-line);
+  --toolbar-sep-left: var(--color-bevel-dark);
+  --toolbar-sep-right: var(--color-bevel-light);
+
+  --statusbar-bg: var(--color-surface);
+  --statusbar-shadow: inset 0 1px 0 0 var(--color-bevel-dark);
+
+  --progress-well-bg: var(--color-surface);
+  --progress-well-shadow: inset 0 0 0 1px var(--mac-edge);
+  --progress-padding: 1px;
+  --progress-fill: linear-gradient(
+    to bottom,
+    #9999cc,
+    #ccccff 30%,
+    #7777bb 70%,
+    #444488
+  );
+  --progress-muted-fill: var(--color-bevel-dark);
+
+  /* Etched fieldset (the white edge is added below) */
+  --groupbox-border: 1px solid var(--color-bevel-dark);
+  --groupbox-border-image: none;
+  --groupbox-legend-bg: var(--color-surface);
+
+  /* Finder list view: lavender hover, disclosure triangles (see below) */
+  --tree-inset: 2px;
+  --tree-hover-bg: var(--mac-hover);
+  --tree-selected-bg: var(--color-selection);
+  --tree-selected-text: var(--color-selection-text);
+  --tree-expander-bg: transparent;
+  --tree-expander-border: none;
+  --tree-expander-color: var(--color-bevel-darker);
+
+  --th-bg: var(--color-surface);
+  --th-shadow:
+    inset -1px 0 0 0 var(--color-bevel-dark),
+    inset 0 -1px 0 0 #777777;
+  --th-font-weight: 400;
+
+  --splitter-bg: var(--mac-platinum);
+  --splitter-grip-bg: var(--mac-platinum);
+
+  --sb-bg: var(--mac-platinum);
+  --sb-shadow: inset 0 0 0 1px var(--color-line);
+  --sb-track-bg: repeating-linear-gradient(
+    135deg,
+    #dddddd 0px,
+    #dddddd 1px,
+    #eeeeee 1px,
+    #eeeeee 2px
+  );
+  --sb-thumb-bg: var(--mac-platinum);
+  --sb-thumb-shadow:
+    inset 0 0 0 1px var(--color-bevel-darker),
+    inset 2px 2px 0 0 var(--color-bevel-light),
+    inset -2px -2px 0 0 var(--color-bevel-dark);
+  --sb-btn-bg: var(--mac-platinum);
+  --sb-btn-shadow:
+    inset 0 0 0 1px #777777,
+    inset 2px 2px 0 0 var(--color-bevel-light);
+  --sb-btn-active-shadow:
+    inset 0 0 0 1px #777777,
+    inset 2px 2px 0 0 var(--color-bevel-darker);
+  --sb-arrow-color: #666666;
+  --sb-color-thumb: var(--color-bevel-dark);
+  --sb-color-track: var(--color-surface);
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: var(--color-surface);
+  --grid-header-image: none;
+  --grid-row-hover: var(--mac-hover);
+  --grid-border: var(--mac-platinum);
+
+  /* Theme-local palette */
+  --mac-system-font: Charcoal, Chicago, ChicagoFLF, var(--font-sans);
+  --mac-platinum: #cccccc;
+  --mac-ink: #000000;
+  --mac-edge: #555555;
+  --mac-hover: #eeeeff;
+  --mac-focus: #333399;
+}
+
+@layer components {
+  /* Chicago has a single weight - don't let the browser fake a bold */
+  [data-theme='mac-classic'] .ui-titlebar,
+  [data-theme='mac-classic'] .ui-menubar,
+  [data-theme='mac-classic'] .ui-menu,
+  [data-theme='mac-classic'] .ui-btn,
+  [data-theme='mac-classic'] .ui-tab,
+  [data-theme='mac-classic'] .ui-groupbox-legend {
+    font-family: var(--mac-system-font);
+    font-synthesis: none;
+  }
+
+  /* Title bar: [close] stripes  title  stripes [zoom] [collapse]. The controls
+     wrapper dissolves so its buttons can be ordered around the title. */
+  [data-theme='mac-classic'] .ui-titlebar::before,
+  [data-theme='mac-classic'] .ui-titlebar::after {
+    content: '';
+    flex: 1;
+    min-width: 0;
+    height: 12px;
+    background: repeating-linear-gradient(
+      to bottom,
+      #ffffff 0px,
+      #ffffff 1px,
+      #777777 1px,
+      #777777 2px
+    );
+  }
+  [data-theme='mac-classic'] .ui-titlebar::before {
+    order: 1;
+  }
+  [data-theme='mac-classic'] .ui-titlebar::after {
+    order: 3;
+  }
+  [data-theme='mac-classic'] .ui-titlebar[data-active='false']::before,
+  [data-theme='mac-classic'] .ui-titlebar[data-active='false']::after {
+    background: none;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-icon,
+  [data-theme='mac-classic'] .ui-titlebar-title {
+    order: 2;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-title {
+    flex: 0 1 auto;
+    padding: 0 2px;
+    line-height: 15px;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-controls {
+    display: contents;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn {
+    position: relative;
+    order: 4;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn[data-kind='close'] {
+    order: 0;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn[data-kind='minimize'] {
+    order: 5;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn:active:not(:disabled) {
+    background: var(--color-line);
+  }
+  /* Window boxes carry CSS glyphs instead of the icon font */
+  [data-theme='mac-classic'] .ui-titlebar-btn svg {
+    display: none;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn[data-kind='maximize']::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid currentColor;
+    border-top-width: 2px;
+  }
+  [data-theme='mac-classic'] .ui-titlebar-btn[data-kind='minimize']::before {
+    content: '';
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: 4px;
+    height: 3px;
+    border-top: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+  }
+
+  [data-theme='mac-classic'] .ui-groupbox {
+    box-shadow:
+      1px 1px 0 0 var(--color-bevel-light),
+      inset 1px 1px 0 0 var(--color-bevel-light);
+  }
+
+  /* Disclosure triangles instead of +/- boxes in the tree */
+  [data-theme='mac-classic'] .ui-tree-expander-glyph {
+    display: none;
+  }
+  [data-theme='mac-classic'] .ui-tree-expander::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 6px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform 80ms linear;
+  }
+  [data-theme='mac-classic'] .ui-tree-expander[data-expanded='true']::before {
+    transform: rotate(90deg);
+  }
+  [data-theme='mac-classic'] .ui-tree-row[aria-selected='true'] .ui-tree-expander {
+    color: var(--tree-selected-text);
+  }
+}
+
+/* Platinum scroll arrows (the Classic ones are black on a Win95 button) */
+[data-theme='mac-classic'] ::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+[data-theme='mac-classic'] ::-webkit-scrollbar-button:single-button {
+  background-size: 7px 7px;
+}
+[data-theme='mac-classic'] ::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M0 6L4 1l4 5z' fill='%23666'/%3E%3C/svg%3E");
+}
+[data-theme='mac-classic'] ::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M0 1l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");
+}
+[data-theme='mac-classic'] ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M6 0L1 4l5 4z' fill='%23666'/%3E%3C/svg%3E");
+}
+[data-theme='mac-classic'] ::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M1 0l5 4-5 4z' fill='%23666'/%3E%3C/svg%3E");
+}

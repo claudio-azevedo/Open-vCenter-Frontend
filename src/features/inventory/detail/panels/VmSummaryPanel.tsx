@@ -64,7 +64,13 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
               { label: "Uptime", value: duration(vm.uptimeSec) },
               { label: "Created", value: dateTime(vm.createdAt) },
               { label: "Folder", value: folderName },
+              // the cluster node currently running the VM
+              ...(inCluster
+                ? [{ label: "Host", value: host.data?.name ?? "-" }]
+                : []),
               { label: "VM GUID", value: vm.vmUuid ?? "-" },
+              { label: "Config path", value: vm.configPath ?? "-" },
+              { label: "Mounted ISO", value: vm.dvdPath ?? "None" },
             ]}
           />
         </GroupBox>
@@ -83,16 +89,6 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
                 label: "Provisioned space",
                 value: vm.disks.length ? bytes(provisionedBytes) : "-",
               },
-            ]}
-          />
-        </GroupBox>
-        <VmConsoleBox vm={vm} host={host.data} />
-      </div>
-
-      <GroupBox label="Advanced">
-        <div className="grid gap-3 md:grid-cols-2">
-          <PropertyList
-            items={[
               {
                 label: "Secure Boot",
                 value:
@@ -115,22 +111,15 @@ export function VmSummaryPanel({ vm }: { vm: Vm }) {
                       label: "High availability",
                       value: vm.highlyAvailable ? "Enabled" : "Disabled",
                     },
-                    // the cluster node currently running the VM
-                    { label: "Host", value: host.data?.name ?? "-" },
                   ]
                 : []),
-            ]}
-          />
-          <PropertyList
-            items={[
               { label: "Automatic start", value: autoStart },
               { label: "Automatic stop", value: vm.autoStopAction ?? "-" },
-              { label: "Mounted ISO", value: vm.dvdPath ?? "None" },
-              { label: "Config path", value: vm.configPath ?? "-" },
             ]}
           />
-        </div>
-      </GroupBox>
+        </GroupBox>
+        <VmConsoleBox vm={vm} host={host.data} />
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         <GroupBox label="Notes">

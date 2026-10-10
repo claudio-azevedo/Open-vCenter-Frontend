@@ -1,0 +1,308 @@
+/*
+ * 16bit Overload - the look of 16-bit console games, after snes.css
+ * (github.com/devMiguelCarrero/snes.css, MIT): its palette (dusk ink, plumber
+ * red, nature green, sunshine yellow, ocean blue, phantom purple), pixel-notched
+ * frames and the flat shine/shadow strips on buttons. snes.css is built on a
+ * 6px "pixel" for big marketing pages; this console is dense, so the pixel here
+ * is 2px and the frames are redrawn as a tiny SVG border-image.
+ *
+ * Chrome (title bar, menus, buttons, tabs, legends) is set in Press Start 2P
+ * (OFL, public/fonts/) at its native 8px; body text keeps the system sans so
+ * the tree and tables stay readable.
+ */
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-display: swap;
+  font-weight: 400;
+}
+
+:root[data-theme='16bit'] {
+  --color-surface: #e5e5e5;
+  --color-surface-2: #f4f4f4;
+  --color-window: #ffffff;
+  --color-fg: #2c3e50;
+  --color-bevel-light: #ffffff;
+  --color-bevel-dark: #a9b0b8;
+  --color-bevel-darker: #2c3e50;
+  --color-line: #2c3e50;
+
+  --color-title-active: #4f43ae;
+  --color-title-active-2: #7b6fd6;
+  --color-title-inactive: #8b8b9b;
+  --color-title-text: #ffffff;
+
+  --color-selection: #4f43ae;
+  --color-selection-text: #ffffff;
+  --color-disabled-text: #66737f;
+  --color-disabled-highlight: transparent;
+  --color-link: #4f43ae;
+
+  /* Status colours: the snes.css palette, darkened where it is used as text */
+  --color-accent: #4f43ae;
+  --color-success: #2e8b2a;
+  --color-danger: #d81b4f;
+  --color-warning: #a87900;
+  --color-info: #1f7fa6;
+  --color-running: #4f43ae;
+  --color-notice-bg: #fcf4d9;
+  --color-notice-text: #6b5200;
+  --color-danger-bg: #fde0e8;
+  --color-info-bg: #f0e4ff;
+
+  --color-chart-1: #4bb244;
+  --color-chart-2: #4eb6d9;
+  --color-chart-3: #f2c019;
+  --color-chart-4: #9b5de5;
+  --color-chart-5: #f22561;
+
+  /* Flat 2px ink outline with a shine strip top-left and a shadow strip
+     bottom-right - no gradients, like a sprite */
+  --bevel-raised:
+    inset 0 0 0 2px var(--snes-ink),
+    inset -4px -4px 0 0 var(--snes-shadow),
+    inset 4px 4px 0 0 var(--snes-shine);
+  --bevel-sunken:
+    inset 0 0 0 2px var(--snes-ink),
+    inset 4px 4px 0 0 var(--snes-shadow);
+  --bevel-pressed:
+    inset 0 0 0 2px var(--snes-ink),
+    inset 4px 4px 0 0 var(--snes-shadow-strong);
+  --bevel-thin-raised:
+    inset -2px -2px 0 0 var(--snes-shadow),
+    inset 2px 2px 0 0 var(--snes-shine);
+  --bevel-thin-sunken:
+    inset 2px 2px 0 0 var(--snes-shadow),
+    inset -2px -2px 0 0 var(--snes-shine);
+  --bevel-window: var(--bevel-raised);
+
+  --desktop-bg: repeating-conic-gradient(#33475b 0% 25%, #2c3e50 0% 50%) 0 0 /
+    8px 8px;
+
+  --focus-outline: 2px solid var(--snes-ember);
+  --focus-offset: -2px;
+
+  /* Window: notched frame (see .ui-window below) and a hard drop shadow */
+  --window-bg: var(--color-surface);
+  --window-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.3);
+  --window-padding: 0;
+
+  --titlebar-height: 24px;
+  --titlebar-padding: 0 4px 2px 8px;
+  --titlebar-bg: linear-gradient(
+    to bottom,
+    var(--color-title-active-2) 0 2px,
+    var(--color-title-active) 2px calc(100% - 4px),
+    #3a3085 calc(100% - 4px) calc(100% - 2px),
+    var(--snes-ink) calc(100% - 2px)
+  );
+  --titlebar-text: var(--color-title-text);
+  --titlebar-text-shadow: 1px 1px 0 var(--snes-ink);
+  --titlebar-font: var(--snes-font);
+  --titlebar-font-size: 8px;
+  --titlebar-font-weight: 400;
+  --titlebar-inactive-bg: var(--color-title-inactive);
+  --titlebar-inactive-text: var(--color-surface);
+  --titlebar-btn-gap: 4px;
+  --titlebar-btn-width: 16px;
+  --titlebar-btn-height: 16px;
+  --titlebar-btn-bg: var(--snes-sunshine);
+  --titlebar-btn-color: var(--snes-ink);
+  --titlebar-btn-shadow:
+    inset 0 0 0 2px var(--snes-ink),
+    inset -4px -4px 0 0 var(--snes-shadow),
+    inset 4px 4px 0 0 var(--snes-shine);
+  --titlebar-btn-active-shadow:
+    inset 0 0 0 2px var(--snes-ink),
+    inset 4px 4px 0 0 var(--snes-shadow-strong);
+  --titlebar-close-bg: var(--snes-plumber);
+
+  --btn-bg: var(--snes-lavender);
+  --btn-color: var(--snes-ink);
+  --btn-border: 2px solid transparent; /* painted by the frame, see below */
+  --btn-shadow:
+    inset -2px -2px 0 0 var(--snes-shadow),
+    inset 2px 2px 0 0 var(--snes-shine);
+  --btn-hover-bg: #d9d5f8;
+  --btn-active-bg: #a59ee0;
+  --btn-active-shadow: inset 2px 2px 0 0 var(--snes-shadow-strong);
+  --btn-focus-outline: 2px solid var(--snes-ember);
+  --btn-focus-offset: 1px;
+  --btn-disabled-bg: #b5ced1;
+  --btn-disabled-shadow: none;
+  --btn-disabled-text-shadow: none;
+
+  --field-bg: var(--color-window);
+  --field-shadow: inset 0 0 0 2px var(--snes-ink);
+  --field-thin-shadow: inset 0 0 0 1px var(--snes-ink);
+  --field-focus-shadow: inset 0 0 0 2px var(--color-accent);
+  --field-disabled-bg: #dfe6e8;
+
+  --dropdown-btn-bg: var(--snes-lavender);
+  --dropdown-btn-shadow:
+    inset 0 0 0 2px var(--snes-ink),
+    inset -4px -4px 0 0 var(--snes-shadow),
+    inset 4px 4px 0 0 var(--snes-shine);
+  --dropdown-btn-open-shadow: var(--bevel-pressed);
+  --dropdown-arrow-color: var(--snes-ink);
+  --listbox-bg: var(--color-window);
+  --listbox-border: 2px solid var(--snes-ink);
+  --listbox-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.3);
+
+  --menubar-bg: var(--color-surface);
+  --menubar-shadow: inset 0 -2px 0 0 var(--snes-ink);
+  --menubar-item-hover-bg: var(--snes-lavender);
+  --menubar-item-hover-text: var(--snes-ink);
+  --menubar-item-open-bg: var(--color-selection);
+  --menubar-item-open-text: var(--color-selection-text);
+  --menu-bg: var(--color-window);
+  --menu-shadow:
+    0 0 0 2px var(--snes-ink),
+    4px 4px 0 2px rgba(0, 0, 0, 0.3);
+  --menu-padding: 4px;
+  --menu-item-hover-bg: var(--color-selection);
+  --menu-item-hover-text: var(--color-selection-text);
+  --menu-sep-top: var(--color-bevel-dark);
+  --menu-sep-bottom: transparent;
+
+  --tab-bg: #cfcfd8;
+  --tab-text: var(--snes-ink);
+  --tab-inactive-opacity: 1;
+  --tab-border-width: 2px 2px 0 2px;
+  --tab-border-color: var(--snes-ink);
+  --tab-hover-bg: var(--snes-lavender);
+  --tab-active-bg: var(--color-surface);
+  --tab-active-border-color: var(--snes-ink);
+  /* the 1px skirt hides the pane's 2px outline under the selected tab */
+  --tab-active-shadow:
+    0 1px 0 0 var(--color-surface),
+    inset 0 2px 0 0 var(--snes-phantom);
+  --tab-panel-bg: var(--color-surface);
+  --tab-panel-shadow: inset 0 0 0 2px var(--snes-ink);
+
+  --toolbar-bg: var(--color-surface);
+  --toolbar-shadow: none;
+  --toolbtn-hover-bg: var(--snes-lavender);
+  --toolbtn-hover-shadow: inset 0 0 0 2px var(--snes-ink);
+  --toolbtn-active-bg: #a59ee0;
+  --toolbtn-active-shadow: inset 0 0 0 2px var(--snes-ink);
+  --toolbtn-on-bg: var(--snes-lavender);
+  --toolbtn-on-shadow: inset 0 0 0 2px var(--snes-ink);
+  --toolbar-sep-left: var(--color-bevel-dark);
+  --toolbar-sep-right: transparent;
+
+  --statusbar-bg: var(--color-surface);
+  --statusbar-shadow: inset 0 2px 0 0 var(--snes-ink);
+  --statusbar-panel-shadow: inset -2px 0 0 0 var(--color-bevel-dark);
+
+  /* Segmented like an energy bar */
+  --progress-well-bg: var(--color-window);
+  --progress-well-shadow: inset 0 0 0 2px var(--snes-ink);
+  --progress-padding: 4px;
+  --progress-fill: repeating-linear-gradient(
+    to right,
+    var(--snes-nature) 0 6px,
+    transparent 6px 8px
+  );
+  --progress-muted-fill: repeating-linear-gradient(
+    to right,
+    var(--color-bevel-dark) 0 6px,
+    transparent 6px 8px
+  );
+
+  --groupbox-border: 2px solid var(--snes-ink);
+  --groupbox-border-image: var(--snes-frame) 2;
+  --groupbox-legend-bg: var(--color-surface);
+  --groupbox-legend-color: var(--color-accent);
+
+  --tree-inset: 2px;
+  --tree-hover-bg: var(--color-info-bg);
+  --tree-selected-bg: var(--color-selection);
+  --tree-selected-text: var(--color-selection-text);
+  --tree-expander-bg: var(--snes-lavender);
+  --tree-expander-border: 1px solid var(--snes-ink);
+  --tree-expander-color: var(--snes-ink);
+
+  --th-bg: #d5d5dd;
+  --th-shadow:
+    inset 0 -2px 0 0 var(--snes-ink),
+    inset -2px 0 0 0 var(--color-bevel-dark);
+  --th-font-weight: 700;
+
+  --sb-bg: #cfcfd8;
+  --sb-shadow: none;
+  --sb-track-bg: repeating-conic-gradient(#c6c6d0 0% 25%, #dcdce4 0% 50%) 0 0 /
+    4px 4px;
+  --sb-thumb-bg: var(--snes-lavender);
+  --sb-thumb-shadow:
+    inset 0 0 0 2px var(--snes-ink),
+    inset -4px -4px 0 0 var(--snes-shadow),
+    inset 4px 4px 0 0 var(--snes-shine);
+  --sb-btn-bg: var(--snes-lavender);
+  --sb-btn-shadow: var(--sb-thumb-shadow);
+  --sb-btn-active-shadow: var(--bevel-pressed);
+  --sb-arrow-color: var(--snes-ink);
+  --sb-color-thumb: var(--snes-lavender);
+  --sb-color-track: #cfcfd8;
+
+  --grid-fg: var(--color-fg);
+  --grid-header-bg: #d5d5dd;
+  --grid-header-image: none;
+  --grid-row-hover: var(--color-info-bg);
+  --grid-border: #cfcfd8;
+
+  /* Theme-local palette (names follow snes.css) */
+  --snes-font: 'Press Start 2P', var(--font-mono);
+  --snes-ink: #2c3e50;
+  --snes-plumber: #f22561;
+  --snes-nature: #4bb244;
+  --snes-sunshine: #f2c019;
+  --snes-ocean: #4eb6d9;
+  --snes-phantom: #9b5de5;
+  --snes-ember: #ff6f00;
+  --snes-lavender: #c3bdf0;
+  --snes-shine: rgba(255, 255, 255, 0.5);
+  --snes-shadow: rgba(0, 0, 0, 0.18);
+  --snes-shadow-strong: rgba(0, 0, 0, 0.3);
+  /* 2px ink frame with the corner pixel cut out */
+  --snes-frame: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='6' shape-rendering='crispEdges'><path d='M2 0h2v2H2zM0 2h2v2H0zM4 2h2v2H4zM2 4h2v2H2z' fill='%232c3e50'/></svg>");
+}
+
+@layer components {
+  /* Pixel font on the chrome. Its glyphs are a full em wide, so it runs at
+     8px; `--text-base` is rescoped so the `text-base` utility follows. */
+  [data-theme='16bit'] .ui-titlebar,
+  [data-theme='16bit'] .ui-menubar,
+  [data-theme='16bit'] .ui-menu,
+  [data-theme='16bit'] .ui-btn,
+  [data-theme='16bit'] .ui-tab,
+  [data-theme='16bit'] .ui-groupbox-legend {
+    --text-base: 8px;
+    --text-base--line-height: 1.5;
+    font-family: var(--snes-font);
+    font-size: 8px;
+    font-synthesis: none;
+    -webkit-font-smoothing: none;
+  }
+
+  /* Notched frames: the corner pixel is missing, so the background must not
+     paint under the border */
+  [data-theme='16bit'] .ui-window,
+  [data-theme='16bit'] .ui-btn {
+    border-image: var(--snes-frame) 2;
+    background-clip: padding-box;
+  }
+  [data-theme='16bit'] .ui-window {
+    border: 2px solid transparent;
+    border-image: var(--snes-frame) 2;
+  }
+
+  /* Window boxes in the pad's button colours */
+  [data-theme='16bit'] .ui-titlebar-btn[data-kind='maximize'] {
+    background: var(--snes-nature);
+  }
+  [data-theme='16bit'] .ui-titlebar-btn[data-kind='minimize'] {
+    background: var(--snes-sunshine);
+  }
+}

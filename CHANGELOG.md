@@ -4,9 +4,17 @@ All notable changes to ovc-frontend. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Each version is a git tag
 (`0.1.2`, no `v` prefix) with a matching GitHub Release and container image
-(`ghcr.io/claudio-azevedo/ovc-frontend:<version>`). See README "Releasing".
+(`ghcr.io/claudio-azevedo/ovc-frontend:<version>`).
 
 ## [Unreleased]
+
+### Added
+
+- "VMware Nostalgia" theme: the vSphere HTML5 Client look, after VMware's
+  Clarity Design System. Pick it on the login screen or in Preferences ▸ Theme.
+- "Classic MacOS" theme: the Mac OS 9 Platinum look, based on the stylesheet of
+  wieslawsoltes/MacOS9.
+- "16bit Overload" theme: the look of 16-bit console games, after snes.css.
 
 ### Removed
 

@@ -21,6 +21,9 @@
 @import "./themes/xp.css";
 @import "./themes/win7.css";
 @import "./themes/modern.css";
+@import "./themes/vmware.css";
+@import "./themes/mac-classic.css";
+@import "./themes/16bit.css";
 
 /* `classic:` variant - for the few Classic-only layout tweaks (pressed-button
    text shift) that can't be expressed as a token. */
@@ -467,7 +470,14 @@
     background: var(--titlebar-inactive-bg);
     color: var(--titlebar-inactive-text);
   }
+  /* Title + controls layout lives here (not in utilities) so a theme can
+     rearrange the bar - Classic MacOS centres the title between its boxes. */
+  .ui-titlebar-title {
+    flex: 1 1 0%;
+  }
   .ui-titlebar-controls {
+    display: flex;
+    align-items: center;
     gap: var(--titlebar-btn-gap);
     align-self: var(--titlebar-btn-align);
   }

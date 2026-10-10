@@ -243,37 +243,6 @@ and `/frontend-api/api` are plain file routes under `src/routes/frontend-api/`.
 | `node .output/server/index.mjs` | Run the built server directly (what the Dockerfile's `CMD` does). Needs the same env vars as dev (`API_URL`, `OIDC_*`, `BETTER_AUTH_*`).                            |
 | `npx tsc --noEmit`              | Type-check.                                                                                                                                                         |
 
-## Releasing
-
-Versions follow [Semantic Versioning](https://semver.org/): **patch** (`0.1.2`
-→ `0.1.3`) for fixes and small changes, **minor** (`0.1.x` → `0.2.0`) for new
-features or config changes, **major** once the app is stable (`1.0.0`). A
-release is three things that always carry the same number: the `version` in
-`package.json` / `package-lock.json`, a git tag (`0.1.3`, no `v` prefix), and a
-GitHub Release. Pushing the tag makes CI publish the image
-`ghcr.io/claudio-azevedo/ovc-frontend:<version>` (every push to `main` still
-publishes `:latest`).
-
-1. Start from an up-to-date, clean `main` that typechecks and builds
-   (`npx tsc --noEmit`, `npm run build`).
-2. **Changelog**: in [`CHANGELOG.md`](CHANGELOG.md), write the release's notes
-   under a new `## [0.1.3] - YYYY-MM-DD` heading (Added / Changed / Fixed),
-   from `git log --oneline <previous-tag>..main`. Leave `## [Unreleased]` empty
-   above it and update the compare links at the bottom. Commit it:
-   `git commit -am "Changelog for 0.1.3"`.
-3. **Bump and tag**: `npm version patch` (or `minor` / `major`, or an exact
-   `npm version 0.1.3`). It updates `package.json` and `package-lock.json`,
-   commits them as `Release 0.1.3` and creates the annotated tag `0.1.3`
-   (`.npmrc` sets the empty tag prefix and the message).
-4. **Push**: `git push github main --follow-tags`. CI builds and publishes the
-   `:0.1.3` image from the tag.
-5. **GitHub Release**: create it from the tag, titled with the version and the
-   changelog section as the notes - on GitHub (Releases ▸ Draft a new release ▸
-   choose the tag) or with
-   `gh release create 0.1.3 --title 0.1.3 --notes "<changelog section>"`.
-
-The `demo` branch doesn't get tags; merge `main` into it as usual.
-
 ## Project structure
 
 ```
@@ -370,3 +339,38 @@ The Windows XP and Windows 7 themes port colours and gradients from
 [**7.css**](https://github.com/khang-nd/7.css) (both MIT
 licensed)
 The Modern theme uses [shadcn/ui](https://ui.shadcn.com)'s zinc palette.
+The VMware Nostalgia theme follows the colours and component styles of VMware's
+[**Clarity Design System**](https://github.com/vmware-clarity/ng-clarity) (MIT licensed).
+
+The Classic MacOS theme ports the Platinum colours, bevels, title bar, tabs and
+scrollbars from [**MacOS9**](https://github.com/wieslawsoltes/MacOS9) by Wiesław
+Šoltés and contributors (MIT licensed), a browser recreation of the Mac OS 9
+desktop. It uses the [**ChicagoFLF**](https://fontlibrary.org/en/font/chicagoflf)
+font by Robin Casady (public domain). No Apple artwork is included; Mac OS is a
+trademark of Apple Inc., and this project is not affiliated with Apple.
+
+The 16bit Overload theme takes its palette and pixel-frame style from
+[**snes.css**](https://github.com/devMiguelCarrero/snes.css) by Miguel Carrero
+(MIT licensed) and uses the
+[**Press Start 2P**](https://fonts.google.com/specimen/Press+Start+2P) font
+(SIL Open Font License).
+
+## Disclaimer
+
+Open vCenter is an independent, community-driven open source project. It is
+not affiliated with, endorsed by, sponsored by or supported by Microsoft,
+VMware, Broadcom or any other vendor whose products it works with or is
+compared to.
+
+Microsoft, Windows, Windows Server and Hyper-V are trademarks of the Microsoft
+group of companies. VMware, ESXi, vSphere, vCenter and vMotion are trademarks
+of Broadcom Inc. and/or its subsidiaries. All other trademarks belong to their
+respective owners.
+
+The "vCenter" in the project's name refers to
+the general idea of a virtualization management center, not to VMware's
+product.
+
+The software is provided "as is", without warranty of any kind - see
+[`LICENSE`](LICENSE). Use it at your own risk, and try it on machines you can
+afford to lose before trusting it with the ones you cannot.

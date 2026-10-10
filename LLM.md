@@ -76,7 +76,7 @@ Companion docs: `CLAUDE.md` (short working summary of this file),
    - **Action**: Move VM to Folder (needs a VM selected with ≥ 1 reachable folder),
      Move Host (needs a host selected), Delete Folder (needs a folder selected).
    - **View**: Refresh, Events History (admin), VM Locks (admin).
-   - **Preferences**: Theme ▸ (5 themes), Tree Behavior ▸ (Collapsed / Expanded).
+   - **Preferences**: Theme ▸ (8 themes), Tree Behavior ▸ (Collapsed / Expanded).
    - **Help**: About Open vCenter (shows the `package.json` version, inlined as
      `__APP_VERSION__` by `vite.config.ts`), plus Auth Debug in dev builds only.
 2. **Split pane**: tree toolbar + inventory tree on the left, detail pane on the right.
@@ -1022,12 +1022,53 @@ ACTIVE_BINARY`.
 
 ## Themes
 
-Six visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
+Eight visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
 (`xp`), **Windows 7** (`win7`, Aero glass via `backdrop-filter`), **Modern (Light)**
-(`modern-light`), **Modern (Dark)** (`modern-dark`) and **VMware Nostalgia**
+(`modern-light`), **Modern (Dark)** (`modern-dark`), **VMware Nostalgia**
 (`vmware`, the vSphere HTML5 Client look after VMware's Clarity Design System:
 slate header, action blue `#0079b8`, uppercase outline buttons, underlined tabs,
-caret tree expanders; its own palette lives in theme-local `--vmw-*` properties).
+caret tree expanders; its own palette lives in theme-local `--vmw-*` properties),
+**16bit Overload** (`16bit`, see below) and **Classic MacOS** (`mac-classic`, the Mac OS 9 "Platinum" appearance ported from
+the stylesheet of [wieslawsoltes/MacOS9](https://github.com/wieslawsoltes/MacOS9),
+MIT).
+
+Classic MacOS specifics:
+
+- Platinum greys (`#ddd` surface, `#ccc` window frame), accent / selection
+  `#333399`, a `#666699` desktop; theme-local values live in `--mac-*` properties.
+- Chrome (title bar, menus, buttons, tabs, group box legends) is set in
+  **ChicagoFLF**, a public-domain stand-in for Charcoal, served from
+  `public/fonts/ChicagoFLF.ttf` (its notice sits next to it). Body text is Geneva
+  where the OS has it. The `@font-face` is in `mac-classic.css`, so the font is
+  only fetched while this theme is active.
+- The title bar is rearranged in CSS: close box on the left, the title centred
+  between pinstripes, zoom and collapse boxes on the right. It does this with
+  `order` on `.ui-titlebar-icon` / `.ui-titlebar-title` / the buttons and
+  `display: contents` on `.ui-titlebar-controls`. That is why the title's `flex`
+  and the controls' `display` are set in `app.css` and not with Tailwind utilities
+  (a utility would outrank the theme's `@layer components` rule).
+- Window boxes draw their glyphs in CSS (the lucide icons are hidden); the tree
+  uses disclosure triangles; scrollbars are the painted Platinum ones.
+- No Apple artwork or icons are used.
+
+16bit Overload specifics:
+
+- The look of 16-bit console games, after
+  [snes.css](https://github.com/devMiguelCarrero/snes.css) (MIT): its palette
+  (dusk ink `#2c3e50`, plumber red, nature green, sunshine yellow, phantom
+  purple) and flat shine/shadow strips. Theme-local values live in `--snes-*`
+  properties.
+- snes.css is built on a 6px "pixel" for large pages; here the pixel is 2px.
+  Frames with the corner pixel cut out are a small SVG `border-image`
+  (`--snes-frame`) on the window, push buttons and group boxes, with
+  `background-clip: padding-box` so the fill stays out of the missing corner.
+- Chrome (title bar, menus, buttons, tabs, group box legends) is set in
+  **Press Start 2P** (OFL, `public/fonts/PressStart2P-Regular.ttf`, licence next
+  to it) at 8px. Its glyphs are a full em wide, so it must not be used for body
+  text. The theme rescopes `--text-base` to 8px on those classes so the
+  `text-base` utility follows.
+- Purple title bar with window boxes in the pad's button colours, lavender
+  buttons, a segmented green progress bar and a checkered desktop.
 
 - **Persistence**: the `ovc-theme` cookie. The root route's `beforeLoad` reads it
   (`getPreferences()`, isomorphic), so SSR renders `<html data-theme="…">` without a
@@ -1079,8 +1120,9 @@ src/
   styles/app.css              Token contract with Windows Classic values: @theme colour
                               tokens, component custom properties (--btn-*, --titlebar-*,
                               --menu-*, ...), @utility bevel classes, semantic `ui-*` classes.
-  styles/themes/              xp.css, win7.css, modern.css (light + dark) - each only
-                              redefines tokens under :root[data-theme='<id>'].
+  styles/themes/              xp.css, win7.css, modern.css (light + dark), vmware.css,
+                              mac-classic.css, 16bit.css - each only redefines tokens under
+                              :root[data-theme='<id>'].
   preferences/                cookies.ts, theme.ts (THEMES), treeBehavior.ts,
                               getPreferences.ts (SSR + client), provider.tsx
                               (useTheme / useTreeBehavior).

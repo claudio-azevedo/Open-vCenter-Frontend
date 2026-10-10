@@ -287,6 +287,19 @@ The Modern theme uses [shadcn/ui](https://ui.shadcn.com)'s zinc palette.
 The VMware Nostalgia theme follows the colours and component styles of VMware's
 [**Clarity Design System**](https://github.com/vmware-clarity/ng-clarity) (MIT licensed).
 
+The Classic MacOS theme ports the Platinum colours, bevels, title bar, tabs and
+scrollbars from [**MacOS9**](https://github.com/wieslawsoltes/MacOS9) by Wiesław
+Šoltés and contributors (MIT licensed), a browser recreation of the Mac OS 9
+desktop. It uses the [**ChicagoFLF**](https://fontlibrary.org/en/font/chicagoflf)
+font by Robin Casady (public domain). No Apple artwork is included; Mac OS is a
+trademark of Apple Inc., and this project is not affiliated with Apple.
+
+The 16bit Overload theme takes its palette and pixel-frame style from
+[**snes.css**](https://github.com/devMiguelCarrero/snes.css) by Miguel Carrero
+(MIT licensed) and uses the
+[**Press Start 2P**](https://fonts.google.com/specimen/Press+Start+2P) font
+(SIL Open Font License).
+
 ## Disclaimer
 
 Open vCenter is an independent, community-driven open source project. It is

@@ -12,6 +12,9 @@ All notable changes to ovc-frontend. The format follows
 
 - "VMware Nostalgia" theme: the vSphere HTML5 Client look, after VMware's
   Clarity Design System. Pick it on the login screen or in Preferences ▸ Theme.
+- "Classic MacOS" theme: the Mac OS 9 Platinum look, based on the stylesheet of
+  wieslawsoltes/MacOS9.
+- "16bit Overload" theme: the look of 16-bit console games, after snes.css.
 
 ### Removed
 

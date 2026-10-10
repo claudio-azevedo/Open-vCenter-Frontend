@@ -1221,8 +1221,9 @@ needs a seed value and a `DEMO_STATE_VERSION` bump.
 
 ## Themes
 
-Eight visual themes: **Windows Classic** (`classic`, the default), **Windows XP**
-(`xp`), **Windows 7** (`win7`, Aero glass via `backdrop-filter`), **Modern (Light)**
+Eight visual themes: **Windows Classic** (`classic`, whose values are the token
+contract in `app.css`), **Windows XP** (`xp`), **Windows 7** (`win7`, the default
+for a browser with no `ovc-theme` cookie; Aero glass via `backdrop-filter`), **Modern (Light)**
 (`modern-light`), **Modern (Dark)** (`modern-dark`), **VMware Nostalgia**
 (`vmware`, the vSphere HTML5 Client look after VMware's Clarity Design System:
 slate header, action blue `#0079b8`, uppercase outline buttons, underlined tabs,
@@ -1273,7 +1274,8 @@ Classic MacOS specifics:
   (`getPreferences()`, isomorphic), so SSR renders `<html data-theme="…">` without a
   flash of the default theme.
 - **Picking a theme**: the login screen's "Theme" dropdown, or Preferences ▸ Theme
-  (`useTheme().setTheme`).
+  (`useTheme().setTheme`). Both list the themes in `THEMES` order
+  (`preferences/theme.ts`), which is kept sorted by label.
 - **A theme is CSS only.** Rules for new UI code:
   - visuals a theme may change go through a `ui-*` class (`ui-btn`, `ui-field`,
     `ui-menu`, `ui-tab`, `ui-toolbar`, …) or a `bevel-*` utility (`bevel-raised`,

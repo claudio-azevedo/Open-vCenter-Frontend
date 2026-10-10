@@ -16,6 +16,12 @@ All notable changes to ovc-frontend. The format follows
   wieslawsoltes/MacOS9.
 - "16bit Overload" theme: the look of 16-bit console games, after snes.css.
 
+### Changed
+
+- Windows 7 is the default theme for new browsers (it was Windows Classic). A
+  theme you already picked is kept.
+- The theme list is sorted alphabetically.
+
 ### Removed
 
 - View ▸ Task History and the Tasks tab on hosts and VMs: the Events screens

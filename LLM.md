@@ -1070,6 +1070,9 @@ Classic MacOS specifics:
   `text-base` utility follows.
 - Purple title bar with window boxes in the pad's button colours, lavender
   buttons, a segmented green progress bar and a checkered desktop.
+- A per-kind title bar button colour must set **both** `--titlebar-btn-bg` and
+  `--titlebar-btn-hover-bg` on the button: the hover token is resolved at
+  `:root`, so it does not follow a `--titlebar-btn-bg` set lower down.
 
 - **Persistence**: the `ovc-theme` cookie. The root route's `beforeLoad` reads it
   (`getPreferences()`, isomorphic), so SSR renders `<html data-theme="…">` without a

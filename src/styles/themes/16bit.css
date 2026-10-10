@@ -300,9 +300,7 @@
 
   /* Window boxes in the pad's button colours */
   [data-theme='16bit'] .ui-titlebar-btn[data-kind='maximize'] {
-    background: var(--snes-nature);
-  }
-  [data-theme='16bit'] .ui-titlebar-btn[data-kind='minimize'] {
-    background: var(--snes-sunshine);
+    --titlebar-btn-bg: var(--snes-nature);
+    --titlebar-btn-hover-bg: var(--snes-nature);
   }
 }
